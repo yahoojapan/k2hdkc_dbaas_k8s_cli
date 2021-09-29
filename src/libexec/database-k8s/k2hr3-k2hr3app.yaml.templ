@@ -1,0 +1,114 @@
+#
+# K2HDKC DBaaS on Kubernetes Command Line Interface - K2HR3 CLI Plugin
+#
+# Copyright 2021 Yahoo! Japan Corporation.
+#
+# K2HDKC DBaaS is a DataBase as a Service provided by Yahoo! JAPAN
+# which is built K2HR3 as a backend and provides services in
+# cooperation with Kubernetes.
+# The Override configuration for K2HDKC DBaaS serves to connect the
+# components that make up the K2HDKC DBaaS. K2HDKC, K2HR3, CHMPX,
+# and K2HASH are components provided as AntPickax.
+#
+# For the full copyright and license information, please view
+# the license file that was distributed with this source code.
+#
+# AUTHOR:   Takeshi Nakatani
+# CREATE:   Wed Sep 15 2021
+# REVISION:
+#
+
+# [NOTE]
+# Must replace the following keywords in this file according to
+# your own environment before using this yaml file.
+#
+# %%....................%%
+#   CONFIGMAP_MOUNTPOINT        ex) /configmap
+#   SEC_CA_MOUNTPOINT           ex) /secret-ca
+#   SEC_CERTS_MOUNTPOINT        ex) /secret-certs
+#   ANTPICKAX_ETC_DIR           ex) /etc/antpickax
+#   K2HR3_APP_REPLICAS          ex) 2
+#   K2HR3_APP_NAMEBASE          ex) r3app
+#   K2HR3_MANUAL_START          ex) 0
+#
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-%%K2HR3_APP_NAMEBASE%%
+spec:
+  replicas: %%K2HR3_APP_REPLICAS%%
+  selector:
+    matchLabels:
+      app: %%K2HR3_APP_NAMEBASE%%
+  template:
+    metadata:
+      labels:
+        app: %%K2HR3_APP_NAMEBASE%%
+    spec:
+      volumes:
+        - name: antpickax-etc-volume
+          emptyDir:
+            medium: Memory
+        - name: antpickax-var-run-volume
+          emptyDir:
+            medium: Memory
+        - name: configmap-k2hr3
+          configMap:
+            name: configmap-k2hr3
+            items:
+              - key: k2hr3-app-init.sh
+                path: k2hr3-app-init.sh
+              - key: k2hr3-app-wrap.sh
+                path: k2hr3-app-wrap.sh
+              - key: k2hr3-app-production.json
+                path: k2hr3-app-production.json
+        - name: secret-k2hr3-ca
+          secret:
+            secretName: secret-k2hr3-ca
+        - name: secret-k2hr3-certs
+          secret:
+            secretName: secret-k2hr3-certs
+      shareProcessNamespace: true
+      initContainers:
+        - name: init-%%K2HR3_APP_NAMEBASE%%
+          image: alpine:3.13.5
+          command: ["/bin/sh"]
+          args: ["%%CONFIGMAP_MOUNTPOINT%%/k2hr3-app-init.sh"]
+          env:
+            - name: ANTPICKAX_ETC_DIR
+              value: "%%ANTPICKAX_ETC_DIR%%"
+            - name: SEC_CA_MOUNTPOINT
+              value: "%%SEC_CA_MOUNTPOINT%%"
+            - name: SEC_CERTS_MOUNTPOINT
+              value: "%%SEC_CERTS_MOUNTPOINT%%"
+          volumeMounts:
+            - mountPath: %%ANTPICKAX_ETC_DIR%%
+              name: antpickax-etc-volume
+            - mountPath: %%CONFIGMAP_MOUNTPOINT%%
+              name: configmap-k2hr3
+              readOnly: true
+            - mountPath: %%SEC_CA_MOUNTPOINT%%
+              name: secret-k2hr3-ca
+              readOnly: true
+            - mountPath: %%SEC_CERTS_MOUNTPOINT%%
+              name: secret-k2hr3-certs
+              readOnly: true
+      containers:
+        - name: container-%%K2HR3_APP_NAMEBASE%%
+          image: antpickax/k2hr3-app:latest
+          env:
+            - name: K2HR3_MANUAL_START
+              value: "%%K2HR3_MANUAL_START%%"
+          volumeMounts:
+            - mountPath: %%ANTPICKAX_ETC_DIR%%
+              name: antpickax-etc-volume
+            - mountPath: /var/run/antpickax
+              name: antpickax-var-run-volume
+            - mountPath: %%CONFIGMAP_MOUNTPOINT%%
+              name: configmap-k2hr3
+              readOnly: true
+          command: ["/bin/sh"]
+          args: ["%%CONFIGMAP_MOUNTPOINT%%/k2hr3-app-wrap.sh"]
+

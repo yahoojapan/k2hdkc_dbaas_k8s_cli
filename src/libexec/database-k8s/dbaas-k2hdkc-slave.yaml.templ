@@ -1,0 +1,206 @@
+#
+# K2HDKC DBaaS on Kubernetes Command Line Interface - K2HR3 CLI Plugin
+#
+# Copyright 2021 Yahoo! Japan Corporation.
+#
+# K2HDKC DBaaS is a DataBase as a Service provided by Yahoo! JAPAN
+# which is built K2HR3 as a backend and provides services in
+# cooperation with Kubernetes.
+# The Override configuration for K2HDKC DBaaS serves to connect the
+# components that make up the K2HDKC DBaaS. K2HDKC, K2HR3, CHMPX,
+# and K2HASH are components provided as AntPickax.
+#
+# For the full copyright and license information, please view
+# the license file that was distributed with this source code.
+#
+# AUTHOR:   Takeshi Nakatani
+# CREATE:   Wed Sep 15 2021
+# REVISION:
+#
+
+# The following variables are replaced.
+#   %%...%%
+#   K2HR3_API_URL               K2HR3 REST API server URL            (ex. https://k2hr3api.default.svc.cluster.local:30443/)
+#   K2HDKC_DOMAIN               domain name for kubernetes           (ex. svc.cluster.local)
+#   K2HKDC_CLUSTER_NAME         Cluster name for K2HDKC dbaas        (ex. k2hdkc)
+#   K2HKDC_SLAVE_CTLPORT        Slave control port for K2HDKC dbaas  (ex. 8022)
+#   K2HDKC_SLAVE_COUNT          Slave count for K2HDKC dbaas         (ex. 2)
+#
+#------------------------------------------------------------------------------
+# The following variables are set static or from pod information.
+#
+#   K2HDKC_MODE                 static value "slave"
+#   K2HDKC_NODE_NAME            load from spec.nodeName
+#   K2HDKC_POD_NAME             load from metadata.name
+#   K2HDKC_NAMESPACE            load from metadata.namespace
+#   K2HDKC_POD_IP               load from status.podIP
+#   K2HDKC_POD_SERVICE_ACCOUNT  load from spec.serviceAccountName
+#   K2HDKC_NODE_IP              load from status.hostIP
+#   K2HDKC_POD_ID               load from metadata.uid
+#
+#------------------------------------------------------------------------------
+# Mount static directory, configmap and secret
+#
+#   antpickax-etc-volume                For /etc/antpickax
+#   antpickax-var-lib-volume            For /var/lib/antpickax
+#   antpickax-var-run-volume            For /var/run/antpickax
+#   configmap-<cluster name>            dbaas configmap to /configmap
+#   secret-<cluster name>-certs         secret for all nodes certifications to /secret-certs
+#   secret-<cluster name>-k2hr3-token   secret for k2hr3 role token file to /secret-k2hr3-token
+#
+#------------------------------------------------------------------------------
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: slvsvc-%%K2HKDC_CLUSTER_NAME%%
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: "k2hdkc-slave-ctlport"
+      protocol: "TCP"
+      port: %%K2HKDC_SLAVE_CTLPORT%%
+      targetPort: %%K2HKDC_SLAVE_CTLPORT%%
+  selector:
+    app: %%K2HKDC_CLUSTER_NAME%%
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: slvpod-%%K2HKDC_CLUSTER_NAME%%
+spec:
+  podManagementPolicy: OrderedReady
+  serviceName: slvsvc-%%K2HKDC_CLUSTER_NAME%%
+  replicas: %%K2HDKC_SLAVE_COUNT%%
+  selector:
+    matchLabels:
+      app: %%K2HKDC_CLUSTER_NAME%%
+  template:
+    metadata:
+      labels:
+        app: %%K2HKDC_CLUSTER_NAME%%
+    spec:
+      volumes:
+        - name: antpickax-etc-volume
+          emptyDir:
+            medium: Memory
+        - name: antpickax-var-lib-volume
+          emptyDir:
+            medium: Memory
+        - name: antpickax-var-run-volume
+          emptyDir:
+            medium: Memory
+        - name: configmap-%%K2HKDC_CLUSTER_NAME%%
+          configMap:
+            name: configmap-%%K2HKDC_CLUSTER_NAME%%
+            items:
+              - key: dbaas-k2hdkc-variables-setup.sh
+                path: dbaas-k2hdkc-variables-setup.sh
+              - key: dbaas-k2hdkc-k2hr3-registration.sh
+                path: dbaas-k2hdkc-k2hr3-registration.sh
+              - key: dbaas-k2hdkc-ini-update.sh
+                path: dbaas-k2hdkc-ini-update.sh
+              - key: dbaas-k2hdkc-chmpxproc-wrap.sh
+                path: dbaas-k2hdkc-chmpxproc-wrap.sh
+        - name: secret-%%K2HKDC_CLUSTER_NAME%%-certs
+          secret:
+            secretName: secret-%%K2HKDC_CLUSTER_NAME%%-certs
+        - name: secret-%%K2HKDC_CLUSTER_NAME%%-k2hr3-token
+          secret:
+            secretName: secret-%%K2HKDC_CLUSTER_NAME%%-k2hr3-token
+
+      shareProcessNamespace: true
+
+      initContainers:
+        - name: slvinit-%%K2HKDC_CLUSTER_NAME%%
+          image: alpine:3.13.5
+          env:
+            - name: K2HR3_API_URL
+              value: "%%K2HR3_API_URL%%"
+            - name: K2HDKC_DOMAIN
+              value: "%%K2HDKC_DOMAIN%%"
+            - name: K2HKDC_CLUSTER_NAME
+              value: "%%K2HKDC_CLUSTER_NAME%%"
+            - name: K2HDKC_MODE
+              value: "slave"
+            - name: K2HDKC_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: K2HDKC_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: K2HDKC_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: K2HDKC_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: K2HDKC_POD_SERVICE_ACCOUNT
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.serviceAccountName
+            - name: K2HDKC_NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: K2HDKC_POD_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+
+          volumeMounts:
+            - mountPath: %%ANTPICKAX_ETC_DIR%%
+              name: antpickax-etc-volume
+            - mountPath: %%CONFIGMAP_MOUNTPOINT%%
+              name: configmap-%%K2HKDC_CLUSTER_NAME%%
+              readOnly: true
+            - mountPath: %%SEC_CERTS_MOUNTPOINT%%
+              name: secret-%%K2HKDC_CLUSTER_NAME%%-certs
+              readOnly: true
+            - mountPath: %%SEC_K2HR3_TOKEN_MOUNTPOINT%%
+              name: secret-%%K2HKDC_CLUSTER_NAME%%-k2hr3-token
+              readOnly: true
+          command: ["/bin/sh"]
+          args: ["%%CONFIGMAP_MOUNTPOINT%%/dbaas-k2hdkc-variables-setup.sh"]
+
+      containers:
+        - name: slvupdate-%%K2HKDC_CLUSTER_NAME%%
+          image: alpine:3.13.5
+          volumeMounts:
+            - mountPath: %%ANTPICKAX_ETC_DIR%%
+              name: antpickax-etc-volume
+            - mountPath: %%CONFIGMAP_MOUNTPOINT%%
+              name: configmap-%%K2HKDC_CLUSTER_NAME%%
+              readOnly: true
+          command: ["/bin/sh"]
+          args: ["%%CONFIGMAP_MOUNTPOINT%%/dbaas-k2hdkc-ini-update.sh"]
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "%%CONFIGMAP_MOUNTPOINT%%/dbaas-k2hdkc-k2hr3-registration.sh", "-reg"]
+            preStop:
+              exec:
+                command: ["/bin/sh", "%%CONFIGMAP_MOUNTPOINT%%/dbaas-k2hdkc-k2hr3-registration.sh", "-del"]
+
+        - name: slvchmpx-%%K2HKDC_CLUSTER_NAME%%
+          image: antpickax/chmpx:latest
+          volumeMounts:
+            - mountPath: %%ANTPICKAX_ETC_DIR%%
+              name: antpickax-etc-volume
+            - mountPath: /var/lib/antpickax
+              name: antpickax-var-lib-volume
+            - mountPath: /var/run/antpickax
+              name: antpickax-var-run-volume
+            - mountPath: %%CONFIGMAP_MOUNTPOINT%%
+              name: configmap-%%K2HKDC_CLUSTER_NAME%%
+              readOnly: true
+          command: ["/bin/sh"]
+          args: ["%%CONFIGMAP_MOUNTPOINT%%/dbaas-k2hdkc-chmpxproc-wrap.sh"]
+

@@ -1,0 +1,24 @@
+Source: @PACKAGE_NAME@
+Section: utils
+Priority: optional
+Maintainer: @DEV_NAME@ <@DEV_EMAIL@>
+Build-Depends: @DEBHELPER_DEP@
+Standards-Version: 3.9.8
+Homepage: https://@GIT_DOMAIN@/@GIT_ORG@/@GIT_REPO@
+Vcs-Git: git://@GIT_DOMAIN@/@GIT_ORG@/@GIT_REPO@.git
+Vcs-Browser: https://@GIT_DOMAIN@/@GIT_ORG@/@GIT_REPO@
+
+Package: @PACKAGE_NAME@
+Section: utils
+Architecture: all
+Depends: ${misc:Depends}, k2hr3-cli
+Description: @SHORTDESC@
+ The K2HDKC DBaaS K8S CLI (Command Line Interface of Database
+  as a Service for K2HDKC) is a tool for building a K2HDKC
+  cluster in conjunction with K2HR3.
+  K2HDKC DBaaS K8S can build a dedicated K2HR3 system in a
+  Kubernetes cluster and build a K2HDKC cluster that works
+  with it.
+  With the basic components of Kubernetes system that works
+  with it, you can easily build a K2HDKC cluster on Kubernetes
+  cluster using the K2HDKC DBaaS K8S CLI.

@@ -1,0 +1,430 @@
+TEST CASE : (1) Normal : Certificate - Create CA
+Succeed : Created certificates
+
+TEST CASE : (2) Normal : Certificate - Create K2HDKC
+Succeed : Created certificates
+
+TEST CASE : (3) Normal : Certificate - Create K2HR3 API
+Succeed : Created certificates
+
+TEST CASE : (4) Normal : Certificate - Create K2HR3 APP
+Succeed : Created certificates
+
+TEST CASE : (5) Normal : Certificate - Create ALL
+Succeed : Created certificates
+
+TEST CASE : (6) Normal : Certificate - Set CA
+Succeed : Set certificates for K2HDKC DBaaS K8S
+
+TEST CASE : (7) Normal : Certificate - Set K2HDKC 0
+Succeed : Set certificates for K2HDKC DBaaS K8S
+
+TEST CASE : (8) Normal : Certificate - Set K2HR3 API 1
+Succeed : Set certificates for K2HDKC DBaaS K8S
+
+TEST CASE : (9) Normal : Certificate - Set K2HR3 APP
+Succeed : Set certificates for K2HDKC DBaaS K8S
+
+TEST CASE : (10) Normal : Certificate - Show
+[CA cert]
+ca.crt
+
+[node certs]
+pod-r3api-0.svc-r3api.default.svc.cluster.local.server.crt
+pod-r3api-1.svc-r3api.default.svc.cluster.local.server.crt
+pod-r3app.svc-r3app.default.svc.cluster.local.server.crt
+pod-r3dkc-0.svc-r3dkc.default.svc.cluster.local.server.crt
+pod-r3dkc-1.svc-r3dkc.default.svc.cluster.local.server.crt
+pod-r3api-0.svc-r3api.default.svc.cluster.local.server.key
+pod-r3api-1.svc-r3api.default.svc.cluster.local.server.key
+pod-r3app.svc-r3app.default.svc.cluster.local.server.key
+pod-r3dkc-0.svc-r3dkc.default.svc.cluster.local.server.key
+pod-r3dkc-1.svc-r3dkc.default.svc.cluster.local.server.key
+pod-r3api-0.svc-r3api.default.svc.cluster.local.client.crt
+pod-r3api-1.svc-r3api.default.svc.cluster.local.client.crt
+pod-r3dkc-0.svc-r3dkc.default.svc.cluster.local.client.crt
+pod-r3dkc-1.svc-r3dkc.default.svc.cluster.local.client.crt
+pod-r3api-0.svc-r3api.default.svc.cluster.local.client.key
+pod-r3api-1.svc-r3api.default.svc.cluster.local.client.key
+pod-r3dkc-0.svc-r3dkc.default.svc.cluster.local.client.key
+pod-r3dkc-1.svc-r3dkc.default.svc.cluster.local.client.key
+
+Succeed : Completed listing the certificates for K2HDKC DBaaS K8S
+
+TEST CASE : (11) Normal : Configiration - List
+[K2HDKC DBaaS K8S configuration]
+K2HR3CLI_DBAAS_K8S_R3API_NP_YAML_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/k2hr3-api-nodeport.yaml.templ"
+K2HR3CLI_DBAAS_K8S_R3APP_NP_YAML_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/k2hr3-app-nodeport.yaml.templ"
+K2HR3CLI_DBAAS_K8S_R3API_PROD_JSON_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/k2hr3-api-production.json.templ"
+K2HR3CLI_DBAAS_K8S_R3APP_PROD_JSON_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/k2hr3-app-production.json.templ"
+K2HR3CLI_DBAAS_K8S_R3_KUSTOM_YAML_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/k2hr3-kustomization.yaml.templ"
+K2HR3CLI_DBAAS_K8S_R3DKC_POD_YAML_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/k2hr3-k2hdkc.yaml.templ"
+K2HR3CLI_DBAAS_K8S_R3API_POD_YAML_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/k2hr3-k2hr3api.yaml.templ"
+K2HR3CLI_DBAAS_K8S_R3APP_POD_YAML_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/k2hr3-k2hr3app.yaml.templ"
+K2HR3CLI_DBAAS_K8S_R3_SA_YAML_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/k2hr3-sa.yaml.templ"
+K2HR3CLI_DBAAS_K8S_K2HR3_K2HDKC_INI_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/k2hr3-k2hdkc.ini.templ"
+K2HR3CLI_DBAAS_K8S_K2HDKC_INI_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/dbaas-k2hdkc.ini.templ"
+K2HR3CLI_DBAAS_K8S_K2HDKC_SVR_YAML_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/dbaas-k2hdkc-server.yaml.templ"
+K2HR3CLI_DBAAS_K8S_K2HDKC_SLV_YAML_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/dbaas-k2hdkc-slave.yaml.templ"
+K2HR3CLI_DBAAS_K8S_K2HDKC_KUSTOM_YAML_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/dbaas-k2hdkc-kustomization.yaml.templ"
+K2HR3CLI_DBAAS_K8S_K2HR3_DKC_INIUPDATE_SH_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/k2hr3-k2hdkc-ini-update.sh"
+K2HR3CLI_DBAAS_K8S_K2HR3_API_WRAP_SH_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/k2hr3-api-wrap.sh"
+K2HR3CLI_DBAAS_K8S_K2HR3_APP_WRAP_SH_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/k2hr3-app-wrap.sh"
+K2HR3CLI_DBAAS_K8S_K2HR3_APP_INIT_SH_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/k2hr3-app-init.sh"
+K2HR3CLI_DBAAS_K8S_K2HDKC_CHMPXPROC_SH_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/dbaas-k2hdkc-chmpxproc-wrap.sh"
+K2HR3CLI_DBAAS_K8S_K2HDKC_SVRPROC_SH_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/dbaas-k2hdkc-serverproc-wrap.sh"
+K2HR3CLI_DBAAS_K8S_K2HDKC_INIUPDATE_SH_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/dbaas-k2hdkc-ini-update.sh"
+K2HR3CLI_DBAAS_K8S_K2HDKC_R3_REG_SH_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/dbaas-k2hdkc-k2hr3-registration.sh"
+K2HR3CLI_DBAAS_K8S_K2HDKC_VAR_SETUP_SH_TEMPL="k2hdkc_dbaas_k8s_cli/src/libexec/database-k8s/dbaas-k2hdkc-variables-setup.sh"
+[K2HDKC DBaaS K8S cluster domains]
+default.svc.cluster.local
+Succeed : Completed listing the configuration of K2HDKC DBaaS K8S
+
+TEST CASE : (12) Normal : Configiration - Show
+[K2HDKC DBaaS Kubernetes Configuration]
+Kubernetes Domain: default.svc.cluster.local
+  Namespace:       default
+  Domain:          svc.cluster.local
+
+[Configurations]
+  K2HR3CLI_DBAAS_K8S_R3DKC_NAME=r3dkc
+  K2HR3CLI_DBAAS_K8S_R3API_NAME=r3api
+  K2HR3CLI_DBAAS_K8S_R3APP_NAME=r3app
+  K2HR3CLI_DBAAS_K8S_R3DKC_REPS=2
+  K2HR3CLI_DBAAS_K8S_R3API_REPS=2
+  K2HR3CLI_DBAAS_K8S_R3APP_REPS=2
+  K2HR3CLI_DBAAS_K8S_R3API_EP=192.168.1.254
+  K2HR3CLI_DBAAS_K8S_R3APP_EP=192.168.1.254
+  K2HR3CLI_DBAAS_K8S_R3API_NPNUM=
+  K2HR3CLI_DBAAS_K8S_R3APP_NPNUM=
+  K2HR3CLI_DBAAS_K8S_NODE_IPS=192.168.10.10
+  K2HR3CLI_DBAAS_K8S_CERT_C=JP
+  K2HR3CLI_DBAAS_K8S_CERT_S=Tokyo
+  K2HR3CLI_DBAAS_K8S_CERT_O=AntPickax
+  K2HR3CLI_DBAAS_K8S_CERT_EXPIRE=5
+  K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_SECRET=
+  K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_ID=
+  K2HR3CLI_DBAAS_K8S_OIDC_ISSUER_URL=
+  K2HR3CLI_DBAAS_K8S_OIDC_USERNAME_KEY=
+  K2HR3CLI_DBAAS_K8S_OIDC_COOKIENAME=
+  K2HR3CLI_DBAAS_K8S_OIDC_COOKIE_EXPIRE=
+  K2HR3CLI_DBAAS_K8S_K8S_API_URL="https://kubernetes.default.svc"
+  K2HR3CLI_DBAAS_K8S_K8S_CA_CERT="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+  K2HR3CLI_DBAAS_K8S_K8S_SA_TOKEN="/var/run/secrets/kubernetes.io/serviceaccount/token"
+  K2HR3CLI_DBAAS_K8S_CA_PASS=
+Succeed : Print configuration.
+
+TEST CASE : (13) Normal : K2HR3 - Create
+Created : K2HR3 API/APP NodePorts(Cluster IP).
+Checked : All certificates.
+Created : The prpduction json file for K2HR3 API.
+Created : The prpduction json file for K2HR3 APP.
+Created : The kustomization.yaml for K2HR3 system.
+Created : The yaml files for K2HDKC, K2HR3 API, K2HR3 APP Pods, and ServiceAccount(SA).
+Created : All Pods, configMap, Secret, and ServiceAccount(SA) for K2HR3 system.
+Run : test_socat for proxy K2HR3 APP/API.
+K2HR3 system Information
+
+[K2HDKC DBaaS K8S : K2HR3 APP/API information]
+
+* CA certificate file
+    k2hdkc_dbaas_k8s_cli/test/dbaas-k8s/DBAAS-default.svc.cluster.local/ca.crt
+
+* K2HR3 API URL
+    Pods:       https://pod-r3api-[0-1].svc-r3api.default.svc.cluster.local:443
+    Pods(RR):   https://svc-r3api.default.svc.cluster.local:443
+    Cluster:    https://10.106.251.103:8443
+    Endpoint:   https://192.168.1.254:32043
+
+* K2HR3 APP URL
+    Cluster:    https://10.106.202.254:8443
+    Endpoint:   https://192.168.1.254:32443
+
+Saved : The information for K2HR3 system to the configuration file(k2hr3.config)
+Succeed : Succeed starting the K2HR3 system
+
+TEST CASE : (14) Normal : K2HR3 - Apply
+Created : K2HR3 API/APP NodePorts(Cluster IP).
+Checked : All certificates.
+Created : The prpduction json file for K2HR3 API.
+Created : The prpduction json file for K2HR3 APP.
+Created : The kustomization.yaml for K2HR3 system.
+Created : The yaml files for K2HDKC, K2HR3 API, K2HR3 APP Pods, and ServiceAccount(SA).
+Created : All Pods, configMap, Secret, and ServiceAccount(SA) for K2HR3 system.
+Run : test_socat for proxy K2HR3 APP/API.
+K2HR3 system Information
+
+[K2HDKC DBaaS K8S : K2HR3 APP/API information]
+
+* CA certificate file
+    k2hdkc_dbaas_k8s_cli/test/dbaas-k8s/DBAAS-default.svc.cluster.local/ca.crt
+
+* K2HR3 API URL
+    Pods:       https://pod-r3api-[0-1].svc-r3api.default.svc.cluster.local:443
+    Pods(RR):   https://svc-r3api.default.svc.cluster.local:443
+    Cluster:    https://10.106.251.103:8443
+    Endpoint:   https://192.168.1.254:32043
+
+* K2HR3 APP URL
+    Cluster:    https://10.106.202.254:8443
+    Endpoint:   https://192.168.1.254:32443
+
+Saved : The information for K2HR3 system to the configuration file(k2hr3.config)
+Succeed : Succeed starting the K2HR3 system
+
+TEST CASE : (15) Normal : K2HR3 - Show Summary
+
+[K2HDKC DBaaS K8S : K2HR3 APP/API information]
+
+* CA certificate file
+    k2hdkc_dbaas_k8s_cli/test/dbaas-k8s/DBAAS-default.svc.cluster.local/ca.crt
+
+* K2HR3 API URL
+    Pods:       https://pod-r3api-[0-1].svc-r3api.default.svc.cluster.local:443
+    Pods(RR):   https://svc-r3api.default.svc.cluster.local:443
+    Cluster:    https://10.106.251.103:8443
+    Endpoint:   https://192.168.1.254:32043
+
+* K2HR3 APP URL
+    Cluster:    https://10.106.202.254:8443
+    Endpoint:   https://192.168.1.254:32443
+
+Succeed : Succeed showing K2HR3 system overview.
+
+TEST CASE : (16) Normal : K2HR3 - Show Configuration
+[Directory]
+  Path         : k2hdkc_dbaas_k8s_cli/test/dbaas-k8s/DBAAS-default.svc.cluster.local
+[K2HR3 system]
+  K2HDKC
+    Base name  : r3dkc
+    Replicas   : 2
+    Hostnames  : pod-r3dkc-[0-1].svc-r3dkc.default.svc.cluster.local
+  K2HR3 API
+    Base name  : r3api
+    Replicas   : 2
+    Hostnames  : pod-r3api-[0-1].svc-r3api.default.svc.cluster.local
+    NodePort   : 32043
+    EndPoint   : 192.168.1.254
+  K2HR3 APP
+    Base name  : r3app
+    Replicas   : 2
+    Hostnames  : pod-r3app-<hash value>.svc-r3app.default.svc.cluster.local
+    NodePort   : 32443
+    EndPoint   : 192.168.1.254
+  Node IPs     : 192.168.10.10
+[K2HR3 Certificates]
+  CERT COUNTRY         : JP
+  CERT STATE           : Tokyo
+  CERT ORGANAIZAATION  : AntPickax
+  CERT PERIOD          : 5 years
+  CA CERT              : ca.crt,private/ca.key
+  K2HDKC CERTS         : 
+  K2HR3 API CERTS      : 
+  K2HR3 APP CERTS      : 
+[K2HR3 OIDC]
+  CLIENT SECRET        : DUMMY_OIDC_CLIENT_SECRET
+  CLIENT ID            : DUMMY_OIDC_CLIENT_ID
+  ISSUER URL           : https://DUMMY_OIDC_ISSUER_URL/
+  USERNAME KEY         : DUMMY_OIDC_USERNAME_KEY
+  COOKIE NAME          : DUMMY_OIDC_COOKIENAME
+  COOKIE EXPIRE        : 120
+Succeed : Succeed showing K2HDKC common configuration.
+
+TEST CASE : (17) Normal : K2HR3 - Show kubernetes resources
+-----------------------------------------------------------
+ PODs
+-----------------------------------------------------------
+NAME                       READY   STATUS    RESTARTS  AGE
+pod-r3api-0                2/2     Running   0         1h
+pod-r3api-1                2/2     Running   0         1h
+pod-r3app-bcf8569f-82g6w   1/1     Running   0         1h
+pod-r3app-bcf8569f-kxfq7   1/1     Running   0         1h
+pod-r3dkc-0                2/2     Running   0         1h
+pod-r3dkc-1                2/2     Running   0         1h
+
+-----------------------------------------------------------
+ Services
+-----------------------------------------------------------
+NAME               TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)             AGE
+np-r3api           NodePort    10.106.251.103   <none>        8443:32043/TCP      1h
+np-r3app           NodePort    10.106.202.254   <none>        8443:32443/TCP      1h
+svc-r3api          ClusterIP   None             <none>        8022/TCP            1h
+svc-r3dkc          ClusterIP   None             <none>        8020/TCP,8021/TCP   1h
+
+-----------------------------------------------------------
+ Deployments
+-----------------------------------------------------------
+NAME        READY   UP-TO-DATE   AVAILABLE   AGE
+pod-r3app   2/2     2            2           1h
+
+-----------------------------------------------------------
+ StatefulSets
+-----------------------------------------------------------
+NAME               READY   AGE
+pod-r3api          2/2     1h
+pod-r3dkc          2/2     1h
+
+-----------------------------------------------------------
+ Secrets
+-----------------------------------------------------------
+NAME                           TYPE                                  DATA   AGE
+secret-k2hr3-ca                Opaque                                1      1h
+secret-k2hr3-certs             Opaque                                18     1h
+
+-----------------------------------------------------------
+ ConfigMaps
+-----------------------------------------------------------
+NAME                  DATA   AGE
+configmap-k2hr3       9      1h
+
+-----------------------------------------------------------
+ ServiceAccount
+-----------------------------------------------------------
+NAME       SECRETS   AGE
+sa-r3api   1         1h
+
+Succeed : Succeed showing Kubernets Resources for K2HDKC DBaaS.
+
+TEST CASE : (18) Normal : K2HDKC - Setup
+Created : The configuration template file("k2hdkc_dbaas_k8s_cli/test/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/dbaas-k2hdkc.ini") for "mycluster" K2HDKC Cluster
+Setup : The K2HR3 Resource "mycluster" for "mycluster" K2HDKC cluster.
+Setup : The K2HR3 Resource "mycluster/server" for "mycluster" K2HDKC cluster.
+Setup : The K2HR3 Resource "mycluster/slave" for "mycluster" K2HDKC cluster.
+Setup : The K2HR3 Policy "mycluster" for "mycluster" K2HDKC cluster.
+Setup : The K2HR3 Role "mycluster" for "mycluster" K2HDKC cluster.
+Setup : The K2HR3 Role "mycluster/server" for "mycluster" K2HDKC cluster.
+Setup : The K2HR3 Role "mycluster/slave" for "mycluster" K2HDKC cluster.
+Setup : The Role Token for "mycluster" K2HDKC cluster.
+Saved : The configuration("k2hdkc.config") for "mycluster" K2HDKC cluster.
+Succeed : Succeed initializing K2HR3 role/policy/resource for K2HDKC DBaaS K8S cluster.
+
+TEST CASE : (19) Normal : K2HDKC - Create
+Created : The all certificates for "mycluster" K2HDKC cluster.
+Created : The kustomization file("k2hdkc_dbaas_k8s_cli/test/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/dbaas-kustomization.yaml") for "mycluster" K2HDKC cluster.
+Created : The symbolic file("k2hdkc_dbaas_k8s_cli/test/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/kustomization.yaml") to the kustomization file for "mycluster" K2HDKC cluster.
+Created : The K2HDKC server yaml file("k2hdkc_dbaas_k8s_cli/test/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/dbaas-k2hdkc-server.yaml.") to the kustomization file for "mycluster" K2HDKC cluster.
+Created : The K2HDKC slave yaml file("k2hdkc_dbaas_k8s_cli/test/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/dbaas-k2hdkc-slave.yaml.") to the kustomization file for "mycluster" K2HDKC cluster.
+Created : The configMap and Secrets from kustomization.yaml for "mycluster" K2HDKC cluster.
+Created(Run) : The K2HDKC Servers from "k2hdkc_dbaas_k8s_cli/test/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/dbaas-k2hdkc-server.yaml" for "mycluster" K2HDKC cluster.
+Created(Run) : The K2HDKC Slaves from "k2hdkc_dbaas_k8s_cli/test/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/dbaas-k2hdkc-slave.yaml" for "mycluster" K2HDKC cluster.
+Saved : The configuration("k2hdkc.config") for "mycluster" K2HDKC cluster.
+Succeed : Succeed creating(applying) K2HDKC DBaaS K8S Cluster.
+
+TEST CASE : (20) Normal : K2HDKC - Apply
+Created : The all certificates for "mycluster" K2HDKC cluster.
+Created : The kustomization file("k2hdkc_dbaas_k8s_cli/test/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/dbaas-kustomization.yaml") for "mycluster" K2HDKC cluster.
+Created : The symbolic file("k2hdkc_dbaas_k8s_cli/test/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/kustomization.yaml") to the kustomization file for "mycluster" K2HDKC cluster.
+Created : The K2HDKC server yaml file("k2hdkc_dbaas_k8s_cli/test/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/dbaas-k2hdkc-server.yaml.") to the kustomization file for "mycluster" K2HDKC cluster.
+Created : The K2HDKC slave yaml file("k2hdkc_dbaas_k8s_cli/test/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/dbaas-k2hdkc-slave.yaml.") to the kustomization file for "mycluster" K2HDKC cluster.
+Created : The configMap and Secrets from kustomization.yaml for "mycluster" K2HDKC cluster.
+Created(Run) : The K2HDKC Servers from "k2hdkc_dbaas_k8s_cli/test/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/dbaas-k2hdkc-server.yaml" for "mycluster" K2HDKC cluster.
+Created(Run) : The K2HDKC Slaves from "k2hdkc_dbaas_k8s_cli/test/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/dbaas-k2hdkc-slave.yaml" for "mycluster" K2HDKC cluster.
+Saved : The configuration("k2hdkc.config") for "mycluster" K2HDKC cluster.
+Succeed : Succeed creating(applying) K2HDKC DBaaS K8S Cluster.
+
+TEST CASE : (21) Normal : K2HDKC - Scale
+Created : The kustomization file("k2hdkc_dbaas_k8s_cli/test/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/dbaas-kustomization.yaml") for "mycluster" K2HDKC cluster.
+Created : The symbolic file("k2hdkc_dbaas_k8s_cli/test/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/kustomization.yaml") to the kustomization file for "mycluster" K2HDKC cluster.
+Applied : The configMap and Secrets from kustomization.yaml for "mycluster" K2HDKC cluster.
+Applied : The K2HDKC Servers statefulset("svrpod-mycluster") to set replicas("3")
+Saved : The configuration("k2hdkc.config") for "mycluster" K2HDKC cluster servers.
+Applied : The K2HDKC Slaves statefulset("slvpod-mycluster") to set replicas("3")
+Saved : The configuration("k2hdkc.config") for "mycluster" K2HDKC cluster slaves.
+Succeed : Succeed scaling K2HDKC DBaaS K8S Cluster.
+
+TEST CASE : (22) Normal : K2HDKC - Show Configuration
+
+K2HDKC server port:         8020
+K2HDKC server contorl port: 8021
+K2HDKC slave contorl port:  8022
+K2HDKC server count:        3
+K2HDKC slave count:         3
+
+Succeed : Succeed showing "mycluster" K2HDKC Cluster configuration.
+
+TEST CASE : (23) Normal : K2HDKC - Show Kubernetes Resources
+-----------------------------------------------------------
+ PODs
+-----------------------------------------------------------
+NAME                       READY   STATUS    RESTARTS  AGE
+slvpod-mycluster-0         2/2     Running   0         1h
+slvpod-mycluster-1         2/2     Running   0         1h
+
+-----------------------------------------------------------
+ Services
+-----------------------------------------------------------
+NAME               TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)             AGE
+slvsvc-mycluster   ClusterIP   None             <none>        8022/TCP            1h
+
+-----------------------------------------------------------
+ StatefulSets
+-----------------------------------------------------------
+NAME               READY   AGE
+slvpod-mycluster   2/2     1h
+
+-----------------------------------------------------------
+ Secrets
+-----------------------------------------------------------
+NAME                           TYPE                                  DATA   AGE
+secret-mycluster-certs         Opaque                                17     1h
+secret-mycluster-k2hr3-token   Opaque                                2      1h
+
+-----------------------------------------------------------
+ ConfigMaps
+-----------------------------------------------------------
+NAME                  DATA   AGE
+configmap-mycluster   5      1h
+
+Succeed : Succeed showing Kubernets Resources for "mycluster" K2HDKC Cluster.
+
+TEST CASE : (24) Normal : K2HDKC - Delete Cluster
+Removed : K2HDKC Slave Service(slvsvc-mycluster)
+Removed : K2HDKC Slave StatefulSet(slvpod-mycluster)
+Removed : K2HDKC Slave Pod(slvpod-mycluster-0)
+Removed : K2HDKC Slave Pod(slvpod-mycluster-1)
+Removed : K2HDKC Server Service(svrsvc-mycluster)
+Removed : K2HDKC Server StatefulSet(svrpod-mycluster)
+Removed : K2HDKC Server Pod(svrpod-mycluster-0)
+Removed : K2HDKC Server Pod(svrpod-mycluster-1)
+Removed : K2HDKC DBaaS Secret for certificates(secret-mycluster-certs)
+Removed : K2HDKC DBaaS Secret for Token(secret-mycluster-k2hr3-token)
+Removed : K2HDKC DBaaS Secret for configMap(configmap-mycluster)
+Removed : The certificates for the "mycluster" K2HDKC Cluster.
+Removed : The configuration and related files for the "mycluster" K2HDKC Cluster.
+Removed : The K2HR3 Role "mycluster/server" for "mycluster" K2HDKC cluster.
+Removed : The K2HR3 Role "mycluster/slave" for "mycluster" K2HDKC cluster.
+Removed : The K2HR3 Role "mycluster" for "mycluster" K2HDKC cluster.
+Removed : The K2HR3 Policy "mycluster" for "mycluster" K2HDKC cluster.
+Removed : The K2HR3 Resource "mycluster/server" for "mycluster" K2HDKC cluster.
+Removed : The K2HR3 Resource "mycluster/slave" for "mycluster" K2HDKC cluster.
+Removed : The K2HR3 Resource "mycluster" for "mycluster" K2HDKC cluster.
+Removed : The K2HDKC cluster configuration firectory("k2hdkc_dbaas_k8s_cli/test/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster").
+Succeed : Succeed deleting K2HDKC DBaaS K8S Cluster.
+
+TEST CASE : (25) Normal : K2HR3 - Delete
+Stopped : test_socat for proxy K2HR3 APP/API.
+Stopped : K2HR3 APP NodePort Service(np-r3app)
+Stopped : K2HR3 API NodePort Service(np-r3api)
+Stopped : K2HR3 APP Deployment Service(pod-r3app)
+Stopped : K2HR3 API Service(svc-r3api)
+Stopped : K2HR3 API StatefusSet(pod-r3api)
+Stopped : K2HDKC Service(svc-r3dkc)
+Stopped : K2HDKC StatefusSet(pod-r3dkc)
+Stopped : K2HR3 APP Pod(pod-r3app)
+Stopped : K2HR3 APP Pod(pod-r3app)
+Stopped : K2HR3 API Pod(pod-r3api)
+Stopped : K2HR3 API Pod(pod-r3api)
+Stopped : K2HDKC Pod(pod-r3dkc)
+Stopped : K2HDKC Pod(pod-r3dkc)
+Removed : Secret CA(secret-k2hr3-ca)
+Removed : Secret Certs(secret-k2hr3-certs)
+Removed : configMap(configmap-k2hr3)
+Removed : ServiceAccount for K2HR3 API(sa-r3api)
+Removed : Cluster Rolebinding for K2HR3 API(crb-r3api)
+Removed : Cluster Role for K2HR3 API(cr-r3api)
+Removed : Files related to K2HR3 systems
+Succeed : Succeed deleting the K2HR3 system
+
+TEST CASE : (26) Normal : Check for unhandled processing
+There is no unhandled processing.
+

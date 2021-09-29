@@ -1,0 +1,28 @@
+K2HDKC DBaaS on Kubernetes Command Line Interface
+-------------------------------------------------
+
+K2HDKC DBaaS on Kubernetes Command Line Interface - K2HR3 CLI Plugin
+
+### Overview
+The K2HDKC DBaaS K8S CLI (Command Line Interface of Database as a  
+Service for K2HDKC) is a tool for building a K2HDKC cluster in  
+conjunction with K2HR3.  
+K2HDKC DBaaS K8S can build a dedicated K2HR3 system in a Kubernetes  
+cluster and build a K2HDKC cluster that works with it.  
+With the basic components of Kubernetes system that works with it,  
+you can easily build a K2HDKC cluster on Kubernetes cluster using  
+the K2HDKC DBaaS K8S CLI.  
+
+### Feature
+The K2HDKC DBaaS K8S CLI(Command Line Interface) acts as a one of Plugin for the K2HR3 CLI(Command Line Interface).  
+The K2HDKC DBaaS K8S CLI is included as one command "database-k8s" in the K2HR3 CLI, allowing you to build a K2HDKC cluster.  
+
+### Documents
+- Github Pages - https://dbaas.k2hdkc.antpick.ax/
+- Github Wiki - https://github.com/yahoojapan/k2hdkc_dbaas_k8s_cli/wiki
+- AntPickax - https://antpick.ax/
+
+### License
+This software is released under the MIT License, see the license file.
+
+Copyright(C) 2021 Yahoo Japan Corporation.

@@ -1,0 +1,103 @@
+#
+# K2HDKC DBaaS on Kubernetes Command Line Interface - K2HR3 CLI Plugin
+#
+# Copyright 2021 Yahoo! Japan Corporation.
+#
+# K2HDKC DBaaS is a DataBase as a Service provided by Yahoo! JAPAN
+# which is built K2HR3 as a backend and provides services in
+# cooperation with Kubernetes.
+# The Override configuration for K2HDKC DBaaS serves to connect the
+# components that make up the K2HDKC DBaaS. K2HDKC, K2HR3, CHMPX,
+# and K2HASH are components provided as AntPickax.
+#
+# For the full copyright and license information, please view
+# the license file that was distributed with this source code.
+#
+# AUTHOR:   Takeshi Nakatani
+# CREATE:   Wed Sep 15 2021
+# REVISION:
+#
+
+SUBDIRS = src buildutils test
+
+ACLOCAL_AMFLAGS = -I m4
+
+EXTRA_DIST = RELEASE_VERSION
+
+# [CLEAN]
+# Use clean-local instead of CLEANFILES as it contains subdirectories and so on.
+#
+clean-local: clean-local-files
+
+.PHONY: clean-local-files
+
+clean-local-files:
+	rm -f *.log; \
+	rm -f src/libexec/database-k8s/VERSION; \
+	DEFAULT_GIT_DOMAIN="@GIT_DOMAIN@" DEFAULT_K2HR3_CLI_ORG="@GIT_ORG@" buildutils/setup_k2hr3_cli_component.sh --clean
+
+# [BUILD]
+# Since it is a shell script-only project, there is nothing to build,
+# but we will create a VERSION file.
+# Then, shellcheck checks all the source code.
+#
+build: setup_k2hr3_cli build_version shellcheck
+
+.PHONY: setup_k2hr3_cli build_version shellcheck
+
+# [SETUP]
+# Copy the required files from the K2HR3 CLI.
+#
+setup_k2hr3_cli:
+	@if true; then \
+		echo "*** Copy the required directories/files from the K2HR3 CLI repository."; \
+		DEFAULT_GIT_DOMAIN="@GIT_DOMAIN@" DEFAULT_K2HR3_CLI_ORG="@GIT_ORG@" buildutils/setup_k2hr3_cli_component.sh --k2hr3_cli_repo k2hr3_cli; \
+	fi
+
+# [VERSION]
+# Create a VERSION file in the src/libexec/database-k8s directory.
+#
+build_version:
+	@if true; then \
+		echo "*** Create VERSION file in src/libexec/database-k8s directory"; \
+		RELEASE_VERSION_BASE=`cat RELEASE_VERSION`; \
+		GIT_SHORT_HASH=`git rev-parse --short HEAD 2>/dev/null || echo \"Unknown\"`; \
+		echo "$${RELEASE_VERSION_BASE}($${GIT_SHORT_HASH})" > src/libexec/database-k8s/VERSION 2>&1; \
+		echo "   -> Succeed"; \
+		echo ""; \
+	fi
+
+# [SHELLCHECK]
+#
+SHELLCHECK_CMD = shellcheck
+SHELLCHECK_OPT = --shell=sh
+SHELLCHECK_COMMON_IGN = --exclude=SC1117,SC1090,SC1091,SC2181
+SHELLCHECK_CUSTOM_IGN = --exclude=SC1117,SC1090,SC1091,SC2181,SC2034
+
+shellcheck:
+	@if type shellcheck > /dev/null 2>&1; then \
+		echo "*** Check all files with ShellCheck"; \
+		$(SHELLCHECK_CMD) $(SHELLCHECK_OPT) $(SHELLCHECK_COMMON_IGN) $$(find buildutils -type f -name '*.sh' | grep -v ostypevars.sh) || exit 1; \
+		if [ -f .github/workflows/ostypevars.sh ]; then \
+			$(SHELLCHECK_CMD) $(SHELLCHECK_OPT) $(SHELLCHECK_CUSTOM_IGN) .github/workflows/ostypevars.sh || exit 1; \
+		fi; \
+		$(SHELLCHECK_CMD) $(SHELLCHECK_OPT) $(SHELLCHECK_COMMON_IGN) $$(find src/libexec/database-k8s -type f -name '*.sh' | grep -v constvariables.sh) || exit 1; \
+		if [ -f src/libexec/database-k8s/constvariables.sh ]; then \
+			$(SHELLCHECK_CMD) $(SHELLCHECK_OPT) $(SHELLCHECK_CUSTOM_IGN) src/libexec/database-k8s/constvariables.sh || exit 1; \
+		fi; \
+		$(SHELLCHECK_CMD) $(SHELLCHECK_OPT) $(SHELLCHECK_COMMON_IGN) $$(find test -type f -name '*.sh' | grep -v 'util_test.sh' | grep -v 'util_request.sh') || exit 1; \
+		echo "   -> No error was detected."; \
+		echo ""; \
+	else \
+		echo "ShellCheck is not installed, so skip check by it."; \
+		echo ""; \
+	fi
+
+#
+# Local variables:
+# tab-width: 4
+# c-basic-offset: 4
+# End:
+# vim600: noexpandtab sw=4 ts=4 fdm=marker
+# vim<600: noexpandtab sw=4 ts=4
+#

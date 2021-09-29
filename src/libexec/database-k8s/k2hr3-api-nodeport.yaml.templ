@@ -1,0 +1,44 @@
+#
+# K2HDKC DBaaS on Kubernetes Command Line Interface - K2HR3 CLI Plugin
+#
+# Copyright 2021 Yahoo! Japan Corporation.
+#
+# K2HDKC DBaaS is a DataBase as a Service provided by Yahoo! JAPAN
+# which is built K2HR3 as a backend and provides services in
+# cooperation with Kubernetes.
+# The Override configuration for K2HDKC DBaaS serves to connect the
+# components that make up the K2HDKC DBaaS. K2HDKC, K2HR3, CHMPX,
+# and K2HASH are components provided as AntPickax.
+#
+# For the full copyright and license information, please view
+# the license file that was distributed with this source code.
+#
+# AUTHOR:   Takeshi Nakatani
+# CREATE:   Wed Sep 15 2021
+# REVISION:
+#
+
+# [NOTE]
+# Must replace the following keywords in this file according to
+# your own environment before using this yaml file.
+#
+# %%....................%%
+#   K2HR3_API_NAMEBASE			ex) "r3api"
+#	K2HR3_API_NODEPORT_STR		ex) "      nodePort: 32443" or ""
+#
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: np-%%K2HR3_API_NAMEBASE%%
+spec:
+  type: NodePort
+  ports:
+    - name: "k2hr3-api-port"
+      protocol: "TCP"
+      port: 8443
+      targetPort: 443
+%%K2HR3_API_NODEPORT_STR%%
+  selector:
+    app: %%K2HR3_API_NAMEBASE%%

@@ -1,0 +1,15 @@
+-----------------------------------------------------------
+K2HDKC DBaaS on kubernetes Command Line Interface - VERSION_NUMBER
+
+Copyright 2021 Yahoo! Japan Corporation.
+
+The K2HDKC DBaaS K8S CLI (Command Line Interface of Database as a
+Service for K2HDKC) is a tool for building a K2HDKC cluster in
+conjunction with K2HR3.
+K2HDKC DBaaS K8S can build a dedicated K2HR3 system in a Kubernetes
+cluster and build a K2HDKC cluster that works with it.
+With the basic components of Kubernetes system that works with it,
+you can easily build a K2HDKC cluster on Kubernetes cluster using
+the K2HDKC DBaaS K8S CLI.
+
+This software is released under the MIT License.

@@ -1,0 +1,185 @@
+#
+# K2HDKC DBaaS on Kubernetes Command Line Interface - K2HR3 CLI Plugin
+#
+# Copyright 2021 Yahoo! Japan Corporation.
+#
+# K2HDKC DBaaS is a DataBase as a Service provided by Yahoo! JAPAN
+# which is built K2HR3 as a backend and provides services in
+# cooperation with Kubernetes.
+# The Override configuration for K2HDKC DBaaS serves to connect the
+# components that make up the K2HDKC DBaaS. K2HDKC, K2HR3, CHMPX,
+# and K2HASH are components provided as AntPickax.
+#
+# For the full copyright and license information, please view
+# the license file that was distributed with this source code.
+#
+# AUTHOR:   Takeshi Nakatani
+# CREATE:   Wed Sep 15 2021
+# REVISION:
+#
+
+# [NOTE]
+# Must replace the following keywords in this file according to
+# your own environment before using this yaml file.
+#
+# %%....................%%
+#   CONFIGMAP_MOUNTPOINT        ex) /configmap
+#   SEC_CA_MOUNTPOINT           ex) /secret-ca
+#   SEC_CERTS_MOUNTPOINT        ex) /secret-certs
+#   ANTPICKAX_ETC_DIR           ex) /etc/antpickax
+#   K2HDKC_REPLICAS             ex) 2
+#   K2HDKC_NAMEBASE             ex) r3dkc
+#   K2HR3_API_REPLICAS          ex) 2
+#   K2HR3_API_NAMEBASE          ex) r3api
+#   K2HR3_MANUAL_START          ex) 0
+#
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-%%K2HR3_API_NAMEBASE%%
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: "chmpx-slave-control-port"
+      protocol: "TCP"
+      port: 8022
+      targetPort: 8022
+  selector:
+    app: %%K2HR3_API_NAMEBASE%%
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pod-%%K2HR3_API_NAMEBASE%%
+spec:
+  podManagementPolicy: OrderedReady
+  serviceName: svc-%%K2HR3_API_NAMEBASE%%
+  replicas: %%K2HR3_API_REPLICAS%%
+  selector:
+    matchLabels:
+      app: %%K2HR3_API_NAMEBASE%%
+  template:
+    metadata:
+      labels:
+        app: %%K2HR3_API_NAMEBASE%%
+    spec:
+      serviceAccountName: sa-%%K2HR3_API_NAMEBASE%%
+      volumes:
+        - name: antpickax-etc-volume
+          emptyDir:
+            medium: Memory
+        - name: antpickax-var-lib-volume
+          emptyDir:
+            medium: Memory
+        - name: antpickax-var-run-volume
+          emptyDir:
+            medium: Memory
+        - name: configmap-k2hr3
+          configMap:
+            name: configmap-k2hr3
+            items:
+              - key: dbaas-k2hdkc-chmpxproc-wrap.sh
+                path: dbaas-k2hdkc-chmpxproc-wrap.sh
+              - key: k2hr3-k2hdkc-ini-update.sh
+                path: k2hr3-k2hdkc-ini-update.sh
+              - key: k2hr3-k2hdkc.ini.templ
+                path: k2hr3-k2hdkc.ini.templ
+              - key: k2hr3-api-wrap.sh
+                path: k2hr3-api-wrap.sh
+              - key: k2hr3-api-production.json
+                path: k2hr3-api-production.json
+        - name: secret-k2hr3-ca
+          secret:
+            secretName: secret-k2hr3-ca
+        - name: secret-k2hr3-certs
+          secret:
+            secretName: secret-k2hr3-certs
+      shareProcessNamespace: true
+      initContainers:
+        - name: init-%%K2HR3_API_NAMEBASE%%
+          image: alpine:3.13.5
+          command: ["/bin/sh"]
+          args: ["%%CONFIGMAP_MOUNTPOINT%%/k2hr3-k2hdkc-ini-update.sh"]
+          env:
+            - name: CHMPX_INI_TEMPLATE_FILE
+              value: "%%CONFIGMAP_MOUNTPOINT%%/k2hr3-k2hdkc.ini.templ"
+            - name: CHMPX_INI_DIR
+              value: "%%ANTPICKAX_ETC_DIR%%"
+            - name: CHMPX_MODE
+              value: "SLAVE"
+            - name: CHMPX_SERVER_PORT
+              value: "8020"
+            - name: CHMPX_SERVER_CTLPORT
+              value: "8021"
+            - name: CHMPX_SLAVE_CTLPORT
+              value: "8022"
+            - name: CHMPX_DEFAULT_DOMAIN
+              value: "%%K2HR3_DOMAIN%%"
+            - name: CHMPX_SERVER_COUNT
+              value: "%%K2HDKC_REPLICAS%%"
+            - name: CHMPX_SERVER_NAMEBASE
+              value: "%%K2HDKC_NAMEBASE%%"
+            - name: CHMPX_SLAVE_COUNT
+              value: "%%K2HR3_API_REPLICAS%%"
+            - name: CHMPX_SLAVE_NAMEBASE
+              value: "%%K2HR3_API_NAMEBASE%%"
+            - name: CHMPX_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: CHMPX_SELF_HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: SEC_CA_MOUNTPOINT
+              value: "%%SEC_CA_MOUNTPOINT%%"
+            - name: SEC_CERTS_MOUNTPOINT
+              value: "%%SEC_CERTS_MOUNTPOINT%%"
+          volumeMounts:
+            - mountPath: %%ANTPICKAX_ETC_DIR%%
+              name: antpickax-etc-volume
+            - mountPath: %%CONFIGMAP_MOUNTPOINT%%
+              name: configmap-k2hr3
+              readOnly: true
+            - mountPath: %%SEC_CA_MOUNTPOINT%%
+              name: secret-k2hr3-ca
+              readOnly: true
+            - mountPath: %%SEC_CERTS_MOUNTPOINT%%
+              name: secret-k2hr3-certs
+              readOnly: true
+      containers:
+        - name: container-%%K2HR3_API_NAMEBASE%%
+          image: antpickax/k2hr3-api:latest
+          env:
+            - name: K2HR3_MANUAL_START
+              value: "%%K2HR3_MANUAL_START%%"
+          volumeMounts:
+            - mountPath: %%ANTPICKAX_ETC_DIR%%
+              name: antpickax-etc-volume
+            - mountPath: /var/lib/antpickax
+              name: antpickax-var-lib-volume
+            - mountPath: /var/run/antpickax
+              name: antpickax-var-run-volume
+            - mountPath: %%CONFIGMAP_MOUNTPOINT%%
+              name: configmap-k2hr3
+              readOnly: true
+          command: ["/bin/sh"]
+          args: ["%%CONFIGMAP_MOUNTPOINT%%/k2hr3-api-wrap.sh"]
+        - name: sidecar-%%K2HR3_API_NAMEBASE%%
+          image: antpickax/chmpx:latest
+          volumeMounts:
+            - mountPath: %%ANTPICKAX_ETC_DIR%%
+              name: antpickax-etc-volume
+            - mountPath: /var/lib/antpickax
+              name: antpickax-var-lib-volume
+            - mountPath: /var/run/antpickax
+              name: antpickax-var-run-volume
+            - mountPath: %%CONFIGMAP_MOUNTPOINT%%
+              name: configmap-k2hr3
+          command: ["/bin/sh"]
+          args: ["%%CONFIGMAP_MOUNTPOINT%%/dbaas-k2hdkc-chmpxproc-wrap.sh", "slave"]
+

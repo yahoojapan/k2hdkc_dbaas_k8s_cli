@@ -1,0 +1,93 @@
+/*
+* 
+*  K2HDKC DBaaS on Kubernetes Command Line Interface - K2HR3 CLI Plugin
+* 
+*  Copyright 2021 Yahoo! Japan Corporation.
+* 
+*  K2HDKC DBaaS is a DataBase as a Service provided by Yahoo! JAPAN
+*  which is built K2HR3 as a backend and provides services in
+*  cooperation with Kubernetes.
+*  The Override configuration for K2HDKC DBaaS serves to connect the
+*  components that make up the K2HDKC DBaaS. K2HDKC, K2HR3, CHMPX,
+*  and K2HASH are components provided as AntPickax.
+* 
+*  For the full copyright and license information, please view
+*  the license file that was distributed with this source code.
+* 
+*  AUTHOR:   Takeshi Nakatani
+*  CREATE:   Wed Sep 15 2021
+*  REVISION:
+* 
+*/
+
+// [NOTE]
+// Must replace the following keywords in this file according to
+// your own environment before using this yaml file.
+//
+// %%....................%%
+//	K2HR3_API_EXTERNAL_HOST		ex) 192.168.0.1, r3api.example.com
+//	K2HR3_API_NODE_PORT			ex) 32443
+//	OIDC_ISSUER_URL				ex) https://..../dex
+//	OIDC_CLIENT_ID				ex) xxxxxxxxxxxxxxxxxxxx
+//	OIDC_USERNAME_KEY			ex) allow empty value
+//	K8S_API_URL					ex) https://kubernetes.default.svc
+//	K8S_CA_CERT					ex) /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+//	K8S_SA_TOKEN				ex) /var/run/secrets/kubernetes.io/serviceaccount/token
+//
+
+{
+	'keystone': {
+		'type':			'k8soidc'
+	},
+
+	'k2hdkc': {
+		'config':			'/etc/antpickax/slave.ini',
+		'port':				8022
+	},
+
+	'corsips': [
+		'*'
+	],
+
+	'multiproc':			true,
+	'scheme':				'https',
+	'runuser':				'root',
+	'privatekey':			'/etc/antpickax/server.key',
+	'cert':					'/etc/antpickax/server.crt',
+	'ca':					'/etc/antpickax/ca.crt',
+
+	'userdata': {
+		'baseuri':			'https://%%K2HR3_API_EXTERNAL_HOST%%:%%K2HR3_API_NODE_PORT%%',
+		'cc_templ':			'config/k2hr3-cloud-config.txt.templ',
+		'script_templ':		'config/k2hr3-init.sh.templ',
+		'errscript_templ':	'config/k2hr3-init-error.sh.templ',
+		'algorithm':		'aes-256-cbc',
+		'passphrase':		'k2hr3_regpass'
+	},
+
+	'chkipconfig': {
+		'type':			'NoCheck',
+		'pendingsec':	864000,
+		'intervalms':	4320000,
+		'timeoutms':	5000
+	},
+
+	'k8soidc': {
+		'audience':		'%%OIDC_CLIENT_ID%%',
+		'issuer':		'%%OIDC_ISSUER_URL%%',
+		'jwks_uri':		'%%OIDC_ISSUER_URL%%/keys',
+		'usernamekey':	'%%OIDC_USERNAME_KEY%%',
+		'k8sapi_url':	'%%K8S_API_URL%%',
+		'k8s_ca_path':	'%%K8S_CA_CERT%%',
+		'k8s_sa_token':	'%%K8S_SA_TOKEN%%'
+	}
+}
+
+/*
+* Local variables:
+* tab-width: 4
+* c-basic-offset: 4
+* End:
+* vim600: noexpandtab sw=4 ts=4 fdm=marker
+* vim<600: noexpandtab sw=4 ts=4
+*/

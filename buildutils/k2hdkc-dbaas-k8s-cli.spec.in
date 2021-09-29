@@ -1,0 +1,128 @@
+#
+# K2HDKC DBaaS on Kubernetes Command Line Interface - K2HR3 CLI Plugin
+#
+# Copyright 2021 Yahoo! Japan Corporation.
+#
+# K2HDKC DBaaS is a DataBase as a Service provided by Yahoo! JAPAN
+# which is built K2HR3 as a backend and provides services in
+# cooperation with Kubernetes.
+# The Override configuration for K2HDKC DBaaS serves to connect the
+# components that make up the K2HDKC DBaaS. K2HDKC, K2HR3, CHMPX,
+# and K2HASH are components provided as AntPickax.
+#
+# For the full copyright and license information, please view
+# the license file that was distributed with this source code.
+#
+# AUTHOR:   Takeshi Nakatani
+# CREATE:   Wed Sep 15 2021
+# REVISION:
+#
+
+#
+# Local macros/define
+#
+%if %{undefined package_revision}
+%global package_revision 1
+%endif
+
+%if %{undefined make_build}
+%global make_build %{__make} %{?_smp_mflags}
+%endif
+
+%if %{undefined autosetup}
+%global autosetup %setup -q
+%endif
+
+%global gittag v@VERSION@
+
+%if %{undefined make_check}
+%global make_check 1
+%endif
+
+#
+# main package
+#
+Summary: @SHORTDESC@
+Name: @PACKAGE_NAME@
+Version: @VERSION@
+Release: %{package_revision}%{?dist}
+License: @PKGLICENSE@
+@RPMPKG_GROUP@
+URL: https://@GIT_DOMAIN@/@GIT_ORG@/@PACKAGE_NAME@
+Source0: https://@GIT_DOMAIN@/@GIT_ORG@/@PACKAGE_NAME@/archive/%{gittag}/%{name}-%{version}.tar.gz
+Requires: k2hr3-cli
+BuildRequires: git-core make
+BuildArch: noarch
+
+%description
+The K2HDKC DBaaS K8S CLI (Command Line Interface of Database
+as a Service for K2HDKC) is a tool for building a K2HDKC
+cluster in conjunction with K2HR3.
+K2HDKC DBaaS K8S can build a dedicated K2HR3 system in a
+Kubernetes cluster and build a K2HDKC cluster that works
+with it.
+With the basic components of Kubernetes system that works
+with it, you can easily build a K2HDKC cluster on Kubernetes
+cluster using the K2HDKC DBaaS K8S CLI.
+
+%prep
+%autosetup -n %{name}-%{version}
+
+%build
+./autogen.sh
+%configure --disable-static @CONFIGUREWITHOPT@
+make build
+
+%install
+%make_install
+install -D -m 444 src/libexec/database-k8s/CREDIT                                %{buildroot}/usr/libexec/k2hr3/database-k8s/CREDIT
+install -D -m 444 src/libexec/database-k8s/VERSION                               %{buildroot}/usr/libexec/k2hr3/database-k8s/VERSION
+install -D -m 444 src/libexec/database-k8s/certification.sh                      %{buildroot}/usr/libexec/k2hr3/database-k8s/certification.sh
+install -D -m 444 src/libexec/database-k8s/command.sh                            %{buildroot}/usr/libexec/k2hr3/database-k8s/command.sh
+install -D -m 444 src/libexec/database-k8s/functions.sh                          %{buildroot}/usr/libexec/k2hr3/database-k8s/functions.sh
+install -D -m 444 src/libexec/database-k8s/help.sh                               %{buildroot}/usr/libexec/k2hr3/database-k8s/help.sh
+install -D -m 444 src/libexec/database-k8s/options.sh                            %{buildroot}/usr/libexec/k2hr3/database-k8s/options.sh
+install -D -m 444 src/libexec/database-k8s/summary.sh                            %{buildroot}/usr/libexec/k2hr3/database-k8s/summary.sh
+install -D -m 444 src/libexec/database-k8s/variables.sh                          %{buildroot}/usr/libexec/k2hr3/database-k8s/variables.sh
+install -D -m 444 src/libexec/database-k8s/k8sapi.sh                             %{buildroot}/usr/libexec/k2hr3/database-k8s/k8sapi.sh
+install -D -m 444 src/libexec/database-k8s/configuration.sh                      %{buildroot}/usr/libexec/k2hr3/database-k8s/configuration.sh
+install -D -m 444 src/libexec/database-k8s/constvariables.sh                     %{buildroot}/usr/libexec/k2hr3/database-k8s/constvariables.sh
+install -D -m 444 src/libexec/database-k8s/dbaas-k8s.config                      %{buildroot}/usr/libexec/k2hr3/database-k8s/dbaas-k8s.config
+install -D -m 444 src/libexec/database-k8s/k2hdkc.config                         %{buildroot}/usr/libexec/k2hr3/database-k8s/k2hdkc.config
+install -D -m 444 src/libexec/database-k8s/k2hr3.config                          %{buildroot}/usr/libexec/k2hr3/database-k8s/k2hr3.config
+install -D -m 444 src/libexec/database-k8s/dbaas-k2hdkc-chmpxproc-wrap.sh        %{buildroot}/usr/libexec/k2hr3/database-k8s/dbaas-k2hdkc-chmpxproc-wrap.sh
+install -D -m 444 src/libexec/database-k8s/dbaas-k2hdkc.ini.templ                %{buildroot}/usr/libexec/k2hr3/database-k8s/dbaas-k2hdkc.ini.templ
+install -D -m 444 src/libexec/database-k8s/dbaas-k2hdkc-ini-update.sh            %{buildroot}/usr/libexec/k2hr3/database-k8s/dbaas-k2hdkc-ini-update.sh
+install -D -m 444 src/libexec/database-k8s/dbaas-k2hdkc-k2hr3-registration.sh    %{buildroot}/usr/libexec/k2hr3/database-k8s/dbaas-k2hdkc-k2hr3-registration.sh
+install -D -m 444 src/libexec/database-k8s/dbaas-k2hdkc-kustomization.yaml.templ %{buildroot}/usr/libexec/k2hr3/database-k8s/dbaas-k2hdkc-kustomization.yaml.templ
+install -D -m 444 src/libexec/database-k8s/dbaas-k2hdkc-serverproc-wrap.sh       %{buildroot}/usr/libexec/k2hr3/database-k8s/dbaas-k2hdkc-serverproc-wrap.sh
+install -D -m 444 src/libexec/database-k8s/dbaas-k2hdkc-server.yaml.templ        %{buildroot}/usr/libexec/k2hr3/database-k8s/dbaas-k2hdkc-server.yaml.templ
+install -D -m 444 src/libexec/database-k8s/dbaas-k2hdkc-slave.yaml.templ         %{buildroot}/usr/libexec/k2hr3/database-k8s/dbaas-k2hdkc-slave.yaml.templ
+install -D -m 444 src/libexec/database-k8s/dbaas-k2hdkc-variables-setup.sh       %{buildroot}/usr/libexec/k2hr3/database-k8s/dbaas-k2hdkc-variables-setup.sh
+install -D -m 444 src/libexec/database-k8s/k2hr3-sa.yaml.templ                   %{buildroot}/usr/libexec/k2hr3/database-k8s/k2hr3-sa.yaml.templ
+install -D -m 444 src/libexec/database-k8s/k2hr3-kustomization.yaml.templ        %{buildroot}/usr/libexec/k2hr3/database-k8s/k2hr3-kustomization.yaml.templ
+install -D -m 444 src/libexec/database-k8s/k2hr3-k2hr3api.yaml.templ             %{buildroot}/usr/libexec/k2hr3/database-k8s/k2hr3-k2hr3api.yaml.templ
+install -D -m 444 src/libexec/database-k8s/k2hr3-k2hr3app.yaml.templ             %{buildroot}/usr/libexec/k2hr3/database-k8s/k2hr3-k2hr3app.yaml.templ
+install -D -m 444 src/libexec/database-k8s/k2hr3-k2hdkc.yaml.templ               %{buildroot}/usr/libexec/k2hr3/database-k8s/k2hr3-k2hdkc.yaml.templ
+install -D -m 444 src/libexec/database-k8s/k2hr3-k2hdkc.ini.templ                %{buildroot}/usr/libexec/k2hr3/database-k8s/k2hr3-k2hdkc.ini.templ
+install -D -m 444 src/libexec/database-k8s/k2hr3-k2hdkc-ini-update.sh            %{buildroot}/usr/libexec/k2hr3/database-k8s/k2hr3-k2hdkc-ini-update.sh
+install -D -m 444 src/libexec/database-k8s/k2hr3-api-nodeport.yaml.templ         %{buildroot}/usr/libexec/k2hr3/database-k8s/k2hr3-api-nodeport.yaml.templ
+install -D -m 444 src/libexec/database-k8s/k2hr3-api-production.json.templ       %{buildroot}/usr/libexec/k2hr3/database-k8s/k2hr3-api-production.json.templ
+install -D -m 444 src/libexec/database-k8s/k2hr3-api-wrap.sh                     %{buildroot}/usr/libexec/k2hr3/database-k8s/k2hr3-api-wrap.sh
+install -D -m 444 src/libexec/database-k8s/k2hr3-app-nodeport.yaml.templ         %{buildroot}/usr/libexec/k2hr3/database-k8s/k2hr3-app-nodeport.yaml.templ
+install -D -m 444 src/libexec/database-k8s/k2hr3-app-production.json.templ       %{buildroot}/usr/libexec/k2hr3/database-k8s/k2hr3-app-production.json.templ
+install -D -m 444 src/libexec/database-k8s/k2hr3-app-wrap.sh                     %{buildroot}/usr/libexec/k2hr3/database-k8s/k2hr3-app-wrap.sh
+install -D -m 444 src/libexec/database-k8s/k2hr3-app-init.sh                     %{buildroot}/usr/libexec/k2hr3/database-k8s/k2hr3-app-init.sh
+
+%if %{make_check}
+%check
+%{__make} check
+%endif
+
+%files
+%license COPYING
+%doc README AUTHORS ChangeLog
+/usr/libexec/k2hr3/database-k8s/*
+
+%changelog
+@RPMCHANGELOG@
