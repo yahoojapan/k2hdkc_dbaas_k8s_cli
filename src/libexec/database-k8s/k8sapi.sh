@@ -1470,16 +1470,15 @@ get_k2hdkc_role_tokens()
 	#
 	# Server Role Token
 	#
+	# shellcheck disable=SC2153
 	_DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT=$(									\
-		K2HR3CLI_API_URI="${K2HR3CLI_API_URI}"								\
 		K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
 		K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
 		K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
 		K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-		K2HR3CLI_SCOPED_TOKEN="${K2HR3CLI_SCOPED_TOKEN}"					\
 		K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
 		K2HR3CLI_OPT_INTERACTIVE=0											\
-		"${K2HR3CLIBIN}" role token create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server" --expire "0")
+		"${K2HR3CLIBIN}" role token create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server" --expire "0" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}")
 
 	if [ $? -ne 0 ] || [ -z "${_DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT}" ]; then
 		prn_err "Failed getting the K2HR3 Role Token for \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server\" for K2HDKC cluster."
@@ -1510,15 +1509,13 @@ get_k2hdkc_role_tokens()
 	# Slave Role Token
 	#
 	_DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT=$(									\
-		K2HR3CLI_API_URI="${K2HR3CLI_API_URI}"								\
 		K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
 		K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
 		K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
 		K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-		K2HR3CLI_SCOPED_TOKEN="${K2HR3CLI_SCOPED_TOKEN}"					\
 		K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
 		K2HR3CLI_OPT_INTERACTIVE=0											\
-		"${K2HR3CLIBIN}" role token create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave" --expire "0")
+		"${K2HR3CLIBIN}" role token create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave" --expire "0" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}")
 
 	if [ $? -ne 0 ] || [ -z "${_DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT}" ]; then
 		prn_err "Failed getting K2HR3 Role Token for \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave\" for K2HDKC cluster."
@@ -1670,15 +1667,13 @@ setup_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3
 	#
-	K2HR3CLI_API_URI="${K2HR3CLI_API_URI}"								\
 	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
 	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
 	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
 	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN="${K2HR3CLI_SCOPED_TOKEN}"					\
 	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
 	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" resource create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" -type string --datafile "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_INI_FILE}" --keys "${_DBAAS_K8S_TMP_K2HDKC_RES_MAIN_KEYS}" > /dev/null
+	"${K2HR3CLIBIN}" resource create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" -type string --datafile "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_INI_FILE}" --keys "${_DBAAS_K8S_TMP_K2HDKC_RES_MAIN_KEYS}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" > /dev/null
 
 	if [ $? -ne 0 ]; then
 		prn_err "Failed setup K2HR3 Resource \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\" for K2HDKC cluster."
@@ -1702,15 +1697,13 @@ setup_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3 for server resource
 	#
-	K2HR3CLI_API_URI="${K2HR3CLI_API_URI}"								\
 	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
 	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
 	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
 	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN="${K2HR3CLI_SCOPED_TOKEN}"					\
 	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
 	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" resource create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server" --keys "${_DBAAS_K8S_TMP_K2HDKC_RES_SERVER_KEYS}" > /dev/null
+	"${K2HR3CLIBIN}" resource create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server" --keys "${_DBAAS_K8S_TMP_K2HDKC_RES_SERVER_KEYS}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" > /dev/null
 
 	if [ $? -ne 0 ]; then
 		prn_err "Failed setup K2HR3 Resource \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server\" for K2HDKC cluster."
@@ -1721,15 +1714,13 @@ setup_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3 for slave resource
 	#
-	K2HR3CLI_API_URI="${K2HR3CLI_API_URI}"								\
 	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
 	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
 	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
 	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN="${K2HR3CLI_SCOPED_TOKEN}"					\
 	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
 	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" resource create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave" --keys "${_DBAAS_K8S_TMP_K2HDKC_RES_SLAVE_KEYS}" > /dev/null
+	"${K2HR3CLIBIN}" resource create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave" --keys "${_DBAAS_K8S_TMP_K2HDKC_RES_SLAVE_KEYS}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" > /dev/null
 
 	if [ $? -ne 0 ]; then
 		prn_err "Failed setup K2HR3 Resource \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave\" for K2HDKC cluster."
@@ -1748,15 +1739,13 @@ setup_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3
 	#
-	K2HR3CLI_API_URI="${K2HR3CLI_API_URI}"								\
 	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
 	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
 	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
 	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN="${K2HR3CLI_SCOPED_TOKEN}"					\
 	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
 	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" policy create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --effect 'allow' --action 'yrn:yahoo::::action:read' --resource "${_DBAAS_K8S_TMP_K2HDKC_POL_RESVAL}" >/dev/null
+	"${K2HR3CLIBIN}" policy create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --effect 'allow' --action 'yrn:yahoo::::action:read' --resource "${_DBAAS_K8S_TMP_K2HDKC_POL_RESVAL}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null
 
 	if [ $? -ne 0 ]; then
 		prn_err "Failed setup K2HR3 Policy \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\" for K2HDKC cluster."
@@ -1775,15 +1764,13 @@ setup_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3
 	#
-	K2HR3CLI_API_URI="${K2HR3CLI_API_URI}"								\
 	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
 	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
 	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
 	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN="${K2HR3CLI_SCOPED_TOKEN}"					\
 	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
 	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" role create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --policies "${_DBAAS_K8S_TMP_K2HDKC_ROLE_POLVAL}" >/dev/null
+	"${K2HR3CLIBIN}" role create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --policies "${_DBAAS_K8S_TMP_K2HDKC_ROLE_POLVAL}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null
 
 	if [ $? -ne 0 ]; then
 		prn_err "Failed setup K2HR3 Role \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\" for K2HDKC cluster."
@@ -1797,15 +1784,13 @@ setup_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3 for server role
 	#
-	K2HR3CLI_API_URI="${K2HR3CLI_API_URI}"								\
 	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
 	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
 	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
 	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN="${K2HR3CLI_SCOPED_TOKEN}"					\
 	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
 	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" role create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server" >/dev/null
+	"${K2HR3CLIBIN}" role create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null
 
 	if [ $? -ne 0 ]; then
 		prn_err "Failed setup K2HR3 Role \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server\" for K2HDKC cluster."
@@ -1816,15 +1801,13 @@ setup_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3 for slave role
 	#
-	K2HR3CLI_API_URI="${K2HR3CLI_API_URI}"								\
 	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
 	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
 	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
 	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN="${K2HR3CLI_SCOPED_TOKEN}"					\
 	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
 	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" role create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave" >/dev/null
+	"${K2HR3CLIBIN}" role create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null
 
 	if [ $? -ne 0 ]; then
 		prn_err "Failed setup K2HR3 Role \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave\" for K2HDKC cluster."
@@ -2786,15 +2769,13 @@ delete_k2hdkc_k2hr3_data()
 	#-----------------------------------------------------------
 	# (1) Delete ROLE(server/slave) to K2HR3
 	#-----------------------------------------------------------
-	K2HR3CLI_API_URI="${K2HR3CLI_API_URI}"								\
 	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
 	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
 	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
 	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN="${K2HR3CLI_SCOPED_TOKEN}"					\
 	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
 	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" role delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server" >/dev/null
+	"${K2HR3CLIBIN}" role delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null
 
 	if [ $? -ne 0 ]; then
 		prn_err "Failed removed K2HDKC Role \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server\" for K2HDKC cluster."
@@ -2805,15 +2786,13 @@ delete_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3 for slave role
 	#
-	K2HR3CLI_API_URI="${K2HR3CLI_API_URI}"								\
 	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
 	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
 	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
 	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN="${K2HR3CLI_SCOPED_TOKEN}"					\
 	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
 	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" role delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave" >/dev/null
+	"${K2HR3CLIBIN}" role delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null
 
 	if [ $? -ne 0 ]; then
 		prn_err "Failed removed K2HR3 Role \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave\" for K2HDKC cluster."
@@ -2829,15 +2808,13 @@ delete_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3
 	#
-	K2HR3CLI_API_URI="${K2HR3CLI_API_URI}"								\
 	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
 	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
 	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
 	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN="${K2HR3CLI_SCOPED_TOKEN}"					\
 	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
 	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" role delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" >/dev/null
+	"${K2HR3CLIBIN}" role delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null
 
 	if [ $? -ne 0 ]; then
 		prn_err "Failed removed K2HR3 Role \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\" for K2HDKC cluster."
@@ -2853,15 +2830,13 @@ delete_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3
 	#
-	K2HR3CLI_API_URI="${K2HR3CLI_API_URI}"								\
 	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
 	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
 	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
 	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN="${K2HR3CLI_SCOPED_TOKEN}"					\
 	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
 	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" policy delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" >/dev/null
+	"${K2HR3CLIBIN}" policy delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null
 
 	if [ $? -ne 0 ]; then
 		prn_err "Failed removed K2HR3 Policy \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\" for K2HDKC cluster."
@@ -2872,15 +2847,13 @@ delete_k2hdkc_k2hr3_data()
 	#-----------------------------------------------------------
 	# (4) Delete RESOURCE(server/slave) to K2HR3
 	#-----------------------------------------------------------
-	K2HR3CLI_API_URI="${K2HR3CLI_API_URI}"								\
 	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
 	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
 	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
 	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN="${K2HR3CLI_SCOPED_TOKEN}"					\
 	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
 	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" resource delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server" > /dev/null
+	"${K2HR3CLIBIN}" resource delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" > /dev/null
 
 	if [ $? -ne 0 ]; then
 		prn_err "Failed removed K2HR3 Resource \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server\" for K2HDKC cluster."
@@ -2891,15 +2864,13 @@ delete_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3 for slave resource
 	#
-	K2HR3CLI_API_URI="${K2HR3CLI_API_URI}"								\
 	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
 	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
 	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
 	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN="${K2HR3CLI_SCOPED_TOKEN}"					\
 	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
 	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" resource delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave" > /dev/null
+	"${K2HR3CLIBIN}" resource delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" > /dev/null
 
 	if [ $? -ne 0 ]; then
 		prn_err "Failed removed K2HR3 Resource \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave\" for K2HDKC cluster."
@@ -2911,15 +2882,13 @@ delete_k2hdkc_k2hr3_data()
 	#-----------------------------------------------------------
 	# (5) Delete RESOURCE(main) to K2HR3
 	#-----------------------------------------------------------
-	K2HR3CLI_API_URI="${K2HR3CLI_API_URI}"								\
 	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
 	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
 	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
 	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN="${K2HR3CLI_SCOPED_TOKEN}"					\
 	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
 	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" resource delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" > /dev/null
+	"${K2HR3CLIBIN}" resource delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" > /dev/null
 
 	if [ $? -ne 0 ]; then
 		prn_err "Failed removed K2HR3 Resource \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\" for K2HDKC cluster."
