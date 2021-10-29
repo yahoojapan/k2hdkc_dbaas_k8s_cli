@@ -1,3 +1,9 @@
+k2hdkc-dbaas-k8s-cli (1.0.2) trusty; urgency=low
+
+  * Removed k8soidc:jwks_uri key in k2hr3-api-production.json.templ - #3
+
+ -- Takeshi Nakatani <ggtakec@gmail.com>  Fri, 29 Oct 2021 14:11:44 +0900
+
 k2hdkc-dbaas-k8s-cli (1.0.1) trusty; urgency=low
 
   * Changed passing by value to subprocess from env to option - #1
