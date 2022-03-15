@@ -64,7 +64,7 @@ jobs:
           - ubuntu:16.04
           - debian:buster
           - debian:stretch
-          - centos:centos8
+          - rockylinux:8
           - centos:centos7
           - fedora:32
           - fedora:31

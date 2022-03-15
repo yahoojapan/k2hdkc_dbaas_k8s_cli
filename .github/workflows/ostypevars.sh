@@ -134,7 +134,7 @@ elif [ "X${CI_OSTYPE}" = "Xdebian:9" ] || [ "X${CI_OSTYPE}" = "Xdebian:stretch" 
 	PKG_EXT="deb"
 	IS_OS_DEBIAN=1
 
-elif [ "X${CI_OSTYPE}" = "Xcentos:8" ] || [ "X${CI_OSTYPE}" = "Xcentos:centos8" ]; then
+elif [ "X${CI_OSTYPE}" = "Xcentos:8" ] || [ "X${CI_OSTYPE}" = "Xcentos:centos8" ] || [ "X${CI_OSTYPE}" = "Xrockylinux:8" ]; then
 	DIST_TAG="el/8"
 	INSTALL_PKG_LIST="git autoconf automake gcc-c++ make pkgconfig redhat-rpm-config rpm-build ruby-devel rubygems procps"
 	CONFIGURE_EXT_OPT=""
