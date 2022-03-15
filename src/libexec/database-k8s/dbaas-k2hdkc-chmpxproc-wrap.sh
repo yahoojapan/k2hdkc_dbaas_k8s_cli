@@ -27,6 +27,7 @@
 #SCRIPTDIR=$(cd "${SRCTOP}" || exit 1; pwd)
 
 ANTPICKAX_ETC_DIR="/etc/antpickax"
+K2HR3_FILE_RESOURCE="k2hr3-resource"
 
 RETRYCOUNT=30
 SLEEP_SHORT=10
@@ -36,10 +37,6 @@ SLEEP_SHORT=10
 #----------------------------------------------------------
 K2HR3_YRN_RESOURCE=$(tr -d '\n' < "${ANTPICKAX_ETC_DIR}/${K2HR3_FILE_RESOURCE}" 2>/dev/null)
 CHMPX_MODE=$(echo "${K2HR3_YRN_RESOURCE}" | sed 's#[:/]# #g' | awk '{print $NF}')
-INI_FILE="${CHMPX_MODE}.ini"
-INI_FILE_PATH="${ANTPICKAX_ETC_DIR}/${INI_FILE}"
-
-K2HR3_FILE_RESOURCE="k2hr3-resource"
 
 if [ -f "${ANTPICKAX_ETC_DIR}/${K2HR3_FILE_RESOURCE}" ]; then
 	K2HR3_YRN_RESOURCE=$(tr -d '\n' < "${ANTPICKAX_ETC_DIR}/${K2HR3_FILE_RESOURCE}" 2>/dev/null)
