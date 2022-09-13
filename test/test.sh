@@ -80,7 +80,7 @@ TEST_FILES=""
 for _TEST_FILE_TMP in "${TESTDIR}"/*; do
 	_TEST_FILE_TMP=$(pecho -n "${_TEST_FILE_TMP}" | sed "s#^${TESTDIR}/##g")
 	case ${_TEST_FILE_TMP} in
-		${TESTMAINBIN})
+		"${TESTMAINBIN}")
 			;;
 		test_*.sh)
 			if [ "X${TEST_FILES}" = "X" ]; then

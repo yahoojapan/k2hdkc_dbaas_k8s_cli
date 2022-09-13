@@ -163,7 +163,7 @@ if [ ${REGISTER_MODE} -eq 1 ]; then
 	#
 	# Registration
 	#
-	${CURL_COMMAND} -s -S ${K2HR3_CA_CERT_OPTION} ${K2HR3_CA_CERT_OPTION_VALUE} -X PUT -H "x-auth-token: R=${K2HDKC_ROLE_TOKEN}" "${K2HR3_REGISTER_URL}/${K2HR3_ROLE}?${K2HR3_APIARG}"
+	"${CURL_COMMAND}" -s -S "${K2HR3_CA_CERT_OPTION}" "${K2HR3_CA_CERT_OPTION_VALUE}" -X PUT -H "x-auth-token: R=${K2HDKC_ROLE_TOKEN}" "${K2HR3_REGISTER_URL}/${K2HR3_ROLE}?${K2HR3_APIARG}"
 	if [ $? -ne 0 ]; then
 		echo "[ERROR] ${PRGNAME} : Failed registration to role member." 1>&2
 		exit 1
@@ -174,7 +174,7 @@ else
 	#
 	# The Pod(Container) has been registered, so we can access K2HR3 without token to delete it.
 	#
-	${CURL_COMMAND} -s -S ${K2HR3_CA_CERT_OPTION} ${K2HR3_CA_CERT_OPTION_VALUE} -X DELETE "${K2HR3_REGISTER_URL}/${K2HR3_ROLE}?${K2HR3_APIARG}"
+	"${CURL_COMMAND}" -s -S "${K2HR3_CA_CERT_OPTION}" "${K2HR3_CA_CERT_OPTION_VALUE}" -X DELETE "${K2HR3_REGISTER_URL}/${K2HR3_ROLE}?${K2HR3_APIARG}"
 	if [ $? -ne 0 ]; then
 		echo "[ERROR] ${PRGNAME} : Failed deletion from role member." 1>&2
 		exit 1

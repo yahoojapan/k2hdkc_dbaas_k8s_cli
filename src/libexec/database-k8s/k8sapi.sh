@@ -154,12 +154,8 @@ create_k8s_one_nodeport()
 	if [ -z "${_DBAAS_K8S_TMP_NODEPORT_PORT}" ]; then
 		# for debug message
 		_DBAAS_K8S_DBG_NODEPORT_PORT="auto"
-
-		_DBAAS_K8S_DBG_NODEPORT_PORT=""
 	else
 		# for debug message
-		_DBAAS_K8S_TMP_NODEPORT_PORT=${_DBAAS_K8S_TMP_NODEPORT_PORT}
-
 		_DBAAS_K8S_TMP_NODEPORT_PORT="      nodePort: ${_DBAAS_K8S_TMP_NODEPORT_PORT}"
 	fi
 
@@ -242,6 +238,7 @@ create_k8s_k2hr3_nodeports()
 			return 1
 		fi
 
+		# shellcheck disable=SC2153
 		create_k8s_one_nodeport "${K2HR3CLI_DBAAS_K8S_R3APP_NP_YAML_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_APP_NP_YAML_FILE}" "${K2HR3CLI_DBAAS_K8S_R3APP_NAME}" "${K2HR3CLI_DBAAS_K8S_R3APP_NPNUM}" "1"
 		if [ $? -ne 0 ]; then
 			prn_err "Could not get K2HR3 APP NodePort yaml template from configuration."
@@ -445,6 +442,7 @@ create_k2hr3_kustomization_yaml_file()
 		#
 		# for k2hr3 api
 		#
+		# shellcheck disable=SC2153
 		for _api_num in $(seq "${K2HR3CLI_DBAAS_K8S_R3API_REPS}"); do
 			if [ ${_DBAAS_K8S_TMP_IS_OUTPUT_FILE_KEY} -eq 0 ]; then
 				_DBAAS_K8S_TMP_IS_OUTPUT_FILE_KEY=1
@@ -723,6 +721,7 @@ run_socat_on_minikube()
 	#
 	# Run socat for K2HR3 APP
 	#
+	# shellcheck disable=SC2153
 	"${SOCAT_BIN}" "TCP-LISTEN:${_DBAAS_K8S_TMP_R3APP_NODEPORT_PORTNUM},fork" "TCP:${K2HR3CLI_DBAAS_K8S_R3APP_EP}:${_DBAAS_K8S_TMP_R3APP_NODEPORT_PORTNUM}" >/dev/null 2>&1 &
 	if [ $? -ne 0 ]; then
 		prn_err "Failed to run ${SOCAT_BIN} for K2HR3 APP."

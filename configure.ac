@@ -34,13 +34,38 @@ AC_PROG_LN_S
 AC_PROG_MAKE_SET
 
 #
+# Load customizable variables
+#
+AC_CHECK_FILE([configure.custom],
+	[
+		configure_custom_file="configure.custom"
+		custom_git_domain="$(grep '^\s*GIT_DOMAIN\s*=' configure.custom | sed -e 's|^\s*GIT_DOMAIN\s*=\s*||g' -e 's|^\s*||g' -e 's|\s*$||g')"
+		custom_git_org="$(grep '^\s*GIT_ORG\s*=' configure.custom | sed -e 's|^\s*GIT_ORG\s*=\s*||g' -e 's|^\s*||g' -e 's|\s*$||g')"
+		custom_git_repo="$(grep '^\s*GIT_REPO\s*=' configure.custom | sed -e 's|^\s*GIT_REPO\s*=\s*||g' -e 's|^\s*||g' -e 's|\s*$||g')"
+		custom_git_endpoint="$(grep '^\s*GIT_EP_V3_REPO\s*=' configure.custom | sed -e 's|^\s*GIT_EP_V3_REPO\s*=\s*||g' -e 's|^\s*||g' -e 's|\s*$||g')"
+		custom_dev_email="$(grep '^\s*DEV_EMAIL\s*=' configure.custom | sed -e 's|^\s*DEV_EMAIL\s*=\s*||g' -e 's|^\s*||g' -e 's|\s*$||g')"
+		custom_dev_name="$(grep '^\s*DEB_NAME\s*=' configure.custom | sed -e 's|^\s*DEB_NAME\s*=\s*||g' -e 's|^\s*||g' -e 's|\s*$||g')"
+	],
+	[
+		configure_custom_file=""
+		custom_git_domain="github.com"
+		custom_git_org="yahoojapan"
+		custom_git_repo="k2hdkc_dbaas_k8s_cli"
+		custom_git_endpoint="https://api.github.com/repos/"
+		custom_dev_email="antpickax-support@mail.yahoo.co.jp"
+		custom_dev_name="K2HR3_DEVELOPER"
+	]
+)
+
+#
 # Symbols for buildutils
 #
-AC_SUBST([GIT_DOMAIN], "github.com")
-AC_SUBST([GIT_ORG], "yahoojapan")
-AC_SUBST([GIT_REPO], "k2hdkc_dbaas_k8s_cli")
-AC_SUBST([DEV_EMAIL], "`echo ${DEBEMAIL:-antpickax-support@mail.yahoo.co.jp}`")
-AC_SUBST([DEV_NAME], "`echo ${DEBFULLNAME:-K2HR3_DEVELOPER}`")
+AC_SUBST([CONFIGURECUSTOM], "${configure_custom_file}")
+AC_SUBST([GIT_DOMAIN], "${custom_git_domain}")
+AC_SUBST([GIT_ORG], "${custom_git_org}")
+AC_SUBST([GIT_REPO], "${custom_git_repo}")
+AC_SUBST([DEV_EMAIL], "$(echo ${DEBEMAIL:-"${custom_dev_email}"})")
+AC_SUBST([DEV_NAME], "$(echo ${DEBFULLNAME:-"${custom_dev_name}"})")
 #
 AC_SUBST([RPMCHANGELOG], "`$(pwd)/buildutils/make_rpm_changelog.sh $(pwd)/ChangeLog`")
 AC_SUBST([SHORTDESC], "K2HDKC DBaaS Command Line Interface(K2HR3 CLI Plugin)")

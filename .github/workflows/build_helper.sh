@@ -352,7 +352,7 @@ fi
 # Set variables for packaging
 #
 if [ "X${OPT_BUILD_NUMBER}" != "X" ]; then
-	BUILD_NUMBER=${BUILD_NUMBER}
+	BUILD_NUMBER=${OPT_BUILD_NUMBER}
 else
 	BUILD_NUMBER=1
 fi

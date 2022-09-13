@@ -27,6 +27,7 @@ TESTNAME=$(basename "$0")
 TESTBASENAME=$(echo "${TESTNAME}" | sed 's/[.]sh$//')
 TESTDIR=$(dirname "$0")
 TESTDIR=$(cd "${TESTDIR}/../test" || exit 1; pwd)
+SRCTOP=$(cd "${TESTDIR}/.." || exit 1; pwd)
 
 #
 # Special Environment
@@ -496,7 +497,7 @@ test_prn_title "${TEST_TITLE}"
 # This result includes the full path to the repository, so delete the
 # path to the repository.
 #
-sed -i -e 's#/.*k2hdkc-dbaas-k8s-cli-[0-9\.]*/#k2hdkc_dbaas_k8s_cli/#g' -e 's#/.*k2hdkc_dbaas_k8s_cli/#k2hdkc_dbaas_k8s_cli/#g' "${SUB_TEST_PART_FILE}"
+sed -i -e "s#${SRCTOP}/#k2hdkc_dbaas_k8s_cli/#g" "${SUB_TEST_PART_FILE}"
 
 #
 # Check result
@@ -562,7 +563,7 @@ test_prn_title "${TEST_TITLE}"
 # This result includes the full path to the repository, so delete the
 # path to the repository.
 #
-sed -i -e 's#/.*k2hdkc-dbaas-k8s-cli-[0-9\.]*/#k2hdkc_dbaas_k8s_cli/#g' -e 's#/.*k2hdkc_dbaas_k8s_cli/#k2hdkc_dbaas_k8s_cli/#g' "${SUB_TEST_PART_FILE}"
+sed -i -e "s#${SRCTOP}/#k2hdkc_dbaas_k8s_cli/#g" "${SUB_TEST_PART_FILE}"
 
 #
 # Check result
@@ -606,7 +607,7 @@ test_prn_title "${TEST_TITLE}"
 # This result includes the full path to the repository, so delete the
 # path to the repository.
 #
-sed -i -e 's#/.*k2hdkc-dbaas-k8s-cli-[0-9\.]*/#k2hdkc_dbaas_k8s_cli/#g' -e 's#/.*k2hdkc_dbaas_k8s_cli/#k2hdkc_dbaas_k8s_cli/#g' "${SUB_TEST_PART_FILE}"
+sed -i -e "s#${SRCTOP}/#k2hdkc_dbaas_k8s_cli/#g" "${SUB_TEST_PART_FILE}"
 
 #
 # Check result
@@ -637,7 +638,7 @@ test_prn_title "${TEST_TITLE}"
 # This result includes the full path to the repository, so delete the
 # path to the repository.
 #
-sed -i -e 's#/.*k2hdkc-dbaas-k8s-cli-[0-9\.]*/#k2hdkc_dbaas_k8s_cli/#g' -e 's#/.*k2hdkc_dbaas_k8s_cli/#k2hdkc_dbaas_k8s_cli/#g' "${SUB_TEST_PART_FILE}"
+sed -i -e "s#${SRCTOP}/#k2hdkc_dbaas_k8s_cli/#g" "${SUB_TEST_PART_FILE}"
 
 #
 # Check result
@@ -668,7 +669,7 @@ test_prn_title "${TEST_TITLE}"
 # This result includes the full path to the repository, so delete the
 # path to the repository.
 #
-sed -i -e 's#/.*k2hdkc-dbaas-k8s-cli-[0-9\.]*/#k2hdkc_dbaas_k8s_cli/#g' -e 's#/.*k2hdkc_dbaas_k8s_cli/#k2hdkc_dbaas_k8s_cli/#g' "${SUB_TEST_PART_FILE}"
+sed -i -e "s#${SRCTOP}/#k2hdkc_dbaas_k8s_cli/#g" "${SUB_TEST_PART_FILE}"
 
 #
 # Check result
@@ -724,7 +725,7 @@ test_prn_title "${TEST_TITLE}"
 # This result includes the full path to the repository, so delete the
 # path to the repository.
 #
-sed -i -e 's#/.*k2hdkc-dbaas-k8s-cli-[0-9\.]*/#k2hdkc_dbaas_k8s_cli/#g' -e 's#/.*k2hdkc_dbaas_k8s_cli/#k2hdkc_dbaas_k8s_cli/#g' "${SUB_TEST_PART_FILE}"
+sed -i -e "s#${SRCTOP}/#k2hdkc_dbaas_k8s_cli/#g" "${SUB_TEST_PART_FILE}"
 
 #
 # Check result
@@ -762,7 +763,7 @@ test_prn_title "${TEST_TITLE}"
 # This result includes the full path to the repository, so delete the
 # path to the repository.
 #
-sed -i -e 's#/.*k2hdkc-dbaas-k8s-cli-[0-9\.]*/#k2hdkc_dbaas_k8s_cli/#g' -e 's#/.*k2hdkc_dbaas_k8s_cli/#k2hdkc_dbaas_k8s_cli/#g' "${SUB_TEST_PART_FILE}"
+sed -i -e "s#${SRCTOP}/#k2hdkc_dbaas_k8s_cli/#g" "${SUB_TEST_PART_FILE}"
 
 #
 # Check result
@@ -800,7 +801,7 @@ test_prn_title "${TEST_TITLE}"
 # This result includes the full path to the repository, so delete the
 # path to the repository.
 #
-sed -i -e 's#/.*k2hdkc-dbaas-k8s-cli-[0-9\.]*/#k2hdkc_dbaas_k8s_cli/#g' -e 's#/.*k2hdkc_dbaas_k8s_cli/#k2hdkc_dbaas_k8s_cli/#g' "${SUB_TEST_PART_FILE}"
+sed -i -e "s#${SRCTOP}/#k2hdkc_dbaas_k8s_cli/#g" "${SUB_TEST_PART_FILE}"
 
 #
 # Check result
@@ -834,7 +835,7 @@ test_prn_title "${TEST_TITLE}"
 # This result includes the full path to the repository, so delete the
 # path to the repository.
 #
-sed -i -e 's#/.*k2hdkc-dbaas-k8s-cli-[0-9\.]*/#k2hdkc_dbaas_k8s_cli/#g' -e 's#/.*k2hdkc_dbaas_k8s_cli/#k2hdkc_dbaas_k8s_cli/#g' "${SUB_TEST_PART_FILE}"
+sed -i -e "s#${SRCTOP}/#k2hdkc_dbaas_k8s_cli/#g" "${SUB_TEST_PART_FILE}"
 
 #
 # Check result
@@ -916,7 +917,7 @@ test_prn_title "${TEST_TITLE}"
 # This result includes the full path to the repository, so delete the
 # path to the repository.
 #
-sed -i -e 's#/.*k2hdkc-dbaas-k8s-cli-[0-9\.]*/#k2hdkc_dbaas_k8s_cli/#g' -e 's#/.*k2hdkc_dbaas_k8s_cli/#k2hdkc_dbaas_k8s_cli/#g' "${SUB_TEST_PART_FILE}"
+sed -i -e "s#${SRCTOP}/#k2hdkc_dbaas_k8s_cli/#g" "${SUB_TEST_PART_FILE}"
 
 #
 # Check result
