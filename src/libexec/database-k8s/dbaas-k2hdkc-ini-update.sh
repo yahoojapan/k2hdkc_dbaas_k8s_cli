@@ -156,7 +156,7 @@ while [ ${FILE_NOT_UPDATED_YET} -le 1 ]; do
 	#
 	# Get the resource which is configuration file template
 	#
-	RESOURCE_STRING=$(curl -s -S -X GET ${K2HR3_CA_CERT_OPTION} ${K2HR3_CA_CERT_OPTION_VALUE} -H "Content-Type: application/json" -H "x-auth-token: R=${K2HR3_ROLE_TOKEN}" "${K2HR3_RESOURCE_URL}/${K2HR3_YRN_RESOURCE}" 2>&1)
+	RESOURCE_STRING=$(curl -s -S -X GET "${K2HR3_CA_CERT_OPTION}" "${K2HR3_CA_CERT_OPTION_VALUE}" -H "Content-Type: application/json" -H "x-auth-token: R=${K2HR3_ROLE_TOKEN}" "${K2HR3_RESOURCE_URL}/${K2HR3_YRN_RESOURCE}" 2>&1)
 
 	#
 	# Check got resource result
