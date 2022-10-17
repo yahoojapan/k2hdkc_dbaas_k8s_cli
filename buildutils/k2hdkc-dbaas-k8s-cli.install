@@ -1,0 +1,68 @@
+#
+# K2HDKC DBaaS on Kubernetes Command Line Interface - K2HR3 CLI Plugin
+#
+# Copyright 2022 Yahoo! Japan Corporation.
+#
+# K2HDKC DBaaS is a DataBase as a Service provided by Yahoo! JAPAN
+# which is built K2HR3 as a backend and provides services in
+# cooperation with Kubernetes.
+# The Override configuration for K2HDKC DBaaS serves to connect the
+# components that make up the K2HDKC DBaaS. K2HDKC, K2HR3, CHMPX,
+# and K2HASH are components provided as AntPickax.
+#
+# For the full copyright and license information, please view
+# the license file that was distributed with this source code.
+#
+# AUTHOR:   Takeshi Nakatani
+# CREATE:   Mon, Aug 16 2021
+# REVISION:
+#
+
+
+src/libexec/database-k8s/CREDIT                                usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/VERSION                               usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/certification.sh                      usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/command.sh                            usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/functions.sh                          usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/help.sh                               usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/options.sh                            usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/summary.sh                            usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/variables.sh                          usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/k8sapi.sh                             usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/configuration.sh                      usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/constvariables.sh                     usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/dbaas-k8s.config                      usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/k2hdkc.config                         usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/k2hr3.config                          usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/dbaas-k2hdkc-chmpxproc-wrap.sh        usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/dbaas-k2hdkc.ini.templ                usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/dbaas-k2hdkc-ini-update.sh            usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/dbaas-k2hdkc-k2hr3-registration.sh    usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/dbaas-k2hdkc-kustomization.yaml.templ usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/dbaas-k2hdkc-serverproc-wrap.sh       usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/dbaas-k2hdkc-server.yaml.templ        usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/dbaas-k2hdkc-slave.yaml.templ         usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/dbaas-k2hdkc-variables-setup.sh       usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/k2hr3-sa.yaml.templ                   usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/k2hr3-kustomization.yaml.templ        usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/k2hr3-k2hr3api.yaml.templ             usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/k2hr3-k2hr3app.yaml.templ             usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/k2hr3-k2hdkc.yaml.templ               usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/k2hr3-k2hdkc.ini.templ                usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/k2hr3-k2hdkc-ini-update.sh            usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/k2hr3-api-nodeport.yaml.templ         usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/k2hr3-api-production.json.templ       usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/k2hr3-api-wrap.sh                     usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/k2hr3-app-nodeport.yaml.templ         usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/k2hr3-app-production.json.templ       usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/k2hr3-app-wrap.sh                     usr/libexec/k2hr3/database-k8s
+src/libexec/database-k8s/k2hr3-app-init.sh                     usr/libexec/k2hr3/database-k8s
+
+#
+# Local variables:
+# tab-width: 4
+# c-basic-offset: 4
+# End:
+# vim600: noexpandtab sw=4 ts=4 fdm=marker
+# vim<600: noexpandtab sw=4 ts=4
+#

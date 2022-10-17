@@ -1,7 +1,7 @@
 #
 # K2HDKC DBaaS on Kubernetes Command Line Interface - K2HR3 CLI Plugin
 #
-# Copyright 2021 Yahoo! Japan Corporation.
+# Copyright 2022 Yahoo! Japan Corporation.
 #
 # K2HDKC DBaaS is a DataBase as a Service provided by Yahoo! JAPAN
 # which is built K2HR3 as a backend and provides services in
@@ -14,17 +14,30 @@
 # the license file that was distributed with this source code.
 #
 # AUTHOR:   Takeshi Nakatani
-# CREATE:   Wed Sep 15 2021
+# CREATE:   Mon, Aug 16 2021
 # REVISION:
 #
 
-EXTRA_DIST =make_variables.sh \
-			make_release_version_file.sh \
-			make_rpm_changelog.sh \
-			debian_build.sh \
-			rpm_build.sh \
-			k2hdkc-dbaas-k8s-cli.install \
-			setup_k2hr3_cli_component.sh
+#---------------------------------------------------------------
+# @PACKAGE_NAME@ / @PACKAGE_NAME@-dev packages
+#---------------------------------------------------------------
+%:
+	dh $@
+
+override_dh_auto_install:
+	dh_auto_install --destdir=debian/@PACKAGE_NAME@
+
+#
+# Placefolder for configure options
+#
+# [NOTE]
+# If an option is required for running configure, the placeholder will be rewritten as follows.
+# -------------------------------------------------
+# override_dh_auto_configure:
+#     dh_auto_configure -- <configure options>
+# -------------------------------------------------
+#
+# [PLACEFOLDER CONFIGURE OPTION]
 
 #
 # Local variables:
