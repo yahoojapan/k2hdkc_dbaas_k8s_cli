@@ -39,6 +39,12 @@
 %global make_check 1
 %endif
 
+%if %{undefined not_run_autogen}
+%global run_autogen ./autogen.sh
+%else
+%global run_autogen echo "skip autogen.sh"
+%endif
+
 #
 # main package
 #
@@ -69,7 +75,7 @@ cluster using the K2HDKC DBaaS K8S CLI.
 %autosetup -n %{name}-%{version}
 
 %build
-./autogen.sh
+%run_autogen
 %configure --disable-static @CONFIGUREWITHOPT@
 make build
 

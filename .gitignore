@@ -77,6 +77,7 @@ VERSION
 *.trs
 buildutils/control
 buildutils/copyright
+buildutils/rules
 rpmbuild
 rpmbuild/*
 debian

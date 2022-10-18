@@ -1,4 +1,4 @@
-k2hdkc-dbaas-k8s-cli (1.0.3) trusty; urgency=low
+k2hdkc-dbaas-k8s-cli (1.0.3) unstable; urgency=low
 
   * Stabilized the startup of the k2hdkc cluster in k2hr3 - #7
   * Using RockyLinux:8 instead of CentOS:8 - #6
@@ -6,19 +6,19 @@ k2hdkc-dbaas-k8s-cli (1.0.3) trusty; urgency=low
 
  -- Takeshi Nakatani <ggtakec@gmail.com>  Tue, 15 Mar 2022 15:19:52 +0900
 
-k2hdkc-dbaas-k8s-cli (1.0.2) trusty; urgency=low
+k2hdkc-dbaas-k8s-cli (1.0.2) unstable; urgency=low
 
   * Removed k8soidc:jwks_uri key in k2hr3-api-production.json.templ - #3
 
  -- Takeshi Nakatani <ggtakec@gmail.com>  Fri, 29 Oct 2021 14:11:44 +0900
 
-k2hdkc-dbaas-k8s-cli (1.0.1) trusty; urgency=low
+k2hdkc-dbaas-k8s-cli (1.0.1) unstable; urgency=low
 
   * Changed passing by value to subprocess from env to option - #1
 
  -- Takeshi Nakatani <ggtakec@gmail.com>  Thu, 30 Sep 2021 16:35:47 +0900
 
-k2hdkc-dbaas-k8s-cli (1.0.0) trusty; urgency=low
+k2hdkc-dbaas-k8s-cli (1.0.0) unstable; urgency=low
 
   * First version
 
