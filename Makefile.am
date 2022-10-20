@@ -44,9 +44,8 @@ clean-local-files:
 # [BUILD]
 # Since it is a shell script-only project, there is nothing to build,
 # but we will create a VERSION file.
-# Then, shellcheck checks all the source code.
 #
-build: setup_k2hr3_cli build_version shellcheck
+build: setup_k2hr3_cli build_version
 
 .PHONY: setup_k2hr3_cli build_version shellcheck
 
