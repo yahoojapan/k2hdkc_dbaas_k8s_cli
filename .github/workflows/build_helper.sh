@@ -355,15 +355,15 @@ fi
 # Set variables for packaging
 #
 if [ "X${OPT_BUILD_NUMBER}" != "X" ]; then
-	BUILD_NUMBER=${OPT_BUILD_NUMBER}
+	BUILD_NUMBER="${OPT_BUILD_NUMBER}"
 else
 	BUILD_NUMBER=1
 fi
 if [ "X${OPT_DEBEMAIL}" != "X" ]; then
-	export DEBEMAIL=${OPT_DEBEMAIL}
+	export DEBEMAIL="${OPT_DEBEMAIL}"
 fi
 if [ "X${OPT_DEBFULLNAME}" != "X" ]; then
-	export DEBFULLNAME=${OPT_DEBFULLNAME}
+	export DEBFULLNAME="${OPT_DEBFULLNAME}"
 fi
 
 #
@@ -564,10 +564,6 @@ else
 	#
 	# Create debian packages
 	#
-	DEBUILD_OPT=""
-	if [ ${IS_PUBLISH} -ne 1 ]; then
-		DEBUILD_OPT="-nodebuild"
-	fi
 	prn_cmd CONFIGUREOPT="${CONFIGURE_EXT_OPT}" ./buildutils/debian_build.sh --buildnum "${BUILD_NUMBER}" --disttype "${DIST_TAG}" -y
 	CONFIGUREOPT="${CONFIGURE_EXT_OPT}" ./buildutils/debian_build.sh --buildnum "${BUILD_NUMBER}" --disttype "${DIST_TAG}" -y
 fi
