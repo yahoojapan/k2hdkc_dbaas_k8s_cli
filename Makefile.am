@@ -73,23 +73,22 @@ build_version:
 
 # [SHELLCHECK]
 #
-SHELLCHECK_CMD = shellcheck
-SHELLCHECK_OPT = --shell=sh
-SHELLCHECK_COMMON_IGN = --exclude=SC1117,SC1090,SC1091,SC2181
-SHELLCHECK_CUSTOM_IGN = --exclude=SC1117,SC1090,SC1091,SC2181,SC2034
+SHELLCHECK_CMD				= shellcheck
+SHELLCHECK_OPT				= --shell=sh
+SHELLCHECK_COMMON_IGN		= --exclude=SC1117,SC1090,SC1091,SC2181
+SHELLCHECK_CUSTOM_IGN		= --exclude=SC1117,SC1090,SC1091,SC2181,SC2034
+SHELLCHECK_FILES_COMMON_SH	= `grep -ril '^\#!/bin/sh' . | grep '\.sh' | grep -v '\.sh.' | grep -v '/.git/' | grep -v '/rpmbuild/' | grep -v '/debian_build/' | grep -v '/autom4te.cache/' | grep -v '/m4/' | grep -v '/.git/' | grep -v '/rpmbuild/' | grep -v '/debian_build/' | grep -v '/autom4te.cache/' | grep -v '/m4/' | tr '\n' ' '`
+SHELLCHECK_FILES_CUSTOM_SH	= `grep -Lir '^\#!/bin/sh' . | grep '\.sh' | grep -v '\.sh.' | grep -v '/.git/' | grep -v '/rpmbuild/' | grep -v '/debian_build/' | grep -v '/autom4te.cache/' | grep -v '/m4/' | grep -v '/.git/' | grep -v '/rpmbuild/' | grep -v '/debian_build/' | grep -v '/autom4te.cache/' | grep -v '/m4/' | tr '\n' ' '`
 
 shellcheck:
 	@if type shellcheck > /dev/null 2>&1; then \
 		echo "*** Check all files with ShellCheck"; \
-		$(SHELLCHECK_CMD) $(SHELLCHECK_OPT) $(SHELLCHECK_COMMON_IGN) $$(find buildutils -type f -name '*.sh' | grep -v ostypevars.sh) || exit 1; \
-		if [ -f .github/workflows/ostypevars.sh ]; then \
-			$(SHELLCHECK_CMD) $(SHELLCHECK_OPT) $(SHELLCHECK_CUSTOM_IGN) .github/workflows/ostypevars.sh || exit 1; \
+		if [ -n "$(SHELLCHECK_FILES_COMMON_SH)" ]; then \
+			$(SHELLCHECK_CMD) $(SHELLCHECK_OPT) $(SHELLCHECK_COMMON_IGN) $(SHELLCHECK_FILES_COMMON_SH) || exit 1; \
 		fi; \
-		$(SHELLCHECK_CMD) $(SHELLCHECK_OPT) $(SHELLCHECK_COMMON_IGN) $$(find src/libexec/database-k8s -type f -name '*.sh' | grep -v constvariables.sh) || exit 1; \
-		if [ -f src/libexec/database-k8s/constvariables.sh ]; then \
-			$(SHELLCHECK_CMD) $(SHELLCHECK_OPT) $(SHELLCHECK_CUSTOM_IGN) src/libexec/database-k8s/constvariables.sh || exit 1; \
+		if [ -n "$(SHELLCHECK_FILES_CUSTOM_SH)" ]; then \
+			$(SHELLCHECK_CMD) $(SHELLCHECK_OPT) $(SHELLCHECK_CUSTOM_IGN) $(SHELLCHECK_FILES_CUSTOM_SH) || exit 1; \
 		fi; \
-		$(SHELLCHECK_CMD) $(SHELLCHECK_OPT) $(SHELLCHECK_COMMON_IGN) $$(find test -type f -name '*.sh' | grep -v 'util_test.sh' | grep -v 'util_request.sh') || exit 1; \
 		echo "   -> No error was detected."; \
 		echo ""; \
 	else \
