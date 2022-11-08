@@ -1,21 +1,24 @@
 #!/bin/sh
 #
-# K2HDKC DBaaS on Kubernetes Command Line Interface - K2HR3 CLI Plugin
+# Utility helper tools for Github Actions by AntPickax
 #
-# Copyright 2021 Yahoo! Japan Corporation.
+# Copyright 2018 Yahoo Japan Corporation.
 #
-# K2HDKC DBaaS is a DataBase as a Service provided by Yahoo! JAPAN
-# which is built K2HR3 as a backend and provides services in
-# cooperation with Kubernetes.
-# The Override configuration for K2HDKC DBaaS serves to connect the
-# components that make up the K2HDKC DBaaS. K2HDKC, K2HR3, CHMPX,
-# and K2HASH are components provided as AntPickax.
+# AntPickax provides utility tools for supporting autotools
+# builds.
 #
+# These tools retrieve the necessary information from the
+# repository and appropriately set the setting values of
+# configure, Makefile, spec,etc file and so on.
+# These tools were recreated to reduce the number of fixes and
+# reduce the workload of developers when there is a change in
+# the project configuration.
+# 
 # For the full copyright and license information, please view
 # the license file that was distributed with this source code.
 #
 # AUTHOR:   Takeshi Nakatani
-# CREATE:   Wed Sep 15 2021
+# CREATE:   Fri, Apr 13 2018
 # REVISION:
 #
 
