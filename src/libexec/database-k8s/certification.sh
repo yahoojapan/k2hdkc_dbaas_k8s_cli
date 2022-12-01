@@ -72,15 +72,14 @@ _DBAAS_K8S_OPENSSL_OUTPUT_FILE="/tmp/.${BINNAME}.${K2HR3CLI_MODE}.$$.log"
 #
 get_dbaas_k8s_domain_certificates()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
 	#
 	# CA cert
 	#
-	if [ "X${K2HR3CLI_OPT_JSON}" = "X1" ]; then
+	if [ -n "${K2HR3CLI_OPT_JSON}" ] && [ "${K2HR3CLI_OPT_JSON}" = "1" ]; then
 		#
 		# JSON
 		#
@@ -125,12 +124,12 @@ get_dbaas_k8s_domain_certificates()
 	_DBAAS_K8S_CONFIG_TMP_FILE_LIST="${_DBAAS_K8S_CONFIG_TMP_FILE_LIST} ${_DBAAS_K8S_CONFIG_TMP_FILE_LIST_TMP}"
 	_DBAAS_K8S_CONFIG_TMP_RESULT=$(echo "${_DBAAS_K8S_CONFIG_TMP_FILE_LIST}" | sed -e "s#${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/##g" -e 's#/$##g' 2>/dev/null)
 
-	if [ "X${K2HR3CLI_OPT_JSON}" = "X1" ]; then
+	if [ -n "${K2HR3CLI_OPT_JSON}" ] && [ "${K2HR3CLI_OPT_JSON}" = "1" ]; then
 		_DBAAS_K8S_CERT_TMP_OUTPUT_JSON="${_DBAAS_K8S_CERT_TMP_OUTPUT_JSON}\"node certs\":["
 
 		_DBAAS_K8S_CERT_TMP_FIRST=1
 		for _one_element in ${_DBAAS_K8S_CONFIG_TMP_RESULT}; do
-			if [ "X${_one_element}" != "X" ]; then
+			if [ -n "${_one_element}" ]; then
 				if [ "${_DBAAS_K8S_CERT_TMP_FIRST}" -eq 1 ]; then
 					_DBAAS_K8S_CERT_TMP_SEP=""
 					_DBAAS_K8S_CERT_TMP_FIRST=0
@@ -147,7 +146,7 @@ get_dbaas_k8s_domain_certificates()
 	else
 		pecho "[node certs]"
 		for _one_element in ${_DBAAS_K8S_CONFIG_TMP_RESULT}; do
-			if [ "X${_one_element}" != "X" ]; then
+			if [ -n "${_one_element}" ]; then
 				pecho "${_one_element}"
 			fi
 		done
@@ -174,8 +173,7 @@ get_dbaas_k8s_domain_certificates()
 #
 print_dbaas_k8s_domain_certificate()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
@@ -184,7 +182,7 @@ print_dbaas_k8s_domain_certificate()
 	#
 	# Check file
 	#
-	if [ "X${_DBAAS_K8S_CERT_TMP_TARGETFILE}" = "X${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME}" ]; then
+	if [ -n "${_DBAAS_K8S_CERT_TMP_TARGETFILE}" ] && [ "${_DBAAS_K8S_CERT_TMP_TARGETFILE}" = "${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME}" ]; then
 		#
 		# CA certificate
 		#
@@ -241,8 +239,7 @@ print_dbaas_k8s_domain_certificate()
 #
 set_dbaas_k8s_domain_certificates()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
@@ -258,7 +255,7 @@ set_dbaas_k8s_domain_certificates()
 		prn_err "${_DBAAS_K8S_CERT_TMP_CERT_1} or ${_DBAAS_K8S_CERT_TMP_KEY_1} file is not existed"
 		return 1
 	fi
-	if [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ] || [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ]; then
+	if [ -n "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" ] && { [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ] || [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ]; }; then
 		if [ ! -f "${_DBAAS_K8S_CERT_TMP_CERT_2}" ] || [ ! -f "${_DBAAS_K8S_CERT_TMP_KEY_2}" ]; then
 			prn_err "${_DBAAS_K8S_CERT_TMP_CERT_2} or ${_DBAAS_K8S_CERT_TMP_KEY_2} file is not existed"
 			return 1
@@ -268,7 +265,13 @@ set_dbaas_k8s_domain_certificates()
 	#
 	# distination file name(with sub directory)
 	#
-	if [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_CA}" ]; then
+	if [ -z "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" ]; then
+		#
+		# Nothing to do
+		#
+		:
+
+	elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_CA}" ]; then
 		#
 		# ca.crt
 		# private/ca.key
@@ -280,7 +283,7 @@ set_dbaas_k8s_domain_certificates()
 			rm -f "${_DBAAS_K8S_CERT_TMP_KEY_FILENAME_1}"
 		fi
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ]; then
 		#
 		# certs/pod-<r3dkc>-<num>.svc-<r3dkc>.<k8snamespace>.<k8sdomain>.server.crt
 		# certs/pod-<r3dkc>-<num>.svc-<r3dkc>.<k8snamespace>.<k8sdomain>.server.key
@@ -292,7 +295,7 @@ set_dbaas_k8s_domain_certificates()
 		_DBAAS_K8S_CERT_TMP_CERT_FILENAME_2="${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3DKC_NAME}-${K2HR3CLI_DBAAS_K8S_HOST_NUM}.${K2HR3CLI_DBAAS_K8S_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3DKC_NAME}.${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}.${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}${K2HR3CLI_DBAAS_K8S_CLIENT_CERT_SUFFIX}"
 		_DBAAS_K8S_CERT_TMP_KEY_FILENAME_2="${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3DKC_NAME}-${K2HR3CLI_DBAAS_K8S_HOST_NUM}.${K2HR3CLI_DBAAS_K8S_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3DKC_NAME}.${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}.${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}${K2HR3CLI_DBAAS_K8S_CLIENT_KEY_SUFFIX}"
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ]; then
 		#
 		# certs/pod-<r3api>-<num>.svc-<r3api>.<k8snamespace>.<k8sdomain>.server.crt
 		# certs/pod-<r3api>-<num>.svc-<r3api>.<k8snamespace>.<k8sdomain>.server.key
@@ -304,7 +307,7 @@ set_dbaas_k8s_domain_certificates()
 		_DBAAS_K8S_CERT_TMP_CERT_FILENAME_2="${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}-${K2HR3CLI_DBAAS_K8S_HOST_NUM}.${K2HR3CLI_DBAAS_K8S_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}.${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}.${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}${K2HR3CLI_DBAAS_K8S_CLIENT_CERT_SUFFIX}"
 		_DBAAS_K8S_CERT_TMP_KEY_FILENAME_2="${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}-${K2HR3CLI_DBAAS_K8S_HOST_NUM}.${K2HR3CLI_DBAAS_K8S_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}.${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}.${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}${K2HR3CLI_DBAAS_K8S_CLIENT_KEY_SUFFIX}"
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3APP}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3APP}" ]; then
 		#
 		# certs/pod-<r3app>.svc-<r3app>.<k8snamespace>.<k8sdomain>.server.crt
 		# certs/pod-<r3app>.svc-<r3app>.<k8snamespace>.<k8sdomain>.server.key
@@ -316,33 +319,29 @@ set_dbaas_k8s_domain_certificates()
 	#
 	# Copy files
 	#
-	cp "${_DBAAS_K8S_CERT_TMP_CERT_1}" "${_DBAAS_K8S_CERT_TMP_CERT_FILENAME_1}"
-	if [ $? -ne 0 ]; then
+	if ! cp "${_DBAAS_K8S_CERT_TMP_CERT_1}" "${_DBAAS_K8S_CERT_TMP_CERT_FILENAME_1}"; then
 		prn_err "Failed to copy ${_DBAAS_K8S_CERT_TMP_CERT_1} to ${_DBAAS_K8S_CERT_TMP_CERT_FILENAME_1}"
 		return 1
 	else
 		prn_info "Copied ${_DBAAS_K8S_CERT_TMP_CERT_1} to ${_DBAAS_K8S_CERT_TMP_CERT_FILENAME_1}"
 	fi
 
-	cp "${_DBAAS_K8S_CERT_TMP_KEY_1}" "${_DBAAS_K8S_CERT_TMP_KEY_FILENAME_1}"
-	if [ $? -ne 0 ]; then
+	if ! cp "${_DBAAS_K8S_CERT_TMP_KEY_1}" "${_DBAAS_K8S_CERT_TMP_KEY_FILENAME_1}"; then
 		prn_err "Failed to copy ${_DBAAS_K8S_CERT_TMP_KEY_1} to ${_DBAAS_K8S_CERT_TMP_KEY_FILENAME_1}"
 		return 1
 	else
 		prn_info "Copied ${_DBAAS_K8S_CERT_TMP_KEY_1} to ${_DBAAS_K8S_CERT_TMP_KEY_FILENAME_1}"
 	fi
 
-	if [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ] || [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ]; then
-		cp "${_DBAAS_K8S_CERT_TMP_CERT_2}" "${_DBAAS_K8S_CERT_TMP_CERT_FILENAME_2}"
-		if [ $? -ne 0 ]; then
+	if [ -n "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" ] && { [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ] || [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ]; }; then
+		if ! cp "${_DBAAS_K8S_CERT_TMP_CERT_2}" "${_DBAAS_K8S_CERT_TMP_CERT_FILENAME_2}"; then
 			prn_err "Failed to copy ${_DBAAS_K8S_CERT_TMP_CERT_2} to ${_DBAAS_K8S_CERT_TMP_CERT_FILENAME_2}"
 			return 1
 		else
 			prn_info "Copied ${_DBAAS_K8S_CERT_TMP_CERT_2} to ${_DBAAS_K8S_CERT_TMP_CERT_FILENAME_2}"
 		fi
 
-		cp "${_DBAAS_K8S_CERT_TMP_KEY_2}" "${_DBAAS_K8S_CERT_TMP_KEY_FILENAME_2}"
-		if [ $? -ne 0 ]; then
+		if ! cp "${_DBAAS_K8S_CERT_TMP_KEY_2}" "${_DBAAS_K8S_CERT_TMP_KEY_FILENAME_2}"; then
 			prn_err "Failed to copy ${_DBAAS_K8S_CERT_TMP_KEY_2} to ${_DBAAS_K8S_CERT_TMP_KEY_FILENAME_2}"
 			return 1
 		else
@@ -366,13 +365,11 @@ set_dbaas_k8s_domain_certificates()
 #
 create_openssl_cnf_file()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 	if [ ! -d "${_DBAAS_K8S_CLUSTER_DIRPATH}" ]; then
-		mkdir -p "${_DBAAS_K8S_CLUSTER_DIRPATH}"
-		if [ $? -ne 0 ]; then
+		if ! mkdir -p "${_DBAAS_K8S_CLUSTER_DIRPATH}"; then
 			prn_err "Coult nod create ${_DBAAS_K8S_CLUSTER_DIRPATH} directory."
 			return 1
 		fi
@@ -392,7 +389,7 @@ create_openssl_cnf_file()
 	# If force update, remove current file at first.
 	#
 	if [ -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF}" ]; then
-		if [ "X${K2HR3CLI_DBAAS_K8S_FORCE}" = "X1" ]; then
+		if [ -n "${K2HR3CLI_DBAAS_K8S_FORCE}" ] && [ "${K2HR3CLI_DBAAS_K8S_FORCE}" = "1" ]; then
 			rm -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF}"
 			prn_dbg "(create_openssl_cnf_file) Removed ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF} file."
 		else
@@ -449,6 +446,9 @@ create_openssl_cnf_file()
 		_DBAAS_K8S_CERT_TMP_OLD_CONTENTS=$(sed -e 's/#.*$//g' -e 's/^[[:space:]]*//g' -e 's/[[:space:]]*$//g' -e 's/[[:space:]]*=[[:space:]]*/=/g' -e '/^$/d' "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF}")
 		_DBAAS_K8S_CERT_TMP_NEW_CONTENTS=$(sed -e 's/#.*$//g' -e 's/^[[:space:]]*//g' -e 's/[[:space:]]*$//g' -e 's/[[:space:]]*=[[:space:]]*/=/g' -e '/^$/d' "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF_TMP}")
 
+		# [NOTE]
+		# Since the condition becomes complicated, use "X"(temporary word).
+		#
 		if [ "X${_DBAAS_K8S_CERT_TMP_OLD_CONTENTS}" = "X${_DBAAS_K8S_CERT_TMP_NEW_CONTENTS}" ]; then
 			rm -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF_TMP}"
 			prn_dbg "(create_openssl_cnf_file) Nothing to update."
@@ -495,16 +495,14 @@ create_openssl_cnf_file()
 #
 create_ca_certificate_files()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
 	#
 	# Check opsnssl.cnf file and create it if not exists
 	#
-	create_openssl_cnf_file
-	if [ $? -ne 0 ]; then
+	if ! create_openssl_cnf_file; then
 		return 1
 	fi
 
@@ -512,7 +510,7 @@ create_ca_certificate_files()
 	# If already have CA certificate, nothing to do.
 	#
 	if [ -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME}" ]; then
-		if [ "X${K2HR3CLI_DBAAS_K8S_FORCE}" != "X1" ]; then
+		if [ -z "${K2HR3CLI_DBAAS_K8S_FORCE}" ] || [ "${K2HR3CLI_DBAAS_K8S_FORCE}" != "1" ]; then
 			prn_dbg "(create_ca_certificate_files) Already have ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME}, then do not remake it."
 			return 0
 		fi
@@ -545,43 +543,37 @@ create_ca_certificate_files()
 	fi
 	prn_dbg "(create_ca_certificate_files) Removed all directories and files for certificates."
 
-	mkdir -p "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}"
-	if [ $? -ne 0 ]; then
+	if ! mkdir -p "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}"; then
 		prn_err "Coult nod create ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME} directory."
 		return 1
 	fi
 	prn_dbg "(create_ca_certificate_files) Created ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME} directory."
 
-	mkdir -p "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_NEWCERTS_DIRNAME}"
-	if [ $? -ne 0 ]; then
+	if ! mkdir -p "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_NEWCERTS_DIRNAME}"; then
 		prn_err "Coult nod create ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_NEWCERTS_DIRNAME} directory."
 		return 1
 	fi
 	prn_dbg "(create_ca_certificate_files) Created ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_NEWCERTS_DIRNAME} directory."
 
-	mkdir -p "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OLDCERTS_DIRNAME}"
-	if [ $? -ne 0 ]; then
+	if ! mkdir -p "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OLDCERTS_DIRNAME}"; then
 		prn_err "Coult nod create ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OLDCERTS_DIRNAME} directory."
 		return 1
 	fi
 	prn_dbg "(create_ca_certificate_files) Created ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OLDCERTS_DIRNAME} directory."
 
-	mkdir -p "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_PRIVATE_DIRNAME}"
-	if [ $? -ne 0 ]; then
+	if ! mkdir -p "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_PRIVATE_DIRNAME}"; then
 		prn_err "Coult nod create ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_PRIVATE_DIRNAME} directory."
 		return 1
 	fi
 	prn_dbg "(create_ca_certificate_files) Created ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_PRIVATE_DIRNAME} directory."
 
-	echo "1000" > "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_SERIAL_FILENAME}"
-	if [ $? -ne 0 ]; then
+	if ! echo "1000" > "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_SERIAL_FILENAME}"; then
 		prn_err "Coult nod create ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_SERIAL_FILENAME} file."
 		return 1
 	fi
 	prn_dbg "(create_ca_certificate_files) Created ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_SERIAL_FILENAME} file."
 
-	touch "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_INDEX_FILENAME}"
-	if [ $? -ne 0 ]; then
+	if ! touch "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_INDEX_FILENAME}"; then
 		prn_err "Coult nod create ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_INDEX_FILENAME} file."
 		return 1
 	fi
@@ -652,6 +644,7 @@ create_ca_certificate_files()
 			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
 	fi
 
+	# shellcheck disable=SC2181
 	if [ $? -ne 0 ]; then
 		prn_err "Failed to create self-signed CA certificate and private key."
 		pecho ""
@@ -667,8 +660,7 @@ create_ca_certificate_files()
 	#
 	# Set private file permission
 	#
-	chmod 0400 "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_PRIVATE_DIRNAME}/${K2HR3CLI_DBAAS_K8S_CA_KEY_FILENAME}"
-	if [ $? -ne 0 ]; then
+	if ! chmod 0400 "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_PRIVATE_DIRNAME}/${K2HR3CLI_DBAAS_K8S_CA_KEY_FILENAME}"; then
 		prn_err "Could not set permission(0400) to ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_PRIVATE_DIRNAME}/${K2HR3CLI_DBAAS_K8S_CA_KEY_FILENAME}."
 		return 1
 	fi
@@ -677,12 +669,11 @@ create_ca_certificate_files()
 	#
 	# Check and print CA certificate
 	#
-	"${OPENSSL_BIN}" x509															\
+	if ! "${OPENSSL_BIN}" x509														\
 		-in "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME}"	\
 		-text																		\
-		> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+		> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed to dump self-signed CA certificate(${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME})."
 		cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
 		rm -f "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}"
@@ -694,13 +685,12 @@ create_ca_certificate_files()
 	#
 	# Check and print CA private key
 	#
-	"${OPENSSL_BIN}" rsa																										\
+	if ! "${OPENSSL_BIN}" rsa																									\
 		-in			"${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_PRIVATE_DIRNAME}/${K2HR3CLI_DBAAS_K8S_CA_KEY_FILENAME}"	\
 		-passin		"${_DBAAS_K8S_CERT_TMP_PASS_OPT_VAL}"																		\
 		-text																													\
-		> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+		> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed to dump self-signed CA private key(${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_PRIVATE_DIRNAME}/${K2HR3CLI_DBAAS_K8S_CA_KEY_FILENAME})."
 		cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
 		rm -f "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}"
@@ -716,7 +706,7 @@ create_ca_certificate_files()
 	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CERT_C'		"${K2HR3CLI_DBAAS_K8S_CERT_C}"
 	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CERT_S'		"${K2HR3CLI_DBAAS_K8S_CERT_S}"
 	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CERT_O'		"${K2HR3CLI_DBAAS_K8S_CERT_O}"
-	if [ "X${K2HR3CLI_OPT_SAVE_PASS}" = "X1" ]; then
+	if [ -n "${K2HR3CLI_OPT_SAVE_PASS}" ] && [ "${K2HR3CLI_OPT_SAVE_PASS}" = "1" ]; then
 		save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CA_PASS'	"${K2HR3CLI_DBAAS_K8S_CA_PASS}"
 	fi
 	prn_dbg "(create_ca_certificate_files) Saved information for self-signed CA certificate to configuration."
@@ -739,15 +729,13 @@ create_san_value_strings()
 		#
 		# Check type
 		#
-		echo "${_one_hostname}" | grep -q -E -o '^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$' 2>/dev/null
-		if [ $? -eq 0 ]; then
+		if echo "${_one_hostname}" | grep -q -E -o '^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$' 2>/dev/null; then
 			#
 			# IPv4
 			#
 			_DBAAS_K8S_TMP_SAN_PREFIX="IP:"
 		else
-			echo "${_one_hostname}" | grep -q -E -o '^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$'
-			if [ $? -eq 0 ]; then
+			if echo "${_one_hostname}" | grep -q -E -o '^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$'; then
 				#
 				# IPv6
 				#
@@ -762,7 +750,7 @@ create_san_value_strings()
 
 		_DBAAS_K8S_TMP_SAN_PART="${_DBAAS_K8S_TMP_SAN_PREFIX}${_one_hostname}"
 
-		if [ "X${_DBAAS_K8S_TMP_SAN_RESULT}" != "X" ]; then
+		if [ -n "${_DBAAS_K8S_TMP_SAN_RESULT}" ]; then
 			_DBAAS_K8S_TMP_SAN_RESULT="${_DBAAS_K8S_TMP_SAN_RESULT}, ${_DBAAS_K8S_TMP_SAN_PART}"
 		else
 			_DBAAS_K8S_TMP_SAN_RESULT="${_DBAAS_K8S_TMP_SAN_PART}"
@@ -807,8 +795,7 @@ create_san_value_strings()
 #
 create_k2hdkc_certificate_files()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
@@ -887,7 +874,7 @@ create_k2hdkc_certificate_files()
 		# If already have all certificate, nothing to do.
 		#
 		if [ -f "${_DBAAS_K8S_CERT_TMP_SERVER_CERT_FILE}" ] && [ -f "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}" ] && [ -f "${_DBAAS_K8S_CERT_TMP_CLIENT_CERT_FILE}" ] && [ -f "${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}" ]; then
-			if [ "X${K2HR3CLI_DBAAS_K8S_FORCE}" != "X1" ]; then
+			if [ -z "${K2HR3CLI_DBAAS_K8S_FORCE}" ] || [ "${K2HR3CLI_DBAAS_K8S_FORCE}" != "1" ]; then
 				prn_dbg "(create_k2hdkc_certificate_files) Already have ${_DBAAS_K8S_CERT_TMP_SERVER_CERT_FILE}, ${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}, ${_DBAAS_K8S_CERT_TMP_CLIENT_CERT_FILE} and ${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}, then do not remake it."
 				continue
 			fi
@@ -922,8 +909,7 @@ create_k2hdkc_certificate_files()
 		#
 		# Make SAN parameter from other hostnames/IP addresses
 		#
-		_DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS=$(create_san_value_strings "${_DBAAS_K8S_CERT_TMP_HOST_FULL},${_DBAAS_K8S_CERT_TMP_HOST_DNSRR},${_DBAAS_K8S_CERT_TMP_HOST_DNSRR_FULL},${K2HR3CLI_DBAAS_K8S_LOCALHOST_ALL}")
-		if [ $? -ne 0 ]; then
+		if ! _DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS=$(create_san_value_strings "${_DBAAS_K8S_CERT_TMP_HOST_FULL},${_DBAAS_K8S_CERT_TMP_HOST_DNSRR},${_DBAAS_K8S_CERT_TMP_HOST_DNSRR_FULL},${K2HR3CLI_DBAAS_K8S_LOCALHOST_ALL}"); then
 			prn_err "Something error occurred in making SAN parameter."
 			return 1
 		fi
@@ -932,7 +918,7 @@ create_k2hdkc_certificate_files()
 		# Make SANs parameter:
 		# 	"subjectAltName = DNS:subname.antpickax, IP:172.0.0.1, ...."
 		#
-		if [ "X${_DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS}" = "X" ]; then
+		if [ -z "${_DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS}" ]; then
 			_DBAAS_K8S_CERT_TMP_SANS="subjectAltName = DNS:${_DBAAS_K8S_CERT_TMP_HOST_CN}"
 		else
 			_DBAAS_K8S_CERT_TMP_SANS="subjectAltName = DNS:${_DBAAS_K8S_CERT_TMP_HOST_CN}, ${_DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS}"
@@ -954,12 +940,11 @@ create_k2hdkc_certificate_files()
 		#
 		# Make server secret key(2048 bit) without passphrase
 		#
-		"${OPENSSL_BIN}" genrsa								\
+		if ! "${OPENSSL_BIN}" genrsa						\
 			-out "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}"	\
 			2048											\
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE} private key."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -969,8 +954,7 @@ create_k2hdkc_certificate_files()
 		fi
 		rm -f "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}"
 
-		chmod 0400 "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! chmod 0400 "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}"; then
 			prn_err "Failed to set permission(0400) to ${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE} private key."
 			return 1
 		fi
@@ -979,14 +963,13 @@ create_k2hdkc_certificate_files()
 		#
 		# Make server CSR file
 		#
-		"${OPENSSL_BIN}" req								\
+		if ! "${OPENSSL_BIN}" req							\
 			-new											\
 			-key  "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}"	\
 			-out  "${_DBAAS_K8S_CERT_TMP_SERVER_CSR_FILE}"	\
 			-subj "/C=${K2HR3CLI_DBAAS_K8S_CERT_C}/ST=${K2HR3CLI_DBAAS_K8S_CERT_S}/O=${K2HR3CLI_DBAAS_K8S_CERT_O}/CN=${_DBAAS_K8S_CERT_TMP_HOST_CN}" \
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_SERVER_CSR_FILE} CSR file."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -1000,7 +983,7 @@ create_k2hdkc_certificate_files()
 		#
 		# Make server certificate
 		#
-		"${OPENSSL_BIN}" ca											\
+		if ! "${OPENSSL_BIN}" ca									\
 			-batch													\
 			-extensions	v3_server									\
 			-out		"${_DBAAS_K8S_CERT_TMP_SERVER_CERT_FILE}"	\
@@ -1008,9 +991,8 @@ create_k2hdkc_certificate_files()
 			-passin		"${_DBAAS_K8S_CERT_TMP_PASS_OPT_VAL}"		\
 			-config		"${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF_NODE_TMP}" \
 			-infiles	"${_DBAAS_K8S_CERT_TMP_SERVER_CSR_FILE}"	\
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_SERVER_CERT_FILE} certificate file."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -1024,12 +1006,11 @@ create_k2hdkc_certificate_files()
 		#
 		# Make client secret key(2048 bit) without passphrase
 		#
-		"${OPENSSL_BIN}" genrsa								\
+		if ! "${OPENSSL_BIN}" genrsa						\
 			-out "${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}"	\
 			2048											\
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE} private key."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -1039,8 +1020,7 @@ create_k2hdkc_certificate_files()
 		fi
 		rm -f "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}"
 
-		chmod 0400 "${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! chmod 0400 "${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}"; then
 			prn_err "Failed to set permission(0400) to ${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE} private key."
 			return 1
 		fi
@@ -1049,14 +1029,13 @@ create_k2hdkc_certificate_files()
 		#
 		# Make client CSR file
 		#
-		"${OPENSSL_BIN}" req								\
+		if ! "${OPENSSL_BIN}" req							\
 			-new											\
 			-key  "${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}"	\
 			-out  "${_DBAAS_K8S_CERT_TMP_CLIENT_CSR_FILE}"	\
 			-subj "/C=${K2HR3CLI_DBAAS_K8S_CERT_C}/ST=${K2HR3CLI_DBAAS_K8S_CERT_S}/O=${K2HR3CLI_DBAAS_K8S_CERT_O}/CN=${_DBAAS_K8S_CERT_TMP_HOST_CN}" \
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_CLIENT_CSR_FILE} CSR file."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -1070,7 +1049,7 @@ create_k2hdkc_certificate_files()
 		#
 		# Make client certificate
 		#
-		"${OPENSSL_BIN}" ca											\
+		if ! "${OPENSSL_BIN}" ca									\
 			-batch													\
 			-extensions	v3_client									\
 			-out		"${_DBAAS_K8S_CERT_TMP_CLIENT_CERT_FILE}"	\
@@ -1078,9 +1057,8 @@ create_k2hdkc_certificate_files()
 			-passin		"${_DBAAS_K8S_CERT_TMP_PASS_OPT_VAL}"		\
 			-config		"${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF_NODE_TMP}" \
 			-infiles	"${_DBAAS_K8S_CERT_TMP_CLIENT_CSR_FILE}"	\
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_CLIENT_CERT_FILE} certificate file."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -1111,7 +1089,7 @@ create_k2hdkc_certificate_files()
 	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CERT_C'		"${K2HR3CLI_DBAAS_K8S_CERT_C}"
 	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CERT_S'		"${K2HR3CLI_DBAAS_K8S_CERT_S}"
 	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CERT_O'		"${K2HR3CLI_DBAAS_K8S_CERT_O}"
-	if [ "X${K2HR3CLI_OPT_SAVE_PASS}" = "X1" ]; then
+	if [ -n "${K2HR3CLI_OPT_SAVE_PASS}" ] && [ "${K2HR3CLI_OPT_SAVE_PASS}" = "1" ]; then
 		save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CA_PASS'	"${K2HR3CLI_DBAAS_K8S_CA_PASS}"
 	fi
 	prn_dbg "(create_k2hdkc_certificate_files) Saved information for self-signed CA certificate to configuration."
@@ -1155,8 +1133,7 @@ create_k2hdkc_certificate_files()
 #
 create_k2hr3api_certificate_files()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
@@ -1209,8 +1186,7 @@ create_k2hr3api_certificate_files()
 	#
 	# Get NodePort ClusterIP
 	#
-	_DBAAS_K8S_TMP_NODEPORT_CLUSTERIP=$(get_k2hr3_nodeport_cluster_ip 0 "${K2HR3CLI_DBAAS_K8S_R3API_NAME}")
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_TMP_NODEPORT_CLUSTERIP=$(get_k2hr3_nodeport_cluster_ip 0 "${K2HR3CLI_DBAAS_K8S_R3API_NAME}"); then
 		prn_err "K2HR3 API NodePort Service is not existed, The NodePort service must be started and the Cluster IP must be present to create the certificate. First, start the NodePort service."
 		return 1
 	fi
@@ -1244,7 +1220,7 @@ create_k2hr3api_certificate_files()
 		# If already have all certificate, nothing to do.
 		#
 		if [ -f "${_DBAAS_K8S_CERT_TMP_SERVER_CERT_FILE}" ] && [ -f "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}" ] && [ -f "${_DBAAS_K8S_CERT_TMP_CLIENT_CERT_FILE}" ] && [ -f "${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}" ]; then
-			if [ "X${K2HR3CLI_DBAAS_K8S_FORCE}" != "X1" ]; then
+			if [ -z "${K2HR3CLI_DBAAS_K8S_FORCE}" ] || [ "${K2HR3CLI_DBAAS_K8S_FORCE}" != "1" ]; then
 				prn_dbg "(create_k2hr3api_certificate_files) Already have ${_DBAAS_K8S_CERT_TMP_SERVER_CERT_FILE}, ${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}, ${_DBAAS_K8S_CERT_TMP_CLIENT_CERT_FILE} and ${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}, then do not remake it."
 				continue
 			fi
@@ -1281,22 +1257,21 @@ create_k2hr3api_certificate_files()
 		#
 		_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES="${_DBAAS_K8S_CERT_TMP_HOST_FULL},${_DBAAS_K8S_CERT_TMP_HOST_DNSRR},${_DBAAS_K8S_CERT_TMP_HOST_DNSRR_FULL}"
 
-		if [ "X${K2HR3CLI_DBAAS_K8S_LOCALHOST_ALL}" != "X" ]; then
+		if [ -n "${K2HR3CLI_DBAAS_K8S_LOCALHOST_ALL}" ]; then
 			_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES="${_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES},${K2HR3CLI_DBAAS_K8S_LOCALHOST_ALL}"
 		fi
-		if [ "X${_DBAAS_K8S_TMP_NODEPORT_CLUSTERIP}" != "X" ]; then
+		if [ -n "${_DBAAS_K8S_TMP_NODEPORT_CLUSTERIP}" ]; then
 			_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES="${_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES},${_DBAAS_K8S_TMP_NODEPORT_CLUSTERIP}"
 		fi
 		# shellcheck disable=SC2153
-		if [ "X${K2HR3CLI_DBAAS_K8S_R3API_EP}" != "X" ]; then
+		if [ -n "${K2HR3CLI_DBAAS_K8S_R3API_EP}" ]; then
 			_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES="${_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES},${K2HR3CLI_DBAAS_K8S_R3API_EP}"
 		fi
-		if [ "X${K2HR3CLI_DBAAS_K8S_NODE_IPS}" != "X" ]; then
+		if [ -n "${K2HR3CLI_DBAAS_K8S_NODE_IPS}" ]; then
 			_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES="${_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES},${K2HR3CLI_DBAAS_K8S_NODE_IPS}"
 		fi
 
-		_DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS=$(create_san_value_strings "${_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES},${_DBAAS_K8S_CERT_TMP_HOST_DNSRR},${_DBAAS_K8S_CERT_TMP_LOCAL_HOSTNAMES}")
-		if [ $? -ne 0 ]; then
+		if ! _DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS=$(create_san_value_strings "${_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES},${_DBAAS_K8S_CERT_TMP_HOST_DNSRR},${_DBAAS_K8S_CERT_TMP_LOCAL_HOSTNAMES}"); then
 			prn_err "Something error occurred in making SAN parameter."
 			return 1
 		fi
@@ -1305,7 +1280,7 @@ create_k2hr3api_certificate_files()
 		# Make SANs parameter:
 		# 	"subjectAltName = DNS:subname.antpickax, IP:172.0.0.1, ...."
 		#
-		if [ "X${_DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS}" = "X" ]; then
+		if [ -z "${_DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS}" ]; then
 			_DBAAS_K8S_CERT_TMP_SANS="subjectAltName = DNS:${_DBAAS_K8S_CERT_TMP_HOST_CN}"
 		else
 			_DBAAS_K8S_CERT_TMP_SANS="subjectAltName = DNS:${_DBAAS_K8S_CERT_TMP_HOST_CN}, ${_DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS}"
@@ -1327,12 +1302,11 @@ create_k2hr3api_certificate_files()
 		#
 		# Make server secret key(2048 bit) without passphrase
 		#
-		"${OPENSSL_BIN}" genrsa								\
+		if ! "${OPENSSL_BIN}" genrsa						\
 			-out "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}"	\
 			2048											\
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE} private key."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -1342,8 +1316,7 @@ create_k2hr3api_certificate_files()
 		fi
 		rm -f "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}"
 
-		chmod 0400 "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! chmod 0400 "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}"; then
 			prn_err "Failed to set permission(0400) to ${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE} private key."
 			return 1
 		fi
@@ -1352,14 +1325,13 @@ create_k2hr3api_certificate_files()
 		#
 		# Make server CSR file
 		#
-		"${OPENSSL_BIN}" req								\
+		if ! "${OPENSSL_BIN}" req							\
 			-new											\
 			-key  "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}"	\
 			-out  "${_DBAAS_K8S_CERT_TMP_SERVER_CSR_FILE}"	\
 			-subj "/C=${K2HR3CLI_DBAAS_K8S_CERT_C}/ST=${K2HR3CLI_DBAAS_K8S_CERT_S}/O=${K2HR3CLI_DBAAS_K8S_CERT_O}/CN=${_DBAAS_K8S_CERT_TMP_HOST_CN}" \
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_SERVER_CSR_FILE} CSR file."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -1373,7 +1345,7 @@ create_k2hr3api_certificate_files()
 		#
 		# Make server certificate
 		#
-		"${OPENSSL_BIN}" ca											\
+		if ! "${OPENSSL_BIN}" ca									\
 			-batch													\
 			-extensions	v3_server									\
 			-out		"${_DBAAS_K8S_CERT_TMP_SERVER_CERT_FILE}"	\
@@ -1381,9 +1353,8 @@ create_k2hr3api_certificate_files()
 			-passin		"${_DBAAS_K8S_CERT_TMP_PASS_OPT_VAL}"		\
 			-config		"${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF_NODE_TMP}" \
 			-infiles	"${_DBAAS_K8S_CERT_TMP_SERVER_CSR_FILE}"	\
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_SERVER_CERT_FILE} certificate file."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -1397,12 +1368,11 @@ create_k2hr3api_certificate_files()
 		#
 		# Make client secret key(2048 bit) without passphrase
 		#
-		"${OPENSSL_BIN}" genrsa								\
+		if ! "${OPENSSL_BIN}" genrsa						\
 			-out "${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}"	\
 			2048											\
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE} private key."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -1412,8 +1382,7 @@ create_k2hr3api_certificate_files()
 		fi
 		rm -f "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}"
 
-		chmod 0400 "${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! chmod 0400 "${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}"; then
 			prn_err "Failed to set permission(0400) to ${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE} private key."
 			return 1
 		fi
@@ -1422,14 +1391,13 @@ create_k2hr3api_certificate_files()
 		#
 		# Make client CSR file
 		#
-		"${OPENSSL_BIN}" req								\
+		if ! "${OPENSSL_BIN}" req							\
 			-new											\
 			-key  "${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}"	\
 			-out  "${_DBAAS_K8S_CERT_TMP_CLIENT_CSR_FILE}"	\
 			-subj "/C=${K2HR3CLI_DBAAS_K8S_CERT_C}/ST=${K2HR3CLI_DBAAS_K8S_CERT_S}/O=${K2HR3CLI_DBAAS_K8S_CERT_O}/CN=${_DBAAS_K8S_CERT_TMP_HOST_CN}" \
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_CLIENT_CSR_FILE} CSR file."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -1443,7 +1411,7 @@ create_k2hr3api_certificate_files()
 		#
 		# Make client certificate
 		#
-		"${OPENSSL_BIN}" ca											\
+		if ! "${OPENSSL_BIN}" ca									\
 			-batch													\
 			-extensions	v3_client									\
 			-out		"${_DBAAS_K8S_CERT_TMP_CLIENT_CERT_FILE}"	\
@@ -1451,9 +1419,8 @@ create_k2hr3api_certificate_files()
 			-passin		"${_DBAAS_K8S_CERT_TMP_PASS_OPT_VAL}"		\
 			-config		"${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF_NODE_TMP}" \
 			-infiles	"${_DBAAS_K8S_CERT_TMP_CLIENT_CSR_FILE}"	\
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_CLIENT_CERT_FILE} certificate file."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -1485,7 +1452,7 @@ create_k2hr3api_certificate_files()
 	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CERT_C'		"${K2HR3CLI_DBAAS_K8S_CERT_C}"
 	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CERT_S'		"${K2HR3CLI_DBAAS_K8S_CERT_S}"
 	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CERT_O'		"${K2HR3CLI_DBAAS_K8S_CERT_O}"
-	if [ "X${K2HR3CLI_OPT_SAVE_PASS}" = "X1" ]; then
+	if [ -n "${K2HR3CLI_OPT_SAVE_PASS}" ] && [ "${K2HR3CLI_OPT_SAVE_PASS}" = "1" ]; then
 		save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CA_PASS'	"${K2HR3CLI_DBAAS_K8S_CA_PASS}"
 	fi
 	prn_dbg "(create_k2hr3api_certificate_files) Saved information for self-signed CA certificate to configuration."
@@ -1529,8 +1496,7 @@ create_k2hr3api_certificate_files()
 #
 create_k2hr3app_certificate_files()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
@@ -1583,8 +1549,7 @@ create_k2hr3app_certificate_files()
 	#
 	# Get NodePort ClusterIP
 	#
-	_DBAAS_K8S_TMP_NODEPORT_CLUSTERIP=$(get_k2hr3_nodeport_cluster_ip 1 "${K2HR3CLI_DBAAS_K8S_R3APP_NAME}")
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_TMP_NODEPORT_CLUSTERIP=$(get_k2hr3_nodeport_cluster_ip 1 "${K2HR3CLI_DBAAS_K8S_R3APP_NAME}"); then
 		prn_err "K2HR3 API NodePort Service is not existed, The NodePort service must be started and the Cluster IP must be present to create the certificate. First, start the NodePort service."
 		return 1
 	fi
@@ -1612,7 +1577,7 @@ create_k2hr3app_certificate_files()
 		# (The private key is not required for the K2HR3 APP system)
 		#
 		if [ -f "${_DBAAS_K8S_CERT_TMP_SERVER_CERT_FILE}" ]; then
-			if [ "X${K2HR3CLI_DBAAS_K8S_FORCE}" != "X1" ]; then
+			if [ -z "${K2HR3CLI_DBAAS_K8S_FORCE}" ] || [ "${K2HR3CLI_DBAAS_K8S_FORCE}" != "1" ]; then
 				prn_dbg "(create_k2hr3app_certificate_files) Already have ${_DBAAS_K8S_CERT_TMP_SERVER_CERT_FILE} then do not remake it."
 				continue
 			fi
@@ -1642,22 +1607,21 @@ create_k2hr3app_certificate_files()
 		#
 		_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES="${_DBAAS_K8S_CERT_TMP_HOST_FULL},${_DBAAS_K8S_CERT_TMP_LOCAL_HOSTNAMES}"
 
-		if [ "X${K2HR3CLI_DBAAS_K8S_LOCALHOST_ALL}" != "X" ]; then
+		if [ -n "${K2HR3CLI_DBAAS_K8S_LOCALHOST_ALL}" ]; then
 			_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES="${_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES},${K2HR3CLI_DBAAS_K8S_LOCALHOST_ALL}"
 		fi
-		if [ "X${_DBAAS_K8S_TMP_NODEPORT_CLUSTERIP}" != "X" ]; then
+		if [ -n "${_DBAAS_K8S_TMP_NODEPORT_CLUSTERIP}" ]; then
 			_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES="${_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES},${_DBAAS_K8S_TMP_NODEPORT_CLUSTERIP}"
 		fi
 		# shellcheck disable=SC2153
-		if [ "X${K2HR3CLI_DBAAS_K8S_R3APP_EP}" != "X" ]; then
+		if [ -n "${K2HR3CLI_DBAAS_K8S_R3APP_EP}" ]; then
 			_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES="${_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES},${K2HR3CLI_DBAAS_K8S_R3APP_EP}"
 		fi
-		if [ "X${K2HR3CLI_DBAAS_K8S_NODE_IPS}" != "X" ]; then
+		if [ -n "${K2HR3CLI_DBAAS_K8S_NODE_IPS}" ]; then
 			_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES="${_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES},${K2HR3CLI_DBAAS_K8S_NODE_IPS}"
 		fi
 
-		_DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS=$(create_san_value_strings "${_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES},${_DBAAS_K8S_CERT_TMP_HOST_DNSRR},${_DBAAS_K8S_CERT_TMP_LOCAL_HOSTNAMES}")
-		if [ $? -ne 0 ]; then
+		if ! _DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS=$(create_san_value_strings "${_DBAAS_K8S_CERT_TMP_SAN_HOSTNAMES},${_DBAAS_K8S_CERT_TMP_HOST_DNSRR},${_DBAAS_K8S_CERT_TMP_LOCAL_HOSTNAMES}"); then
 			prn_err "Something error occurred in making SAN parameter."
 			return 1
 		fi
@@ -1666,7 +1630,7 @@ create_k2hr3app_certificate_files()
 		# Make SANs parameter:
 		# 	"subjectAltName = DNS:subname.antpickax, IP:172.0.0.1, ...."
 		#
-		if [ "X${_DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS}" = "X" ]; then
+		if [ -z "${_DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS}" ]; then
 			_DBAAS_K8S_CERT_TMP_SANS="subjectAltName = DNS:${_DBAAS_K8S_CERT_TMP_HOST_CN}"
 		else
 			_DBAAS_K8S_CERT_TMP_SANS="subjectAltName = DNS:${_DBAAS_K8S_CERT_TMP_HOST_CN}, ${_DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS}"
@@ -1688,12 +1652,11 @@ create_k2hr3app_certificate_files()
 		#
 		# Make server secret key(2048 bit) without passphrase
 		#
-		"${OPENSSL_BIN}" genrsa								\
+		if ! "${OPENSSL_BIN}" genrsa						\
 			-out "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}"	\
 			2048											\
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE} private key."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -1703,8 +1666,7 @@ create_k2hr3app_certificate_files()
 		fi
 		rm -f "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}"
 
-		chmod 0400 "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! chmod 0400 "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}"; then
 			prn_err "Failed to set permission(0400) to ${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE} private key."
 			return 1
 		fi
@@ -1713,14 +1675,13 @@ create_k2hr3app_certificate_files()
 		#
 		# Make server CSR file
 		#
-		"${OPENSSL_BIN}" req								\
+		if ! "${OPENSSL_BIN}" req							\
 			-new											\
 			-key  "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}"	\
 			-out  "${_DBAAS_K8S_CERT_TMP_SERVER_CSR_FILE}"	\
 			-subj "/C=${K2HR3CLI_DBAAS_K8S_CERT_C}/ST=${K2HR3CLI_DBAAS_K8S_CERT_S}/O=${K2HR3CLI_DBAAS_K8S_CERT_O}/CN=${_DBAAS_K8S_CERT_TMP_HOST_CN}" \
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_SERVER_CSR_FILE} CSR file."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -1734,7 +1695,7 @@ create_k2hr3app_certificate_files()
 		#
 		# Make server certificate
 		#
-		"${OPENSSL_BIN}" ca											\
+		if ! "${OPENSSL_BIN}" ca									\
 			-batch													\
 			-extensions	v3_server									\
 			-out		"${_DBAAS_K8S_CERT_TMP_SERVER_CERT_FILE}"	\
@@ -1742,9 +1703,8 @@ create_k2hr3app_certificate_files()
 			-passin		"${_DBAAS_K8S_CERT_TMP_PASS_OPT_VAL}"		\
 			-config		"${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF_NODE_TMP}" \
 			-infiles	"${_DBAAS_K8S_CERT_TMP_SERVER_CSR_FILE}"	\
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_SERVER_CERT_FILE} certificate file."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -1775,7 +1735,7 @@ create_k2hr3app_certificate_files()
 	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CERT_C'		"${K2HR3CLI_DBAAS_K8S_CERT_C}"
 	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CERT_S'		"${K2HR3CLI_DBAAS_K8S_CERT_S}"
 	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CERT_O'		"${K2HR3CLI_DBAAS_K8S_CERT_O}"
-	if [ "X${K2HR3CLI_OPT_SAVE_PASS}" = "X1" ]; then
+	if [ -n "${K2HR3CLI_OPT_SAVE_PASS}" ] && [ "${K2HR3CLI_OPT_SAVE_PASS}" = "1" ]; then
 		save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CA_PASS'	"${K2HR3CLI_DBAAS_K8S_CA_PASS}"
 	fi
 	prn_dbg "(create_k2hr3app_certificate_files) Saved information for self-signed CA certificate to configuration."
@@ -1805,8 +1765,7 @@ create_k2hr3app_certificate_files()
 #
 create_dbaas_k8s_domain_certificates()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory "1")
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory "1"); then
 		return 1
 	fi
 
@@ -1818,18 +1777,21 @@ create_dbaas_k8s_domain_certificates()
 	_DBAAS_K8S_CERT_TMP_CREATE_R3API=0
 	_DBAAS_K8S_CERT_TMP_CREATE_R3APP=0
 
-	if [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_ALL}" ]; then
+	if [ -z "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" ]; then
+		prn_err "There is an error in the type(${K2HR3CLI_DBAAS_K8S_CERT_TYPE}) of certificate to be set."
+		return 1
+	elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_ALL}" ]; then
 		_DBAAS_K8S_CERT_TMP_CREATE_CA=1
 		_DBAAS_K8S_CERT_TMP_CREATE_R3DKC=1
 		_DBAAS_K8S_CERT_TMP_CREATE_R3API=1
 		_DBAAS_K8S_CERT_TMP_CREATE_R3APP=1
-	elif [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_CA}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_CA}" ]; then
 		_DBAAS_K8S_CERT_TMP_CREATE_CA=1
-	elif [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ]; then
 		_DBAAS_K8S_CERT_TMP_CREATE_R3DKC=1
-	elif [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ]; then
 		_DBAAS_K8S_CERT_TMP_CREATE_R3API=1
-	elif [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3APP}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3APP}" ]; then
 		_DBAAS_K8S_CERT_TMP_CREATE_R3APP=1
 	else
 		prn_err "There is an error in the type(${K2HR3CLI_DBAAS_K8S_CERT_TYPE}) of certificate to be set."
@@ -1840,29 +1802,25 @@ create_dbaas_k8s_domain_certificates()
 	# Create certificates
 	#
 	if [ "${_DBAAS_K8S_CERT_TMP_CREATE_CA}" -eq 1 ]; then
-		create_ca_certificate_files
-		if [ $? -ne 0 ]; then
+		if ! create_ca_certificate_files; then
 			prn_err "Failed to create CA certificate and provate key."
 			return 1
 		fi
 	fi
 	if [ "${_DBAAS_K8S_CERT_TMP_CREATE_R3DKC}" -eq 1 ]; then
-		create_k2hdkc_certificate_files
-		if [ $? -ne 0 ]; then
+		if ! create_k2hdkc_certificate_files; then
 			prn_err "Failed to create K2HDKC in K2HR3 system certificates and provate keys."
 			return 1
 		fi
 	fi
 	if [ "${_DBAAS_K8S_CERT_TMP_CREATE_R3API}" -eq 1 ]; then
-		create_k2hr3api_certificate_files
-		if [ $? -ne 0 ]; then
+		if ! create_k2hr3api_certificate_files; then
 			prn_err "Failed to create K2HR3 API system certificates and provate keys."
 			return 1
 		fi
 	fi
 	if [ "${_DBAAS_K8S_CERT_TMP_CREATE_R3APP}" -eq 1 ]; then
-		create_k2hr3app_certificate_files
-		if [ $? -ne 0 ]; then
+		if ! create_k2hr3app_certificate_files; then
 			prn_err "Failed to create K2HR3 APP system certificates and provate keys."
 			return 1
 		fi
@@ -1910,15 +1868,20 @@ create_dbaas_k8s_domain_certificates()
 #
 delete_dbaas_k8s_domain_certificates()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
 	#
 	# distination file name(with sub directory)
 	#
-	if [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_ALL}" ]; then
+	if [ -z "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" ]; then
+		#
+		# Nothing to do
+		#
+		:
+
+	elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_ALL}" ]; then
 		#
 		# all certificates, it means all directories/files is removed
 		#
@@ -1956,7 +1919,7 @@ delete_dbaas_k8s_domain_certificates()
 			prn_dbg "(delete_dbaas_k8s_domain_certificates) Removed ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_PRIVATE_DIRNAME} directory."
 		fi
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_CA}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_CA}" ]; then
 		#
 		# Remove all files related to CA
 		#
@@ -1978,7 +1941,7 @@ delete_dbaas_k8s_domain_certificates()
 		prn_dbg "(delete_dbaas_k8s_domain_certificates) Removed ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_SERIAL_FILENAME} files."
 		prn_dbg "(delete_dbaas_k8s_domain_certificates) Removed ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_SERIAL_OLD_FILENAME} files."
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ]; then
 		#
 		# certs/pod-<r3dkc>-<num|*>.svc-<r3dkc>.<k8snamespace>.<k8sdomain>.server.crt
 		# certs/pod-<r3dkc>-<num|*>.svc-<r3dkc>.<k8snamespace>.<k8sdomain>.server.key
@@ -2007,7 +1970,7 @@ delete_dbaas_k8s_domain_certificates()
 			prn_dbg "(delete_dbaas_k8s_domain_certificates) Removed ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3DKC_NAME}-${K2HR3CLI_DBAAS_K8S_HOST_NUM}.${K2HR3CLI_DBAAS_K8S_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3DKC_NAME}.${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}.${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}${K2HR3CLI_DBAAS_K8S_CLIENT_KEY_SUFFIX} files."
 		fi
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ]; then
 		#
 		# certs/pod-<r3api>-<num|*>.svc-<r3api>.<k8snamespace>.<k8sdomain>.server.crt
 		# certs/pod-<r3api>-<num|*>.svc-<r3api>.<k8snamespace>.<k8sdomain>.server.key
@@ -2036,7 +1999,7 @@ delete_dbaas_k8s_domain_certificates()
 			prn_dbg "(delete_dbaas_k8s_domain_certificates) Removed ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}-${K2HR3CLI_DBAAS_K8S_HOST_NUM}.${K2HR3CLI_DBAAS_K8S_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}.${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}.${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}${K2HR3CLI_DBAAS_K8S_CLIENT_KEY_SUFFIX} files."
 		fi
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3APP}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3APP}" ]; then
 		#
 		# certs/pod-<r3app>.svc-<r3app>.<k8snamespace>.<k8sdomain>.server.crt
 		# certs/pod-<r3app>.svc-<r3app>.<k8snamespace>.<k8sdomain>.server.key
@@ -2061,8 +2024,7 @@ delete_dbaas_k8s_domain_certificates()
 #
 check_dbaas_k8s_domain_ca_ertification()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
@@ -2102,8 +2064,7 @@ check_dbaas_k8s_domain_ca_ertification()
 #
 check_dbaas_k8s_all_domain_certificates()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
@@ -2201,27 +2162,29 @@ check_dbaas_k8s_all_domain_certificates()
 #
 create_dbaas_k2hdkc_certificate_files()
 {
-	if [ "X$1" = "Xall" ] || [ "X$1" = "XALL" ]; then
+	if [ -z "$1" ]; then
+		prn_err "The first parameter is not specified, or wrong value."
+		return 1
+	elif [ "$1" = "all" ] || [ "$1" = "ALL" ]; then
 		_DBAAS_K8S_CLUSTER_TMP_TYPE_SERVER=1
 		_DBAAS_K8S_CLUSTER_TMP_TYPE_SLAVE=1
-	elif [ "X$1" = "Xserver" ] || [ "X$1" = "XSERVER" ]; then
+	elif [ "$1" = "server" ] || [ "$1" = "SERVER" ]; then
 		_DBAAS_K8S_CLUSTER_TMP_TYPE_SERVER=1
 		_DBAAS_K8S_CLUSTER_TMP_TYPE_SLAVE=0
-	elif [ "X$1" = "Xslave" ] || [ "X$1" = "XSLAVE" ]; then
+	elif [ "$1" = "slave" ] || [ "$1" = "SLAVE" ]; then
 		_DBAAS_K8S_CLUSTER_TMP_TYPE_SERVER=0
 		_DBAAS_K8S_CLUSTER_TMP_TYPE_SLAVE=1
 	else
 		prn_err "The first parameter is not specified, or wrong value."
 		return 1
 	fi
-	if [ "X$2" = "X1" ]; then
+	if [ -n "$2" ] && [ "$2" = "1" ]; then
 		_DBAAS_K8S_CLUSTER_TMP_OVERWRITE=1
 	else
 		_DBAAS_K8S_CLUSTER_TMP_OVERWRITE=0
 	fi
 
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
@@ -2291,7 +2254,7 @@ create_dbaas_k2hdkc_certificate_files()
 		#
 		if [ "${_DBAAS_K8S_CLUSTER_TMP_OVERWRITE}" -ne 1 ]; then
 			if [ -f "${_DBAAS_K8S_CERT_TMP_SERVER_CERT_FILE}" ] && [ -f "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}" ] && [ -f "${_DBAAS_K8S_CERT_TMP_CLIENT_CERT_FILE}" ] && [ -f "${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}" ]; then
-				if [ "X${K2HR3CLI_DBAAS_K8S_FORCE}" != "X1" ]; then
+				if [ -z "${K2HR3CLI_DBAAS_K8S_FORCE}" ] || [ "${K2HR3CLI_DBAAS_K8S_FORCE}" != "1" ]; then
 					prn_dbg "(create_dbaas_k2hdkc_certificate_files) Already have ${_DBAAS_K8S_CERT_TMP_SERVER_CERT_FILE}, ${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}, ${_DBAAS_K8S_CERT_TMP_CLIENT_CERT_FILE} and ${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}, then do not remake it."
 					continue
 				fi
@@ -2327,8 +2290,7 @@ create_dbaas_k2hdkc_certificate_files()
 		#
 		# Make SAN parameter from other hostnames/IP addresses
 		#
-		_DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS=$(create_san_value_strings "${_DBAAS_K8S_CERT_TMP_HOST_FULL},${_DBAAS_K8S_CERT_TMP_HOST_DNSRR},${_DBAAS_K8S_CERT_TMP_HOST_DNSRR_FULL},${K2HR3CLI_DBAAS_K8S_LOCALHOST_ALL}")
-		if [ $? -ne 0 ]; then
+		if ! _DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS=$(create_san_value_strings "${_DBAAS_K8S_CERT_TMP_HOST_FULL},${_DBAAS_K8S_CERT_TMP_HOST_DNSRR},${_DBAAS_K8S_CERT_TMP_HOST_DNSRR_FULL},${K2HR3CLI_DBAAS_K8S_LOCALHOST_ALL}"); then
 			prn_err "Something error occurred in making SAN parameter."
 			return 1
 		fi
@@ -2337,7 +2299,7 @@ create_dbaas_k2hdkc_certificate_files()
 		# Make SANs parameter:
 		# 	"subjectAltName = DNS:subname.antpickax, IP:172.0.0.1, ...."
 		#
-		if [ "X${_DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS}" = "X" ]; then
+		if [ -z "${_DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS}" ]; then
 			_DBAAS_K8S_CERT_TMP_SANS="subjectAltName = DNS:${_DBAAS_K8S_CERT_TMP_HOST_CN}"
 		else
 			_DBAAS_K8S_CERT_TMP_SANS="subjectAltName = DNS:${_DBAAS_K8S_CERT_TMP_HOST_CN}, ${_DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS}"
@@ -2359,12 +2321,11 @@ create_dbaas_k2hdkc_certificate_files()
 		#
 		# Make server secret key(2048 bit) without passphrase
 		#
-		"${OPENSSL_BIN}" genrsa								\
+		if ! "${OPENSSL_BIN}" genrsa						\
 			-out "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}"	\
 			2048											\
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE} private key."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -2374,8 +2335,7 @@ create_dbaas_k2hdkc_certificate_files()
 		fi
 		rm -f "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}"
 
-		chmod 0400 "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! chmod 0400 "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}"; then
 			prn_err "Failed to set permission(0400) to ${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE} private key."
 			return 1
 		fi
@@ -2384,14 +2344,13 @@ create_dbaas_k2hdkc_certificate_files()
 		#
 		# Make server CSR file
 		#
-		"${OPENSSL_BIN}" req								\
+		if ! "${OPENSSL_BIN}" req							\
 			-new											\
 			-key  "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}"	\
 			-out  "${_DBAAS_K8S_CERT_TMP_SERVER_CSR_FILE}"	\
 			-subj "/C=${K2HR3CLI_DBAAS_K8S_CERT_C}/ST=${K2HR3CLI_DBAAS_K8S_CERT_S}/O=${K2HR3CLI_DBAAS_K8S_CERT_O}/CN=${_DBAAS_K8S_CERT_TMP_HOST_CN}" \
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_SERVER_CSR_FILE} CSR file."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -2405,7 +2364,7 @@ create_dbaas_k2hdkc_certificate_files()
 		#
 		# Make server certificate
 		#
-		"${OPENSSL_BIN}" ca											\
+		if ! "${OPENSSL_BIN}" ca									\
 			-batch													\
 			-extensions	v3_server									\
 			-out		"${_DBAAS_K8S_CERT_TMP_SERVER_CERT_FILE}"	\
@@ -2413,9 +2372,8 @@ create_dbaas_k2hdkc_certificate_files()
 			-passin		"${_DBAAS_K8S_CERT_TMP_PASS_OPT_VAL}"		\
 			-config		"${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF_NODE_TMP}" \
 			-infiles	"${_DBAAS_K8S_CERT_TMP_SERVER_CSR_FILE}"	\
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_SERVER_CERT_FILE} certificate file."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -2429,12 +2387,11 @@ create_dbaas_k2hdkc_certificate_files()
 		#
 		# Make client secret key(2048 bit) without passphrase
 		#
-		"${OPENSSL_BIN}" genrsa								\
+		if ! "${OPENSSL_BIN}" genrsa						\
 			-out "${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}"	\
 			2048											\
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE} private key."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -2444,8 +2401,7 @@ create_dbaas_k2hdkc_certificate_files()
 		fi
 		rm -f "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}"
 
-		chmod 0400 "${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! chmod 0400 "${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}"; then
 			prn_err "Failed to set permission(0400) to ${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE} private key."
 			return 1
 		fi
@@ -2454,14 +2410,13 @@ create_dbaas_k2hdkc_certificate_files()
 		#
 		# Make client CSR file
 		#
-		"${OPENSSL_BIN}" req								\
+		if ! "${OPENSSL_BIN}" req							\
 			-new											\
 			-key  "${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}"	\
 			-out  "${_DBAAS_K8S_CERT_TMP_CLIENT_CSR_FILE}"	\
 			-subj "/C=${K2HR3CLI_DBAAS_K8S_CERT_C}/ST=${K2HR3CLI_DBAAS_K8S_CERT_S}/O=${K2HR3CLI_DBAAS_K8S_CERT_O}/CN=${_DBAAS_K8S_CERT_TMP_HOST_CN}" \
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_CLIENT_CSR_FILE} CSR file."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -2475,7 +2430,7 @@ create_dbaas_k2hdkc_certificate_files()
 		#
 		# Make client certificate
 		#
-		"${OPENSSL_BIN}" ca											\
+		if ! "${OPENSSL_BIN}" ca									\
 			-batch													\
 			-extensions	v3_client									\
 			-out		"${_DBAAS_K8S_CERT_TMP_CLIENT_CERT_FILE}"	\
@@ -2483,9 +2438,8 @@ create_dbaas_k2hdkc_certificate_files()
 			-passin		"${_DBAAS_K8S_CERT_TMP_PASS_OPT_VAL}"		\
 			-config		"${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF_NODE_TMP}" \
 			-infiles	"${_DBAAS_K8S_CERT_TMP_CLIENT_CSR_FILE}"	\
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_CLIENT_CERT_FILE} certificate file."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -2536,7 +2490,7 @@ create_dbaas_k2hdkc_certificate_files()
 		#
 		if [ "${_DBAAS_K8S_CLUSTER_TMP_OVERWRITE}" -ne 1 ]; then
 			if [ -f "${_DBAAS_K8S_CERT_TMP_SERVER_CERT_FILE}" ] && [ -f "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}" ] && [ -f "${_DBAAS_K8S_CERT_TMP_CLIENT_CERT_FILE}" ] && [ -f "${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}" ]; then
-				if [ "X${K2HR3CLI_DBAAS_K8S_FORCE}" != "X1" ]; then
+				if [ -z "${K2HR3CLI_DBAAS_K8S_FORCE}" ] || [ "${K2HR3CLI_DBAAS_K8S_FORCE}" != "1" ]; then
 					prn_dbg "(create_dbaas_k2hdkc_certificate_files) Already have ${_DBAAS_K8S_CERT_TMP_SERVER_CERT_FILE}, ${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}, ${_DBAAS_K8S_CERT_TMP_CLIENT_CERT_FILE} and ${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}, then do not remake it."
 					continue
 				fi
@@ -2572,8 +2526,7 @@ create_dbaas_k2hdkc_certificate_files()
 		#
 		# Make SAN parameter from other hostnames/IP addresses
 		#
-		_DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS=$(create_san_value_strings "${_DBAAS_K8S_CERT_TMP_HOST_FULL},${_DBAAS_K8S_CERT_TMP_HOST_DNSRR},${_DBAAS_K8S_CERT_TMP_HOST_DNSRR_FULL},${K2HR3CLI_DBAAS_K8S_LOCALHOST_ALL}")
-		if [ $? -ne 0 ]; then
+		if ! _DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS=$(create_san_value_strings "${_DBAAS_K8S_CERT_TMP_HOST_FULL},${_DBAAS_K8S_CERT_TMP_HOST_DNSRR},${_DBAAS_K8S_CERT_TMP_HOST_DNSRR_FULL},${K2HR3CLI_DBAAS_K8S_LOCALHOST_ALL}"); then
 			prn_err "Something error occurred in making SAN parameter."
 			return 1
 		fi
@@ -2582,7 +2535,7 @@ create_dbaas_k2hdkc_certificate_files()
 		# Make SANs parameter:
 		# 	"subjectAltName = DNS:subname.antpickax, IP:172.0.0.1, ...."
 		#
-		if [ "X${_DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS}" = "X" ]; then
+		if [ -z "${_DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS}" ]; then
 			_DBAAS_K8S_CERT_TMP_SANS="subjectAltName = DNS:${_DBAAS_K8S_CERT_TMP_HOST_CN}"
 		else
 			_DBAAS_K8S_CERT_TMP_SANS="subjectAltName = DNS:${_DBAAS_K8S_CERT_TMP_HOST_CN}, ${_DBAAS_K8S_CERT_TMP_SAN_OTHER_PARAMS}"
@@ -2604,12 +2557,11 @@ create_dbaas_k2hdkc_certificate_files()
 		#
 		# Make server secret key(2048 bit) without passphrase
 		#
-		"${OPENSSL_BIN}" genrsa								\
+		if ! "${OPENSSL_BIN}" genrsa						\
 			-out "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}"	\
 			2048											\
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE} private key."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -2619,8 +2571,7 @@ create_dbaas_k2hdkc_certificate_files()
 		fi
 		rm -f "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}"
 
-		chmod 0400 "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! chmod 0400 "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}"; then
 			prn_err "Failed to set permission(0400) to ${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE} private key."
 			return 1
 		fi
@@ -2629,14 +2580,13 @@ create_dbaas_k2hdkc_certificate_files()
 		#
 		# Make server CSR file
 		#
-		"${OPENSSL_BIN}" req								\
+		if ! "${OPENSSL_BIN}" req							\
 			-new											\
 			-key  "${_DBAAS_K8S_CERT_TMP_SERVER_KEY_FILE}"	\
 			-out  "${_DBAAS_K8S_CERT_TMP_SERVER_CSR_FILE}"	\
 			-subj "/C=${K2HR3CLI_DBAAS_K8S_CERT_C}/ST=${K2HR3CLI_DBAAS_K8S_CERT_S}/O=${K2HR3CLI_DBAAS_K8S_CERT_O}/CN=${_DBAAS_K8S_CERT_TMP_HOST_CN}" \
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_SERVER_CSR_FILE} CSR file."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -2650,7 +2600,7 @@ create_dbaas_k2hdkc_certificate_files()
 		#
 		# Make server certificate
 		#
-		"${OPENSSL_BIN}" ca											\
+		if ! "${OPENSSL_BIN}" ca									\
 			-batch													\
 			-extensions	v3_server									\
 			-out		"${_DBAAS_K8S_CERT_TMP_SERVER_CERT_FILE}"	\
@@ -2658,9 +2608,8 @@ create_dbaas_k2hdkc_certificate_files()
 			-passin		"${_DBAAS_K8S_CERT_TMP_PASS_OPT_VAL}"		\
 			-config		"${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF_NODE_TMP}" \
 			-infiles	"${_DBAAS_K8S_CERT_TMP_SERVER_CSR_FILE}"	\
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_SERVER_CERT_FILE} certificate file."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -2674,12 +2623,11 @@ create_dbaas_k2hdkc_certificate_files()
 		#
 		# Make client secret key(2048 bit) without passphrase
 		#
-		"${OPENSSL_BIN}" genrsa								\
+		if ! "${OPENSSL_BIN}" genrsa						\
 			-out "${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}"	\
 			2048											\
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE} private key."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -2689,8 +2637,7 @@ create_dbaas_k2hdkc_certificate_files()
 		fi
 		rm -f "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}"
 
-		chmod 0400 "${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! chmod 0400 "${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}"; then
 			prn_err "Failed to set permission(0400) to ${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE} private key."
 			return 1
 		fi
@@ -2699,14 +2646,13 @@ create_dbaas_k2hdkc_certificate_files()
 		#
 		# Make client CSR file
 		#
-		"${OPENSSL_BIN}" req								\
+		if ! "${OPENSSL_BIN}" req							\
 			-new											\
 			-key  "${_DBAAS_K8S_CERT_TMP_CLIENT_KEY_FILE}"	\
 			-out  "${_DBAAS_K8S_CERT_TMP_CLIENT_CSR_FILE}"	\
 			-subj "/C=${K2HR3CLI_DBAAS_K8S_CERT_C}/ST=${K2HR3CLI_DBAAS_K8S_CERT_S}/O=${K2HR3CLI_DBAAS_K8S_CERT_O}/CN=${_DBAAS_K8S_CERT_TMP_HOST_CN}" \
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_CLIENT_CSR_FILE} CSR file."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -2720,7 +2666,7 @@ create_dbaas_k2hdkc_certificate_files()
 		#
 		# Make client certificate
 		#
-		"${OPENSSL_BIN}" ca											\
+		if ! "${OPENSSL_BIN}" ca									\
 			-batch													\
 			-extensions	v3_client									\
 			-out		"${_DBAAS_K8S_CERT_TMP_CLIENT_CERT_FILE}"	\
@@ -2728,9 +2674,8 @@ create_dbaas_k2hdkc_certificate_files()
 			-passin		"${_DBAAS_K8S_CERT_TMP_PASS_OPT_VAL}"		\
 			-config		"${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF_NODE_TMP}" \
 			-infiles	"${_DBAAS_K8S_CERT_TMP_CLIENT_CSR_FILE}"	\
-			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1
+			> "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 2>&1; then
 
-		if [ $? -ne 0 ]; then
 			prn_err "Failed to create ${_DBAAS_K8S_CERT_TMP_CLIENT_CERT_FILE} certificate file."
 			pecho ""
 			cat "${_DBAAS_K8S_OPENSSL_OUTPUT_FILE}" 1>&2
@@ -2783,8 +2728,7 @@ create_dbaas_k2hdkc_certificate_files()
 #
 delete_dbaas_k2hdkc_certificates()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
@@ -2863,13 +2807,16 @@ delete_dbaas_k2hdkc_certificates()
 #
 check_dbaas_k2hdkc_certificates()
 {
-	if [ "X$1" = "Xall" ] || [ "X$1" = "XALL" ]; then
+	if [ -z "$1" ]; then
+		prn_err "The first parameter is not specified, or wrong value."
+		return 1
+	elif [ "$1" = "all" ] || [ "$1" = "ALL" ]; then
 		_DBAAS_K8S_CLUSTER_TMP_TYPE_SERVER=1
 		_DBAAS_K8S_CLUSTER_TMP_TYPE_SLAVE=1
-	elif [ "X$1" = "Xserver" ] || [ "X$1" = "XSERVER" ]; then
+	elif [ "$1" = "server" ] || [ "$1" = "SERVER" ]; then
 		_DBAAS_K8S_CLUSTER_TMP_TYPE_SERVER=1
 		_DBAAS_K8S_CLUSTER_TMP_TYPE_SLAVE=0
-	elif [ "X$1" = "Xslave" ] || [ "X$1" = "XSLAVE" ]; then
+	elif [ "$1" = "slave" ] || [ "$1" = "SLAVE" ]; then
 		_DBAAS_K8S_CLUSTER_TMP_TYPE_SERVER=0
 		_DBAAS_K8S_CLUSTER_TMP_TYPE_SLAVE=1
 	else
@@ -2877,8 +2824,7 @@ check_dbaas_k2hdkc_certificates()
 		return 1
 	fi
 
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 

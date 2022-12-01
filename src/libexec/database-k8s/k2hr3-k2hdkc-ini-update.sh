@@ -66,50 +66,50 @@ DATE=$(date -R)
 #----------------------------------------------------------
 # Check enviroment values
 #----------------------------------------------------------
-if [ "X${CHMPX_INI_TEMPLATE_FILE}" = "X" ]; then
+if [ -z "${CHMPX_INI_TEMPLATE_FILE}" ]; then
 	exit 1
 fi
-if [ "X${CHMPX_INI_DIR}" = "X" ]; then
+if [ -z "${CHMPX_INI_DIR}" ]; then
 	exit 1
 fi
-if [ "X${CHMPX_SERVER_PORT}" = "X" ]; then
+if [ -z "${CHMPX_SERVER_PORT}" ]; then
 	exit 1
 fi
-if [ "X${CHMPX_SERVER_CTLPORT}" = "X" ]; then
+if [ -z "${CHMPX_SERVER_CTLPORT}" ]; then
 	exit 1
 fi
-if [ "X${CHMPX_SLAVE_CTLPORT}" = "X" ]; then
+if [ -z "${CHMPX_SLAVE_CTLPORT}" ]; then
 	exit 1
 fi
-if [ "X${CHMPX_SERVER_COUNT}" = "X" ]; then
+if [ -z "${CHMPX_SERVER_COUNT}" ]; then
 	exit 1
 fi
-if [ "X${CHMPX_SERVER_NAMEBASE}" = "X" ]; then
+if [ -z "${CHMPX_SERVER_NAMEBASE}" ]; then
 	exit 1
 fi
-if [ "X${CHMPX_SLAVE_COUNT}" = "X" ]; then
+if [ -z "${CHMPX_SLAVE_COUNT}" ]; then
 	exit 1
 fi
-if [ "X${CHMPX_SLAVE_NAMEBASE}" = "X" ]; then
+if [ -z "${CHMPX_SLAVE_NAMEBASE}" ]; then
 	exit 1
 fi
-if [ "X${CHMPX_POD_NAMESPACE}" = "X" ]; then
+if [ -z "${CHMPX_POD_NAMESPACE}" ]; then
 	exit 1
 fi
-if [ "X${CHMPX_DEFAULT_DOMAIN}" = "X" ]; then
+if [ -z "${CHMPX_DEFAULT_DOMAIN}" ]; then
 	exit 1
 fi
-if [ "X${CHMPX_SELF_HOSTNAME}" = "X" ]; then
+if [ -z "${CHMPX_SELF_HOSTNAME}" ]; then
 	exit 1
 fi
 
 #
 # Allow empty value
 #
-if [ "X${SEC_CA_MOUNTPOINT}" != "X" ] && [ ! -d "${SEC_CA_MOUNTPOINT}" ]; then
+if [ -n "${SEC_CA_MOUNTPOINT}" ] && [ ! -d "${SEC_CA_MOUNTPOINT}" ]; then
 	exit 1
 fi
-if [ "X${SEC_CERTS_MOUNTPOINT}" != "X" ] && [ ! -d "${SEC_CERTS_MOUNTPOINT}" ]; then
+if [ -n "${SEC_CERTS_MOUNTPOINT}" ] && [ ! -d "${SEC_CERTS_MOUNTPOINT}" ]; then
 	exit 1
 fi
 
@@ -128,11 +128,13 @@ mkdir -p "${CHMPX_INI_DIR}"
 #----------------------------------------------------------
 # Set chmpx mode and set common values
 #----------------------------------------------------------
-if [ "X${CHMPX_MODE}" = "XSERVER" ] || [ "X${CHMPX_MODE}" = "Xserver" ]; then
+if [ -z "${CHMPX_MODE}" ]; then
+	exit 1
+elif [ "${CHMPX_MODE}" = "SERVER" ] || [ "${CHMPX_MODE}" = "server" ]; then
 	CHMPX_MODE="SERVER"
 	CHMPX_SELFPORT=${CHMPX_SERVER_CTLPORT}
 	CHMPX_INI_FILENAME="server.ini"
-elif [ "X${CHMPX_MODE}" = "XSLAVE" ] || [ "X${CHMPX_MODE}" = "Xslave" ]; then
+elif [ "${CHMPX_MODE}" = "SLAVE" ] || [ "${CHMPX_MODE}" = "slave" ]; then
 	CHMPX_MODE="SLAVE"
 	CHMPX_SELFPORT=${CHMPX_SLAVE_CTLPORT}
 	CHMPX_INI_FILENAME="slave.ini"
@@ -153,10 +155,10 @@ GLOBAL_PART_SLAVE_PRIKEY=""
 
 SELF_HOSTNAME=$(hostname)
 
-if [ "X${SEC_CA_MOUNTPOINT}" != "X" ]; then
+if [ -n "${SEC_CA_MOUNTPOINT}" ]; then
 	SECRET_CA_CERT_FILE=$(find "${SEC_CA_MOUNTPOINT}/" -name '*_CA.crt' | head -1)
 
-	if [ "X${SECRET_CA_CERT_FILE}" != "X" ]; then
+	if [ -n "${SECRET_CA_CERT_FILE}" ]; then
 		cp "${SECRET_CA_CERT_FILE}" "${CHMPX_INI_DIR}/ca.crt"	|| exit 1
 		chmod 0444 "${CHMPX_INI_DIR}/ca.crt"					|| exit 1
 
@@ -164,21 +166,21 @@ if [ "X${SEC_CA_MOUNTPOINT}" != "X" ]; then
 	fi
 fi
 
-if [ "X${SEC_CERTS_MOUNTPOINT}" != "X" ]; then
+if [ -n "${SEC_CERTS_MOUNTPOINT}" ]; then
 	SECRET_SELF_SERVER_CRT=$(find "${SEC_CERTS_MOUNTPOINT}/" -name "${SELF_HOSTNAME}.*server.crt" | head -1)
 	SECRET_SELF_SERVER_KEY=$(find "${SEC_CERTS_MOUNTPOINT}/" -name "${SELF_HOSTNAME}.*server.key" | head -1)
 	SECRET_SELF_CLIENT_CRT=$(find "${SEC_CERTS_MOUNTPOINT}/" -name "${SELF_HOSTNAME}.*client.crt" | head -1)
 	SECRET_SELF_CLIENT_KEY=$(find "${SEC_CERTS_MOUNTPOINT}/" -name "${SELF_HOSTNAME}.*client.key" | head -1)
 
-	if [ "X${SECRET_SELF_SERVER_CRT}" != "X" ] && [ "X${SECRET_SELF_SERVER_KEY}" != "X" ] && [ "X${SECRET_SELF_CLIENT_CRT}" != "X" ] && [ "X${SECRET_SELF_CLIENT_KEY}" != "X" ]; then
+	if [ -n "${SECRET_SELF_SERVER_CRT}" ] && [ -n "${SECRET_SELF_SERVER_KEY}" ] && [ -n "${SECRET_SELF_CLIENT_CRT}" ] && [ -n "${SECRET_SELF_CLIENT_KEY}" ]; then
 		cp "${SECRET_SELF_SERVER_CRT}" "${CHMPX_INI_DIR}/server.crt"	|| exit 1
 		cp "${SECRET_SELF_SERVER_KEY}" "${CHMPX_INI_DIR}/server.key"	|| exit 1
 		cp "${SECRET_SELF_CLIENT_CRT}" "${CHMPX_INI_DIR}/client.crt"	|| exit 1
 		cp "${SECRET_SELF_CLIENT_KEY}" "${CHMPX_INI_DIR}/client.key"	|| exit 1
-		chmod 0444 "${CHMPX_INI_DIR}/server.crt"	|| exit 1
-		chmod 0400 "${CHMPX_INI_DIR}/server.key"	|| exit 1
-		chmod 0444 "${CHMPX_INI_DIR}/client.crt"	|| exit 1
-		chmod 0400 "${CHMPX_INI_DIR}/client.key"	|| exit 1
+		chmod 0444 "${CHMPX_INI_DIR}/server.crt"						|| exit 1
+		chmod 0400 "${CHMPX_INI_DIR}/server.key"						|| exit 1
+		chmod 0444 "${CHMPX_INI_DIR}/client.crt"						|| exit 1
+		chmod 0400 "${CHMPX_INI_DIR}/client.key"						|| exit 1
 
 		GLOBAL_PART_SSL="SSL = on"
 		GLOBAL_PART_SSL_VERIFY_PEER="SSL_VERIFY_PEER = on"
@@ -264,12 +266,8 @@ set +e
 WAIT_SEC=10
 POD_NUMBER=$(echo "${CHMPX_SELF_HOSTNAME}" | sed 's/-/ /g' | awk '{print $NF}')
 
-# shellcheck disable=SC2003
-expr "${POD_NUMBER}" + 1 >/dev/null 2>&1
-if [ $? -eq 0 ]; then
-	if [ "${POD_NUMBER}" -eq 0 ]; then
-		WAIT_SEC=0
-	fi
+if [ -z "${POD_NUMBER}" ] || [ "${POD_NUMBER}" = "0" ]; then
+	WAIT_SEC=0
 fi
 
 sleep "${WAIT_SEC}"

@@ -95,6 +95,9 @@ check_dbaas_k8s_cluster_domain()
 			K2HR3CLI_DBAAS_K8S_K8SDOMAIN=${_DBAAS_K8S_CONFIG_TMP_K8S_DOMAIN}
 
 		elif [ -z "${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}" ]; then
+			# [NOTE]
+			# Since the condition becomes complicated, use "X"(temporary word).
+			#
 			if [ "X${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}" != "X${_DBAAS_K8S_CONFIG_TMP_K8S_DOMAIN}" ]; then
 				prn_err "The values of the \"${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_DOMAIN_LONG}\" and \"${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_K8SDOMAIN_LONG}\" options are inconsistent."
 				return 1
@@ -102,6 +105,9 @@ check_dbaas_k8s_cluster_domain()
 			K2HR3CLI_DBAAS_K8S_K8SNAMESPACE=${_DBAAS_K8S_CONFIG_TMP_K8S_NAMESPACE}
 
 		elif [ -z "${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}" ]; then
+			# [NOTE]
+			# Since the condition becomes complicated, use "X"(temporary word).
+			#
 			if [ "X${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}" != "X${_DBAAS_K8S_CONFIG_TMP_K8S_NAMESPACE}" ]; then
 				prn_err "The values of the \"${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_DOMAIN_LONG}\" and \"${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_K8SNAMESPACE_LONG}\" options are inconsistent."
 				return 1
@@ -139,13 +145,13 @@ check_dbaas_k8s_cluster_domain()
 # shellcheck disable=SC2120
 get_dbaas_k8s_cluster_directory()
 {
-	if [ "X$1" = "X1" ]; then
+	if [ -n "$1" ] && [ "$1" = "1" ]; then
 		_DBAAS_K8S_CONFIG_CREATE_DIR=1
 	else
 		_DBAAS_K8S_CONFIG_CREATE_DIR=0
 	fi
 
-	if [ "X${K2HR3CLI_DBAAS_K8S_DOMAIN}" != "X${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}.${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}" ]; then
+	if [ -z "${K2HR3CLI_DBAAS_K8S_DOMAIN}" ] || [ "${K2HR3CLI_DBAAS_K8S_DOMAIN}" != "${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}.${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}" ]; then
 		prn_err "K2HDKC DBaaS K8S cluster domain parameters are inconsistent: ${K2HR3CLI_DBAAS_K8S_DOMAIN} is not as same as ${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}.${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}"
 		pecho -n ""
 		return 1
@@ -160,8 +166,7 @@ get_dbaas_k8s_cluster_directory()
 		#
 		# Create domain directory
 		#
-		mkdir -p "${K2HR3CLI_DBAAS_K8S_CONFIG}/${K2HR3CLI_DBAAS_K8S_DOMAIN_PREFIX}${K2HR3CLI_DBAAS_K8S_DOMAIN}"
-		if [ $? -ne 0 ]; then
+		if ! mkdir -p "${K2HR3CLI_DBAAS_K8S_CONFIG}/${K2HR3CLI_DBAAS_K8S_DOMAIN_PREFIX}${K2HR3CLI_DBAAS_K8S_DOMAIN}"; then
 			prn_dbg "(get_dbaas_k8s_cluster_directory) K2HDKC DBaaS K8S cluster domain directory(${K2HR3CLI_DBAAS_K8S_CONFIG}/${K2HR3CLI_DBAAS_K8S_DOMAIN_PREFIX}${K2HR3CLI_DBAAS_K8S_DOMAIN}) is not existed, and failed creating it."
 			pecho -n ""
 			return 1
@@ -191,8 +196,7 @@ get_dbaas_k8s_all_domains()
 	fi
 
 	_DBAAS_K8S_CONFIG_TMP_LIST=$(ls -d "${K2HR3CLI_DBAAS_K8S_CONFIG}"/"${K2HR3CLI_DBAAS_K8S_DOMAIN_PREFIX}"*/ 2>/dev/null)
-	_DBAAS_K8S_CONFIG_TMP_RESULT=$(echo "${_DBAAS_K8S_CONFIG_TMP_LIST}" | sed -e "s#^${K2HR3CLI_DBAAS_K8S_CONFIG}/##g" -e 's#/$##g' -e '/^$/d' 2>/dev/null)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CONFIG_TMP_RESULT=$(echo "${_DBAAS_K8S_CONFIG_TMP_LIST}" | sed -e "s#^${K2HR3CLI_DBAAS_K8S_CONFIG}/##g" -e 's#/$##g' -e '/^$/d' 2>/dev/null); then
 		prn_warn "Something error occurred in listing K2HDKC DBaaS K8S configuration directory."
 		pecho -n ""
 		return 0
@@ -220,8 +224,9 @@ get_dbaas_k8s_value_from_configuration()
 		return 1
 	fi
 
-	_DBAAS_K8S_CONFIG_TMP_VALUE=$(sed -e 's/#.*$//g' -e 's/[[:space:]]*$//g' -e 's/^[[:space:]]*//g' -e '/^$/d' "${_DBAAS_K8S_CONFIG_TMP_FILEPATH}" | grep "^${_DBAAS_K8S_CONFIG_TMP_KEYNAME}[[:space:]]*=" | sed -e "s#^${_DBAAS_K8S_CONFIG_TMP_KEYNAME}[[:space:]]*=[[:space:]]*##g" -e 's/^\"//g' -e 's/\"$//g' | head -1)
-	if [ $? -ne 0 ] || [ -z "${_DBAAS_K8S_CONFIG_TMP_VALUE}" ]; then
+	if ! _DBAAS_K8S_CONFIG_TMP_VALUE=$(sed -e 's/#.*$//g' -e 's/[[:space:]]*$//g' -e 's/^[[:space:]]*//g' -e '/^$/d' "${_DBAAS_K8S_CONFIG_TMP_FILEPATH}" | grep "^${_DBAAS_K8S_CONFIG_TMP_KEYNAME}[[:space:]]*=" | sed -e "s#^${_DBAAS_K8S_CONFIG_TMP_KEYNAME}[[:space:]]*=[[:space:]]*##g" -e 's/^\"//g' -e 's/\"$//g' | head -1); then
+		_DBAAS_K8S_CONFIG_TMP_VALUE=""
+	elif [ -z "${_DBAAS_K8S_CONFIG_TMP_VALUE}" ]; then
 		_DBAAS_K8S_CONFIG_TMP_VALUE=""
 	fi
 	pecho -n "${_DBAAS_K8S_CONFIG_TMP_VALUE}"
@@ -255,8 +260,7 @@ save_dbaas_k8s_value_from_configuration()
 	#
 	# Replace
 	#
-	sed -i -e "s#^[[:space:]]*${_DBAAS_K8S_CONFIG_TMP_KEYNAME}[[:space:]]*=.*#${_DBAAS_K8S_CONFIG_TMP_KEYNAME}=${_DBAAS_K8S_CONFIG_TMP_VALUE}#g" "${_DBAAS_K8S_CONFIG_TMP_FILEPATH}"
-	if [ $? -ne 0 ]; then
+	if ! sed -i -e "s#^[[:space:]]*${_DBAAS_K8S_CONFIG_TMP_KEYNAME}[[:space:]]*=.*#${_DBAAS_K8S_CONFIG_TMP_KEYNAME}=${_DBAAS_K8S_CONFIG_TMP_VALUE}#g" "${_DBAAS_K8S_CONFIG_TMP_FILEPATH}"; then
 		#
 		# Restore backup file
 		#
@@ -294,8 +298,7 @@ get_dbaas_k8s_config_path()
 			return 1
 		fi
 
-		sed -e "s#${K2HR3CLI_DBAAS_K8S_KEYWORD_CURRENT_DIR}#${K2HR3CLI_DBAAS_K8S_CURDIR}#g" "${K2HR3CLI_DBAAS_K8S_CURDIR}/${K2HR3CLI_DBAAS_K8S_COMMON_CONFIG_FILENAME}" > "${K2HR3CLI_DBAAS_K8S_CONFIG}/${K2HR3CLI_DBAAS_K8S_COMMON_CONFIG_FILENAME}"
-		if [ $? -ne 0 ]; then
+		if ! sed -e "s#${K2HR3CLI_DBAAS_K8S_KEYWORD_CURRENT_DIR}#${K2HR3CLI_DBAAS_K8S_CURDIR}#g" "${K2HR3CLI_DBAAS_K8S_CURDIR}/${K2HR3CLI_DBAAS_K8S_COMMON_CONFIG_FILENAME}" > "${K2HR3CLI_DBAAS_K8S_CONFIG}/${K2HR3CLI_DBAAS_K8S_COMMON_CONFIG_FILENAME}"; then
 			prn_err "Failed to copy K2HDKC DBaaS K8S configuration template file(${K2HR3CLI_DBAAS_K8S_CURDIR}/${K2HR3CLI_DBAAS_K8S_COMMON_CONFIG_FILENAME}) to local(${K2HR3CLI_DBAAS_K8S_CONFIG}/${K2HR3CLI_DBAAS_K8S_COMMON_CONFIG_FILENAME})."
 			return 1
 		fi
@@ -314,8 +317,7 @@ get_dbaas_k8s_config_path()
 #
 get_dbaas_k8s_config_value()
 {
-	_DBAAS_K8S_GLOBAL_CONFIG_FILEPATH=$(get_dbaas_k8s_config_path)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_GLOBAL_CONFIG_FILEPATH=$(get_dbaas_k8s_config_path); then
 		prn_err "K2HDKC DBaaS K8S Global configuration file is not existed."
 		return 0
 	fi
@@ -326,8 +328,9 @@ get_dbaas_k8s_config_value()
 		return 1
 	fi
 
-	_DBAAS_K8S_CONFIG_TMP_VALUE=$(sed -e 's/#.*$//g' -e 's/[[:space:]]*$//g' -e 's/^[[:space:]]*//g' -e '/^$/d' "${_DBAAS_K8S_GLOBAL_CONFIG_FILEPATH}" | grep "^${_DBAAS_K8S_GLOBAL_CONFIG_FILEPATH}[[:space:]]*=" | sed -e "s#^${_DBAAS_K8S_GLOBAL_CONFIG_FILEPATH}[[:space:]]*=[[:space:]]*##g" | head -1)
-	if [ $? -ne 0 ] || [ -z "${_DBAAS_K8S_CONFIG_TMP_VALUE}" ]; then
+	if ! _DBAAS_K8S_CONFIG_TMP_VALUE=$(sed -e 's/#.*$//g' -e 's/[[:space:]]*$//g' -e 's/^[[:space:]]*//g' -e '/^$/d' "${_DBAAS_K8S_GLOBAL_CONFIG_FILEPATH}" | grep "^${_DBAAS_K8S_GLOBAL_CONFIG_FILEPATH}[[:space:]]*=" | sed -e "s#^${_DBAAS_K8S_GLOBAL_CONFIG_FILEPATH}[[:space:]]*=[[:space:]]*##g" | head -1); then
+		_DBAAS_K8S_CONFIG_TMP_VALUE=""
+	elif [ -z "${_DBAAS_K8S_CONFIG_TMP_VALUE}" ]; then
 		_DBAAS_K8S_CONFIG_TMP_VALUE=""
 	fi
 	pecho -n "${_DBAAS_K8S_CONFIG_TMP_VALUE}"
@@ -357,9 +360,8 @@ get_dbaas_k8s_config_value()
 #
 get_dbaas_k8s_config_contents()
 {
-	_DBAAS_K8S_GLOBAL_CONFIG_FILEPATH=$(get_dbaas_k8s_config_path)
-	if [ $? -ne 0 ]; then
-		if [ "X${K2HR3CLI_OPT_JSON}" = "X1" ]; then
+	if ! _DBAAS_K8S_GLOBAL_CONFIG_FILEPATH=$(get_dbaas_k8s_config_path); then
+		if [ -n "${K2HR3CLI_OPT_JSON}" ] && [ "${K2HR3CLI_OPT_JSON}" = "1" ]; then
 			pecho -n "{}"
 		else
 			pecho -n ""
@@ -375,7 +377,7 @@ get_dbaas_k8s_config_contents()
 	#
 	# For JSON format
 	#
-	if [ "X${K2HR3CLI_OPT_JSON}" = "X1" ]; then
+	if [ -n "${K2HR3CLI_OPT_JSON}" ] && [ "${K2HR3CLI_OPT_JSON}" = "1" ]; then
 		_DBAAS_K8S_CONFIG_TMP_ALL=${_DBAAS_K8S_CONFIG_TMP_RESULT}
 
 		_DBAAS_K8S_CONFIG_TMP_RESULT="{"
@@ -429,9 +431,8 @@ get_dbaas_k8s_all_domain_contents()
 	#
 	# Get all domains
 	#
-	_DBAAS_K8S_CONFIG_TMP_RESULT=$(get_dbaas_k8s_all_domains)
-	if [ $? -ne 0 ]; then
-		if [ "X${K2HR3CLI_OPT_JSON}" = "X1" ]; then
+	if ! _DBAAS_K8S_CONFIG_TMP_RESULT=$(get_dbaas_k8s_all_domains); then
+		if [ -n "${K2HR3CLI_OPT_JSON}" ] && [ "${K2HR3CLI_OPT_JSON}" = "1" ]; then
 			pecho -n "[]"
 		else
 			pecho -n ""
@@ -442,7 +443,7 @@ get_dbaas_k8s_all_domain_contents()
 	#
 	# For JSON format
 	#
-	if [ "X${K2HR3CLI_OPT_JSON}" = "X1" ]; then
+	if [ -n "${K2HR3CLI_OPT_JSON}" ] && [ "${K2HR3CLI_OPT_JSON}" = "1" ]; then
 		_DBAAS_K8S_CONFIG_TMP_ALL=${_DBAAS_K8S_CONFIG_TMP_RESULT}
 
 		_DBAAS_K8S_CONFIG_TMP_RESULT="["
@@ -504,7 +505,7 @@ get_dbaas_k8s_all_configurations()
 	_DBAAS_K8S_CONFIG_TMP_GLOBAL=$(get_dbaas_k8s_config_contents)
 	_DBAAS_K8S_CONFIG_TMP_DOMAINS=$(get_dbaas_k8s_all_domain_contents)
 
-	if [ "X${K2HR3CLI_OPT_JSON}" = "X1" ]; then
+	if [ -n "${K2HR3CLI_OPT_JSON}" ] && [ "${K2HR3CLI_OPT_JSON}" = "1" ]; then
 		#
 		# JSON
 		#
@@ -517,14 +518,14 @@ get_dbaas_k8s_all_configurations()
 		#
 		pecho "[K2HDKC DBaaS K8S configuration]"
 		for _one_element in ${_DBAAS_K8S_CONFIG_TMP_GLOBAL}; do
-			if [ "X${_one_element}" != "X" ]; then
+			if [ -n "${_one_element}" ]; then
 				pecho "${_one_element}"
 			fi
 		done
 		pecho "[K2HDKC DBaaS K8S cluster domains]"
 		for _one_element in ${_DBAAS_K8S_CONFIG_TMP_DOMAINS}; do
 			_filter_one_element=$(echo "${_one_element}" | sed -e "s#^${K2HR3CLI_DBAAS_K8S_DOMAIN_PREFIX}##g")
-			if [ "X${_filter_one_element}" != "X" ]; then
+			if [ -n "${_filter_one_element}" ]; then
 				pecho "${_filter_one_element}"
 			fi
 		done
@@ -559,7 +560,7 @@ get_dbaas_k8s_all_configurations()
 #
 get_dbaas_k8s_cluster_k2hr3_config_contents()
 {
-	if [ "X${K2HR3CLI_DBAAS_K8S_DOMAIN}" != "X${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}.${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}" ]; then
+	if [ -z "${K2HR3CLI_DBAAS_K8S_DOMAIN}" ] || [ "${K2HR3CLI_DBAAS_K8S_DOMAIN}" != "${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}.${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}" ]; then
 		prn_err "K2HDKC DBaaS K8S cluster domain parameters are inconsistent: ${K2HR3CLI_DBAAS_K8S_DOMAIN} is not as same as ${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}.${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}"
 		return 1
 	fi
@@ -577,7 +578,7 @@ get_dbaas_k8s_cluster_k2hr3_config_contents()
 	#
 	# Output
 	#
-	if [ "X${K2HR3CLI_OPT_JSON}" = "X1" ]; then
+	if [ -n "${K2HR3CLI_OPT_JSON}" ] && [ "${K2HR3CLI_OPT_JSON}" = "1" ]; then
 		#
 		# JSON
 		#
@@ -623,7 +624,7 @@ get_dbaas_k8s_cluster_k2hr3_config_contents()
 			pecho "  (No key and value)"
 		else
 			for _one_element in ${_DBAAS_K8S_CONFIG_TMP_RESULT}; do
-				if [ "X${_one_element}" != "X" ]; then
+				if [ -n "${_one_element}" ]; then
 					pecho "  ${_one_element}"
 				fi
 			done
@@ -672,15 +673,16 @@ load_dbaas_k8s_k2hr3_configuration()
 	# Check Cluster directory
 	#
 	# shellcheck disable=SC2119
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ] || [ -z "${_DBAAS_K8S_CLUSTER_DIRPATH}" ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
+		prn_dbg "(load_dbaas_k8s_k2hr3_configuration) Could not get the configuration directory path of K2HDKC DBaaS K8S cluster."
+		return 0
+	elif [ -z "${_DBAAS_K8S_CLUSTER_DIRPATH}" ]; then
 		prn_dbg "(load_dbaas_k8s_k2hr3_configuration) Could not get the configuration directory path of K2HDKC DBaaS K8S cluster."
 		return 0
 	fi
 	if [ ! -d "${_DBAAS_K8S_CLUSTER_DIRPATH}" ]; then
 		prn_info "Not found the configuration directory(${_DBAAS_K8S_CLUSTER_DIRPATH}) for K2HDKC DBaaS K8S cluster, thus create it."
-		mkdir -p "${_DBAAS_K8S_CLUSTER_DIRPATH}"
-		if [ $? -ne 0 ]; then
+		if ! mkdir -p "${_DBAAS_K8S_CLUSTER_DIRPATH}"; then
 			prn_err "Could not create the configuration directory(${_DBAAS_K8S_CLUSTER_DIRPATH}) for K2HDKC DBaaS K8S cluster."
 			return 1
 		fi
@@ -701,8 +703,7 @@ load_dbaas_k8s_k2hr3_configuration()
 		#
 		# Copy base configuration file
 		#
-		cp "${K2HR3CLI_DBAAS_K8S_CURDIR}/${K2HR3CLI_DBAAS_K8S_K2HR3_CONFIG_FILENAME}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_CONFIG_FILENAME}"
-		if [ $? -ne 0 ]; then
+		if ! cp "${K2HR3CLI_DBAAS_K8S_CURDIR}/${K2HR3CLI_DBAAS_K8S_K2HR3_CONFIG_FILENAME}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_CONFIG_FILENAME}"; then
 			prn_err "Failed to create ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_CONFIG_FILENAME} file."
 			return 1
 		fi
@@ -724,43 +725,35 @@ load_dbaas_k8s_k2hr3_configuration()
 			return 1
 		fi
 
-		cp "${K2HR3CLI_DBAAS_K8S_K2HDKC_SVRPROC_SH_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_SVRPROC_SH_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! cp "${K2HR3CLI_DBAAS_K8S_K2HDKC_SVRPROC_SH_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_SVRPROC_SH_FILE}"; then
 			prn_err "Failed to copy ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_SVRPROC_SH_FILE} file."
 			return 1
 		fi
-		cp "${K2HR3CLI_DBAAS_K8S_K2HDKC_CHMPXPROC_SH_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_CHMPXPROC_SH_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! cp "${K2HR3CLI_DBAAS_K8S_K2HDKC_CHMPXPROC_SH_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_CHMPXPROC_SH_FILE}"; then
 			prn_err "Failed to copy ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_CHMPXPROC_SH_FILE} file."
 			return 1
 		fi
-		cp "${K2HR3CLI_DBAAS_K8S_K2HDKC_INIUPDATE_SH_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_INIUPDATE_SH_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! cp "${K2HR3CLI_DBAAS_K8S_K2HDKC_INIUPDATE_SH_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_INIUPDATE_SH_FILE}"; then
 			prn_err "Failed to copy ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_INIUPDATE_SH_FILE} file."
 			return 1
 		fi
-		cp "${K2HR3CLI_DBAAS_K8S_K2HR3_DKC_INIUPDATE_SH_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_DKC_INIUPDATE_SH_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! cp "${K2HR3CLI_DBAAS_K8S_K2HR3_DKC_INIUPDATE_SH_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_DKC_INIUPDATE_SH_FILE}"; then
 			prn_err "Failed to copy ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_DKC_INIUPDATE_SH_FILE} file."
 			return 1
 		fi
-		cp "${K2HR3CLI_DBAAS_K8S_K2HR3_API_WRAP_SH_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_API_WRAP_SH_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! cp "${K2HR3CLI_DBAAS_K8S_K2HR3_API_WRAP_SH_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_API_WRAP_SH_FILE}"; then
 			prn_err "Failed to copy ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_API_WRAP_SH_FILE} file."
 			return 1
 		fi
-		cp "${K2HR3CLI_DBAAS_K8S_K2HR3_APP_WRAP_SH_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_APP_WRAP_SH_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! cp "${K2HR3CLI_DBAAS_K8S_K2HR3_APP_WRAP_SH_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_APP_WRAP_SH_FILE}"; then
 			prn_err "Failed to copy ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_APP_WRAP_SH_FILE} file."
 			return 1
 		fi
-		cp "${K2HR3CLI_DBAAS_K8S_K2HR3_APP_INIT_SH_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_APP_INIT_SH_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! cp "${K2HR3CLI_DBAAS_K8S_K2HR3_APP_INIT_SH_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_APP_INIT_SH_FILE}"; then
 			prn_err "Failed to copy ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_APP_INIT_SH_FILE} file."
 			return 1
 		fi
-		cp "${K2HR3CLI_DBAAS_K8S_K2HR3_K2HDKC_INI_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_K2HDKC_INI_FILE_TEMPL}"
-		if [ $? -ne 0 ]; then
+		if ! cp "${K2HR3CLI_DBAAS_K8S_K2HR3_K2HDKC_INI_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_K2HDKC_INI_FILE_TEMPL}"; then
 			prn_err "Failed to copy ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_K2HDKC_INI_FILE_TEMPL} file."
 			return 1
 		fi
@@ -935,15 +928,16 @@ save_dbaas_k8s_k2hr3_configuration()
 	# Check Cluster directory
 	#
 	# shellcheck disable=SC2119
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ] || [ -z "${_DBAAS_K8S_CLUSTER_DIRPATH}" ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
+		prn_err "Could not get the configuration directory path of K2HDKC DBaaS K8S cluster."
+		return 1
+	elif [ -z "${_DBAAS_K8S_CLUSTER_DIRPATH}" ]; then
 		prn_err "Could not get the configuration directory path of K2HDKC DBaaS K8S cluster."
 		return 1
 	fi
 	if [ ! -d "${_DBAAS_K8S_CLUSTER_DIRPATH}" ]; then
 		prn_info "Not found the configuration directory(${_DBAAS_K8S_CLUSTER_DIRPATH}) for K2HDKC DBaaS K8S cluster, thus create it."
-		mkdir -p "${_DBAAS_K8S_CLUSTER_DIRPATH}"
-		if [ $? -ne 0 ]; then
+		if ! mkdir -p "${_DBAAS_K8S_CLUSTER_DIRPATH}"; then
 			prn_err "Could not create the configuration directory(${_DBAAS_K8S_CLUSTER_DIRPATH}) for K2HDKC DBaaS K8S cluster."
 			return 1
 		fi
@@ -961,8 +955,7 @@ save_dbaas_k8s_k2hr3_configuration()
 			return 1
 		fi
 
-		cp "${K2HR3CLI_DBAAS_K8S_CURDIR}/${K2HR3CLI_DBAAS_K8S_K2HR3_CONFIG_FILENAME}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_CONFIG_FILENAME}"
-		if [ $? -ne 0 ]; then
+		if ! cp "${K2HR3CLI_DBAAS_K8S_CURDIR}/${K2HR3CLI_DBAAS_K8S_K2HR3_CONFIG_FILENAME}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_CONFIG_FILENAME}"; then
 			prn_err "Failed to create ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_CONFIG_FILENAME} file."
 			return 1
 		fi
@@ -972,8 +965,7 @@ save_dbaas_k8s_k2hr3_configuration()
 	#
 	# Save K2HR3 configuration
 	#
-	save_dbaas_k8s_value_from_configuration "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_CONFIG_FILENAME}" "${_DBAAS_K8S_CONFIG_TMP_SAVE_KEYNAME}" "${_DBAAS_K8S_CONFIG_TMP_SAVE_VALUE}"
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_value_from_configuration "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_CONFIG_FILENAME}" "${_DBAAS_K8S_CONFIG_TMP_SAVE_KEYNAME}" "${_DBAAS_K8S_CONFIG_TMP_SAVE_VALUE}"; then
 		prn_err "Could not save key(${_DBAAS_K8S_CONFIG_TMP_SAVE_KEYNAME}) to the configuration file(${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_CONFIG_FILENAME}) for K2HDKC DBaaS K8S cluster."
 		return 1
 	fi
@@ -1019,15 +1011,16 @@ print_dbaas_k8s_k2hr3_configuration()
 	# Check Cluster directory
 	#
 	# shellcheck disable=SC2119
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ] || [ -z "${_DBAAS_K8S_CLUSTER_DIRPATH}" ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
+		prn_err "Could not get the configuration directory path of K2HDKC DBaaS K8S cluster."
+		return 1
+	elif [ -z "${_DBAAS_K8S_CLUSTER_DIRPATH}" ]; then
 		prn_err "Could not get the configuration directory path of K2HDKC DBaaS K8S cluster."
 		return 1
 	fi
 	if [ ! -d "${_DBAAS_K8S_CLUSTER_DIRPATH}" ]; then
 		prn_info "Not found the configuration directory(${_DBAAS_K8S_CLUSTER_DIRPATH}) for K2HDKC DBaaS K8S cluster, thus create it."
-		mkdir -p "${_DBAAS_K8S_CLUSTER_DIRPATH}"
-		if [ $? -ne 0 ]; then
+		if ! mkdir -p "${_DBAAS_K8S_CLUSTER_DIRPATH}"; then
 			prn_err "Could not create the configuration directory(${_DBAAS_K8S_CLUSTER_DIRPATH}) for K2HDKC DBaaS K8S cluster."
 			return 1
 		fi
@@ -1045,8 +1038,7 @@ print_dbaas_k8s_k2hr3_configuration()
 			return 1
 		fi
 
-		cp "${K2HR3CLI_DBAAS_K8S_CURDIR}/${K2HR3CLI_DBAAS_K8S_K2HR3_CONFIG_FILENAME}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_CONFIG_FILENAME}"
-		if [ $? -ne 0 ]; then
+		if ! cp "${K2HR3CLI_DBAAS_K8S_CURDIR}/${K2HR3CLI_DBAAS_K8S_K2HR3_CONFIG_FILENAME}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_CONFIG_FILENAME}"; then
 			prn_err "Failed to create ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_CONFIG_FILENAME} file."
 			return 1
 		fi
@@ -1089,7 +1081,7 @@ print_dbaas_k8s_k2hr3_configuration()
 		#
 		# No K2HR3 system
 		#
-		if [ "X${K2HR3CLI_OPT_JSON}" = "X1" ]; then
+		if [ -n "${K2HR3CLI_OPT_JSON}" ] && [ "${K2HR3CLI_OPT_JSON}" = "1" ]; then
 			#
 			# JSON
 			#
@@ -1165,7 +1157,7 @@ print_dbaas_k8s_k2hr3_configuration()
 	#
 	# Output K2HR3 configuration file
 	#
-	if [ "X${K2HR3CLI_OPT_JSON}" = "X1" ]; then
+	if [ -n "${K2HR3CLI_OPT_JSON}" ] && [ "${K2HR3CLI_OPT_JSON}" = "1" ]; then
 		#
 		# JSON
 		#
@@ -1313,7 +1305,7 @@ set_dbaas_k8s_k2hdkc_cluster_variables()
 #
 load_dbaas_k8s_k2hdkc_cluster_configuration()
 {
-	if [ "X$2" =  "X1" ]; then
+	if [ -n "$2" ] && [ "$2" =  "1" ]; then
 		_DBAAS_K8S_TMP_FORCE_FLAG=1
 	else
 		_DBAAS_K8S_TMP_FORCE_FLAG=0
@@ -1322,8 +1314,7 @@ load_dbaas_k8s_k2hdkc_cluster_configuration()
 	#
 	# Setup paths
 	#
-	set_dbaas_k8s_k2hdkc_cluster_variables "$1"
-	if [ $? -ne 0 ]; then
+	if ! set_dbaas_k8s_k2hdkc_cluster_variables "$1"; then
 		return 1
 	fi
 
@@ -1337,8 +1328,7 @@ load_dbaas_k8s_k2hdkc_cluster_configuration()
 			return 1
 		fi
 
-		mkdir -p "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}"
-		if [ $? -ne 0 ]; then
+		if ! mkdir -p "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}"; then
 			prn_err "The K2HDKC cluster ${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH} is not existed, and failed creating it."
 			return 1
 		fi
@@ -1360,8 +1350,7 @@ load_dbaas_k8s_k2hdkc_cluster_configuration()
 		#
 		# Copy base configuration file
 		#
-		cp "${K2HR3CLI_DBAAS_K8S_CURDIR}/${K2HR3CLI_DBAAS_K8S_K2HDKC_CONFIG_FILENAME}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_CONFIG_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! cp "${K2HR3CLI_DBAAS_K8S_CURDIR}/${K2HR3CLI_DBAAS_K8S_K2HDKC_CONFIG_FILENAME}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_CONFIG_FILE}"; then
 			prn_err "Failed to create ${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_CONFIG_FILE} file."
 			return 1
 		fi
@@ -1380,28 +1369,23 @@ load_dbaas_k8s_k2hdkc_cluster_configuration()
 			return 1
 		fi
 
-		cp "${K2HR3CLI_DBAAS_K8S_K2HDKC_VAR_SETUP_SH_TEMPL}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_VAR_SETUP_SH_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! cp "${K2HR3CLI_DBAAS_K8S_K2HDKC_VAR_SETUP_SH_TEMPL}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_VAR_SETUP_SH_FILE}"; then
 			prn_err "Failed to copy ${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_VAR_SETUP_SH_FILE} file."
 			return 1
 		fi
-		cp "${K2HR3CLI_DBAAS_K8S_K2HDKC_R3_REG_SH_TEMPL}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_R3_REG_SH_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! cp "${K2HR3CLI_DBAAS_K8S_K2HDKC_R3_REG_SH_TEMPL}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_R3_REG_SH_FILE}"; then
 			prn_err "Failed to copy ${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_R3_REG_SH_FILE} file."
 			return 1
 		fi
-		cp "${K2HR3CLI_DBAAS_K8S_K2HDKC_INIUPDATE_SH_TEMPL}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_INIUPDATE_SH_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! cp "${K2HR3CLI_DBAAS_K8S_K2HDKC_INIUPDATE_SH_TEMPL}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_INIUPDATE_SH_FILE}"; then
 			prn_err "Failed to copy ${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_INIUPDATE_SH_FILE} file."
 			return 1
 		fi
-		cp "${K2HR3CLI_DBAAS_K8S_K2HDKC_SVRPROC_SH_TEMPL}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_SVRPROC_SH_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! cp "${K2HR3CLI_DBAAS_K8S_K2HDKC_SVRPROC_SH_TEMPL}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_SVRPROC_SH_FILE}"; then
 			prn_err "Failed to copy ${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_SVRPROC_SH_FILE} file."
 			return 1
 		fi
-		cp "${K2HR3CLI_DBAAS_K8S_K2HDKC_CHMPXPROC_SH_TEMPL}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_CHMPXPROC_SH_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! cp "${K2HR3CLI_DBAAS_K8S_K2HDKC_CHMPXPROC_SH_TEMPL}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_CHMPXPROC_SH_FILE}"; then
 			prn_err "Failed to copy ${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_CHMPXPROC_SH_FILE} file."
 			return 1
 		fi
@@ -1463,8 +1447,7 @@ save_dbaas_k8s_k2hdkc_cluster_configuration()
 	#
 	# Setup paths
 	#
-	set_dbaas_k8s_k2hdkc_cluster_variables "$1"
-	if [ $? -ne 0 ]; then
+	if ! set_dbaas_k8s_k2hdkc_cluster_variables "$1"; then
 		return 1
 	fi
 
@@ -1483,8 +1466,7 @@ save_dbaas_k8s_k2hdkc_cluster_configuration()
 	#
 	# Save K2HDKC Cluster configuration
 	#
-	save_dbaas_k8s_value_from_configuration "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_CONFIG_FILE}" "${_DBAAS_K8S_CONFIG_TMP_SAVE_KEYNAME}" "${_DBAAS_K8S_CONFIG_TMP_SAVE_VALUE}"
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_value_from_configuration "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_CONFIG_FILE}" "${_DBAAS_K8S_CONFIG_TMP_SAVE_KEYNAME}" "${_DBAAS_K8S_CONFIG_TMP_SAVE_VALUE}"; then
 		prn_err "Could not save key(${_DBAAS_K8S_CONFIG_TMP_SAVE_KEYNAME}) to the k2hdkc cluster configuration file(${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_CONFIG_FILE})."
 		return 1
 	fi
@@ -1511,7 +1493,7 @@ save_dbaas_k8s_k2hdkc_cluster_configuration()
 #
 print_dbaas_k8s_k2hdkc_cluster_configuration()
 {
-	if [ "X$2" =  "X1" ]; then
+	if [ -n "$2" ] && [ "$2" =  "1" ]; then
 		_DBAAS_K8S_TMP_FORCE_FLAG=1
 	else
 		_DBAAS_K8S_TMP_FORCE_FLAG=0
@@ -1520,8 +1502,7 @@ print_dbaas_k8s_k2hdkc_cluster_configuration()
 	#
 	# Setup paths
 	#
-	set_dbaas_k8s_k2hdkc_cluster_variables "$1"
-	if [ $? -ne 0 ]; then
+	if ! set_dbaas_k8s_k2hdkc_cluster_variables "$1"; then
 		return 1
 	fi
 
@@ -1549,7 +1530,7 @@ print_dbaas_k8s_k2hdkc_cluster_configuration()
 	#
 	# Output K2HDKC configuration file
 	#
-	if [ "X${K2HR3CLI_OPT_JSON}" = "X1" ]; then
+	if [ -n "${K2HR3CLI_OPT_JSON}" ] && [ "${K2HR3CLI_OPT_JSON}" = "1" ]; then
 		#
 		# JSON
 		#
@@ -1607,8 +1588,7 @@ if [ -z "${K2HR3CLI_DBAAS_K8S_CONFIG}" ]; then
 	#
 	# Set default directory
 	#
-	_DBAAS_K8S_DEFAULT_USER_DIR=$(config_get_default_user_dir)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_DEFAULT_USER_DIR=$(config_get_default_user_dir); then
 		prn_err "The user's home directory cannot be found."
 		exit 1
 	fi
@@ -1619,8 +1599,7 @@ fi
 # Check the config directory
 #
 if [ ! -d "${K2HR3CLI_DBAAS_K8S_CONFIG}" ]; then
-	_DBAAS_K8S_CONFIG_TMP_RESULT=$(mkdir -p "${K2HR3CLI_DBAAS_K8S_CONFIG}" 2>&1)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CONFIG_TMP_RESULT=$(mkdir -p "${K2HR3CLI_DBAAS_K8S_CONFIG}" 2>&1); then
 		prn_err "Failed the configuration directory(${K2HR3CLI_DBAAS_K8S_CONFIG}) with error: ${_DBAAS_K8S_CONFIG_TMP_RESULT}"
 		exit 1
 	fi
@@ -1630,8 +1609,10 @@ fi
 #
 # Load Global configration
 #
-_DBAAS_K8S_GLOBAL_CONFIG_FILEPATH=$(get_dbaas_k8s_config_path)
-if [ $? -ne 0 ] || [ -z "${_DBAAS_K8S_GLOBAL_CONFIG_FILEPATH}" ]; then
+if ! _DBAAS_K8S_GLOBAL_CONFIG_FILEPATH=$(get_dbaas_k8s_config_path); then
+	prn_err "K2HDKC DBaaS K8S Global configuration file is not existed."
+	exit 1
+elif [ -z "${_DBAAS_K8S_GLOBAL_CONFIG_FILEPATH}" ]; then
 	prn_err "K2HDKC DBaaS K8S Global configuration file is not existed."
 	exit 1
 fi

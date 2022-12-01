@@ -37,8 +37,11 @@ get_k8s_one_nodeport_port_number()
 		return 1
 	fi
 
-	_DBAAS_K8S_TMP_NODEPORT_PORTNUM=$("${KUBECTL_BIN}" get services "${_DBAAS_K8S_TMP_NODEPORT_NAME}" 2>/dev/null | grep "${_DBAAS_K8S_TMP_NODEPORT_NAME}" | awk '{print $5}' | sed -e 's/:/ /g' -e 's#/# #g' | awk '{print $2}')
-	if [ $? -ne 0 ] || [ -z "${_DBAAS_K8S_TMP_NODEPORT_PORTNUM}" ]; then
+	if ! _DBAAS_K8S_TMP_NODEPORT_PORTNUM=$("${KUBECTL_BIN}" get services "${_DBAAS_K8S_TMP_NODEPORT_NAME}" 2>/dev/null | grep "${_DBAAS_K8S_TMP_NODEPORT_NAME}" | awk '{print $5}' | sed -e 's/:/ /g' -e 's#/# #g' | awk '{print $2}'); then
+		prn_err "Could not get NodePort port number."
+		pecho -n ""
+		return 1
+	elif [ -z "${_DBAAS_K8S_TMP_NODEPORT_PORTNUM}" ]; then
 		prn_err "Could not get NodePort port number."
 		pecho -n ""
 		return 1
@@ -69,8 +72,7 @@ get_k8s_one_nodeport_cluster_ip()
 	#
 	# Check NodePort exist
 	#
-	"${KUBECTL_BIN}" get services "${_DBAAS_K8S_TMP_NODEPORT_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" get services "${_DBAAS_K8S_TMP_NODEPORT_NAME}" >/dev/null 2>&1; then
 		prn_err "${_DBAAS_K8S_TMP_NODEPORT_NAME} NordPord service on kubernetes cluster is not existed."
 		pecho -n ""
 		return 1
@@ -79,8 +81,11 @@ get_k8s_one_nodeport_cluster_ip()
 	#
 	# Get Cluster IP address
 	#
-	_DBAAS_K8S_TMP_NODEPORT_CLUSTERIP=$("${KUBECTL_BIN}" describe services "${_DBAAS_K8S_TMP_NODEPORT_NAME}" 2>/dev/null | grep '^IP:' | awk '{print $2}')
-	if [ $? -ne 0 ] || [ -z "${_DBAAS_K8S_TMP_NODEPORT_CLUSTERIP}" ]; then
+	if ! _DBAAS_K8S_TMP_NODEPORT_CLUSTERIP=$("${KUBECTL_BIN}" describe services "${_DBAAS_K8S_TMP_NODEPORT_NAME}" 2>/dev/null | grep '^IP:' | awk '{print $2}'); then
+		prn_err "Could not get NodePort Cluster IP."
+		pecho -n ""
+		return 1
+	elif [ -z "${_DBAAS_K8S_TMP_NODEPORT_CLUSTERIP}" ]; then
 		prn_err "Could not get NodePort Cluster IP."
 		pecho -n ""
 		return 1
@@ -103,14 +108,17 @@ get_k8s_one_nodeport_cluster_ip()
 # 
 get_k2hr3_nodeport_cluster_ip()
 {
-	if [ "X$1" = "X1" ]; then
+	if [ -n "$1" ] && [ "$1" = "1" ]; then
 		_DBAAS_K8S_TMP_NODEPORT_NAME="${K2HR3CLI_DBAAS_K8S_K2HR3_APP_NODEPORT_PREFIX}$2"
 	else
 		_DBAAS_K8S_TMP_NODEPORT_NAME="${K2HR3CLI_DBAAS_K8S_K2HR3_API_NODEPORT_PREFIX}$2"
 	fi
 
-	_DBAAS_K8S_TMP_NODEPORT_CLUSTERIP=$(get_k8s_one_nodeport_cluster_ip "${_DBAAS_K8S_TMP_NODEPORT_NAME}")
-	if [ $? -ne 0 ] || [ "X${_DBAAS_K8S_TMP_NODEPORT_CLUSTERIP}" = "X" ]; then
+	if ! _DBAAS_K8S_TMP_NODEPORT_CLUSTERIP=$(get_k8s_one_nodeport_cluster_ip "${_DBAAS_K8S_TMP_NODEPORT_NAME}"); then
+		prn_err "Could not get IP address for ${_DBAAS_K8S_TMP_NODEPORT_NAME} NordPord service Cluster IP."
+		pecho -n ""
+		return 1
+	elif [ -z "${_DBAAS_K8S_TMP_NODEPORT_CLUSTERIP}" ]; then
 		prn_err "Could not get IP address for ${_DBAAS_K8S_TMP_NODEPORT_NAME} NordPord service Cluster IP."
 		pecho -n ""
 		return 1
@@ -137,7 +145,7 @@ create_k8s_one_nodeport()
 	_DBAAS_K8S_TMP_NODEPORT_YAML_FILE=$2
 	_DBAAS_K8S_TMP_NODEPORT_NAMEBASE=$3
 	_DBAAS_K8S_TMP_NODEPORT_PORT=$4
-	if [ "X$5" = "X1" ]; then
+	if [ -n "$5" ] && [ "$5" = "1" ]; then
 		_DBAAS_K8S_TMP_NODEPORT_TYPE_APP=1
 	else
 		_DBAAS_K8S_TMP_NODEPORT_TYPE_APP=0
@@ -159,25 +167,26 @@ create_k8s_one_nodeport()
 		_DBAAS_K8S_TMP_NODEPORT_PORT="      nodePort: ${_DBAAS_K8S_TMP_NODEPORT_PORT}"
 	fi
 
-	if [ ${_DBAAS_K8S_TMP_NODEPORT_TYPE_APP} -eq 1 ]; then
-		sed	-e "s#%%K2HR3_APP_NAMEBASE%%#${_DBAAS_K8S_TMP_NODEPORT_NAMEBASE}#g"	\
-			-e "s#%%K2HR3_APP_NODEPORT_STR%%#${_DBAAS_K8S_TMP_NODEPORT_PORT}#g"	\
-			"${_DBAAS_K8S_TMP_NODEPORT_TEMPL_FILE}" > "${_DBAAS_K8S_TMP_NODEPORT_YAML_FILE}"
+	if [ "${_DBAAS_K8S_TMP_NODEPORT_TYPE_APP}" -eq 1 ]; then
+		if ! sed -e "s#%%K2HR3_APP_NAMEBASE%%#${_DBAAS_K8S_TMP_NODEPORT_NAMEBASE}#g"	\
+				-e "s#%%K2HR3_APP_NODEPORT_STR%%#${_DBAAS_K8S_TMP_NODEPORT_PORT}#g"		\
+				"${_DBAAS_K8S_TMP_NODEPORT_TEMPL_FILE}" > "${_DBAAS_K8S_TMP_NODEPORT_YAML_FILE}"; then
 
+			prn_err "Failed to create NodePort service yaml file(${_DBAAS_K8S_TMP_NODEPORT_YAML_FILE})."
+			return 1
+		fi
 		# for debug message
 		_DBAAS_K8S_DBG_NODEPORT_NAMEFULL="${K2HR3CLI_DBAAS_K8S_K2HR3_APP_NODEPORT_PREFIX}${_DBAAS_K8S_TMP_NODEPORT_NAMEBASE}"
 	else
-		sed	-e "s#%%K2HR3_API_NAMEBASE%%#${_DBAAS_K8S_TMP_NODEPORT_NAMEBASE}#g"	\
-			-e "s#%%K2HR3_API_NODEPORT_STR%%#${_DBAAS_K8S_TMP_NODEPORT_PORT}#g"	\
-			"${_DBAAS_K8S_TMP_NODEPORT_TEMPL_FILE}" > "${_DBAAS_K8S_TMP_NODEPORT_YAML_FILE}"
+		if ! sed -e "s#%%K2HR3_API_NAMEBASE%%#${_DBAAS_K8S_TMP_NODEPORT_NAMEBASE}#g"	\
+				-e "s#%%K2HR3_API_NODEPORT_STR%%#${_DBAAS_K8S_TMP_NODEPORT_PORT}#g"		\
+				"${_DBAAS_K8S_TMP_NODEPORT_TEMPL_FILE}" > "${_DBAAS_K8S_TMP_NODEPORT_YAML_FILE}"; then
 
+			prn_err "Failed to create NodePort service yaml file(${_DBAAS_K8S_TMP_NODEPORT_YAML_FILE})."
+			return 1
+		fi
 		# for debug message
 		_DBAAS_K8S_DBG_NODEPORT_NAMEFULL="${K2HR3CLI_DBAAS_K8S_K2HR3_API_NODEPORT_PREFIX}${_DBAAS_K8S_TMP_NODEPORT_NAMEBASE}"
-	fi
-
-	if [ $? -ne 0 ]; then
-		prn_err "Failed to create NodePort service yaml file(${_DBAAS_K8S_TMP_NODEPORT_YAML_FILE})."
-		return 1
 	fi
 	prn_dbg "(create_k8s_one_nodeport) Succeed creating NodePort(name=\"${_DBAAS_K8S_DBG_NODEPORT_NAMEFULL}\", port=\"${_DBAAS_K8S_DBG_NODEPORT_PORT}\")"
 
@@ -192,14 +201,12 @@ create_k8s_one_nodeport()
 # 
 create_k8s_k2hr3_nodeports()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
 	_DBAAS_K8S_TMP_R3API_NODEPORT_NAME="${K2HR3CLI_DBAAS_K8S_K2HR3_API_NODEPORT_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}"
-	"${KUBECTL_BIN}" get services "${_DBAAS_K8S_TMP_R3API_NODEPORT_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" get services "${_DBAAS_K8S_TMP_R3API_NODEPORT_NAME}" >/dev/null 2>&1; then
 		#
 		# Create NodePort for K2HR3 API
 		#
@@ -208,8 +215,7 @@ create_k8s_k2hr3_nodeports()
 			return 1
 		fi
 
-		create_k8s_one_nodeport "${K2HR3CLI_DBAAS_K8S_R3API_NP_YAML_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_API_NP_YAML_FILE}" "${K2HR3CLI_DBAAS_K8S_R3API_NAME}" "${K2HR3CLI_DBAAS_K8S_R3API_NPNUM}" "0"
-		if [ $? -ne 0 ]; then
+		if ! create_k8s_one_nodeport "${K2HR3CLI_DBAAS_K8S_R3API_NP_YAML_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_API_NP_YAML_FILE}" "${K2HR3CLI_DBAAS_K8S_R3API_NAME}" "${K2HR3CLI_DBAAS_K8S_R3API_NPNUM}" "0"; then
 			prn_err "Could not get K2HR3 API NodePort yaml template from configuration."
 			return 1
 		fi
@@ -217,8 +223,7 @@ create_k8s_k2hr3_nodeports()
 		#
 		# Try to apply
 		#
-		"${KUBECTL_BIN}" apply -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_API_NP_YAML_FILE}" >/dev/null 2>&1
-		if [ $? -ne 0 ]; then
+		if ! "${KUBECTL_BIN}" apply -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_API_NP_YAML_FILE}" >/dev/null 2>&1; then
 			prn_err "Could not create(apply) K2HR3 API NodePort."
 			return 1
 		fi
@@ -228,8 +233,7 @@ create_k8s_k2hr3_nodeports()
 	fi
 
 	_DBAAS_K8S_TMP_R3APP_NODEPORT_NAME="${K2HR3CLI_DBAAS_K8S_K2HR3_APP_NODEPORT_PREFIX}${K2HR3CLI_DBAAS_K8S_R3APP_NAME}"
-	"${KUBECTL_BIN}" get services "${_DBAAS_K8S_TMP_R3APP_NODEPORT_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" get services "${_DBAAS_K8S_TMP_R3APP_NODEPORT_NAME}" >/dev/null 2>&1; then
 		#
 		# Create NodePort for K2HR3 APP
 		#
@@ -237,10 +241,8 @@ create_k8s_k2hr3_nodeports()
 			prn_err "${K2HR3CLI_DBAAS_K8S_R3APP_NP_YAML_TEMPL} file is not existed."
 			return 1
 		fi
-
 		# shellcheck disable=SC2153
-		create_k8s_one_nodeport "${K2HR3CLI_DBAAS_K8S_R3APP_NP_YAML_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_APP_NP_YAML_FILE}" "${K2HR3CLI_DBAAS_K8S_R3APP_NAME}" "${K2HR3CLI_DBAAS_K8S_R3APP_NPNUM}" "1"
-		if [ $? -ne 0 ]; then
+		if ! create_k8s_one_nodeport "${K2HR3CLI_DBAAS_K8S_R3APP_NP_YAML_TEMPL}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_APP_NP_YAML_FILE}" "${K2HR3CLI_DBAAS_K8S_R3APP_NAME}" "${K2HR3CLI_DBAAS_K8S_R3APP_NPNUM}" "1"; then
 			prn_err "Could not get K2HR3 APP NodePort yaml template from configuration."
 			return 1
 		fi
@@ -248,8 +250,7 @@ create_k8s_k2hr3_nodeports()
 		#
 		# Try to apply
 		#
-		"${KUBECTL_BIN}" apply -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_APP_NP_YAML_FILE}" >/dev/null 2>&1
-		if [ $? -ne 0 ]; then
+		if ! "${KUBECTL_BIN}" apply -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_APP_NP_YAML_FILE}" >/dev/null 2>&1; then
 			prn_err "Could not create(apply) K2HR3 APP NodePort."
 			return 1
 		fi
@@ -271,8 +272,7 @@ create_k8s_k2hr3_nodeports()
 # 
 create_k2hr3_api_production_json_file()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 	_DBAAS_K8S_TMP_R3API_NODEPORT_PORTNUM=$1
@@ -291,18 +291,17 @@ create_k2hr3_api_production_json_file()
 	if [ -z "${K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_SECRET}" ] || [ -z "${K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_ID}" ] || [ -z "${K2HR3CLI_DBAAS_K8S_OIDC_ISSUER_URL}" ]; then
 		prn_warn "No options related to OpenID Connect(OIDC) have been specified. You will not be able to log in via the K2HR3 APP."
 	fi
-	sed	-e "s#%%K2HR3_API_EXTERNAL_HOST%%#${K2HR3CLI_DBAAS_K8S_R3API_EXTERNAL_HOST}#g"	\
-		-e "s#%%K2HR3_API_NODE_PORT%%#${_DBAAS_K8S_TMP_R3API_NODEPORT_PORTNUM}#g"		\
-		-e "s#%%OIDC_ISSUER_URL%%#${K2HR3CLI_DBAAS_K8S_OIDC_ISSUER_URL}#g"				\
-		-e "s#%%OIDC_CLIENT_ID%%#${K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_ID}#g"				\
-		-e "s#%%OIDC_USERNAME_KEY%%#${K2HR3CLI_DBAAS_K8S_OIDC_USERNAME_KEY}#g"			\
-		-e "s#%%K8S_API_URL%%#${K2HR3CLI_DBAAS_K8S_K8S_API_URL}#g"						\
-		-e "s#%%K8S_CA_CERT%%#${K2HR3CLI_DBAAS_K8S_K8S_CA_CERT}#g"						\
-		-e "s#%%K8S_SA_TOKEN%%#${K2HR3CLI_DBAAS_K8S_K8S_SA_TOKEN}#g"					\
-		"${K2HR3CLI_DBAAS_K8S_R3API_PROD_JSON_TEMPL}"									\
-		> "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_API_PROD_JSON_FILE}"
+	if ! sed -e "s#%%K2HR3_API_EXTERNAL_HOST%%#${K2HR3CLI_DBAAS_K8S_R3API_EXTERNAL_HOST}#g"	\
+			-e "s#%%K2HR3_API_NODE_PORT%%#${_DBAAS_K8S_TMP_R3API_NODEPORT_PORTNUM}#g"		\
+			-e "s#%%OIDC_ISSUER_URL%%#${K2HR3CLI_DBAAS_K8S_OIDC_ISSUER_URL}#g"				\
+			-e "s#%%OIDC_CLIENT_ID%%#${K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_ID}#g"				\
+			-e "s#%%OIDC_USERNAME_KEY%%#${K2HR3CLI_DBAAS_K8S_OIDC_USERNAME_KEY}#g"			\
+			-e "s#%%K8S_API_URL%%#${K2HR3CLI_DBAAS_K8S_K8S_API_URL}#g"						\
+			-e "s#%%K8S_CA_CERT%%#${K2HR3CLI_DBAAS_K8S_K8S_CA_CERT}#g"						\
+			-e "s#%%K8S_SA_TOKEN%%#${K2HR3CLI_DBAAS_K8S_K8S_SA_TOKEN}#g"					\
+			"${K2HR3CLI_DBAAS_K8S_R3API_PROD_JSON_TEMPL}"									\
+			> "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_API_PROD_JSON_FILE}"; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed to create ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_API_PROD_JSON_FILE}."
 		return 1
 	fi
@@ -322,8 +321,7 @@ create_k2hr3_api_production_json_file()
 # 
 create_k2hr3_app_production_json_file()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 	_DBAAS_K8S_TMP_R3APP_NODEPORT_PORTNUM=$1
@@ -343,20 +341,19 @@ create_k2hr3_app_production_json_file()
 	if [ -z "${K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_SECRET}" ] || [ -z "${K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_ID}" ] || [ -z "${K2HR3CLI_DBAAS_K8S_OIDC_ISSUER_URL}" ]; then
 		prn_warn "No options related to OpenID Connect(OIDC) have been specified. You will not be able to log in via the K2HR3 APP."
 	fi
-	sed	-e "s#%%K2HR3_APP_EXTERNAL_HOST%%#${K2HR3CLI_DBAAS_K8S_R3APP_EXTERNAL_HOST}#g"	\
-		-e "s#%%K2HR3_APP_NODE_PORT%%#${_DBAAS_K8S_TMP_R3APP_NODEPORT_PORTNUM}#g"		\
-		-e "s#%%K2HR3_API_EXTERNAL_HOST%%#${K2HR3CLI_DBAAS_K8S_R3API_EXTERNAL_HOST}#g"	\
-		-e "s#%%K2HR3_API_NODE_PORT%%#${_DBAAS_K8S_TMP_R3API_NODEPORT_PORTNUM}#g"		\
-		-e "s#%%OIDC_ISSUER_URL%%#${K2HR3CLI_DBAAS_K8S_OIDC_ISSUER_URL}#g"				\
-		-e "s#%%OIDC_CLIENT_SECRET%%#${K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_SECRET}#g"		\
-		-e "s#%%OIDC_CLIENT_ID%%#${K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_ID}#g"				\
-		-e "s#%%OIDC_USERNAME_KEY%%#${K2HR3CLI_DBAAS_K8S_OIDC_USERNAME_KEY}#g"			\
-		-e "s#%%OIDC_COOKIENAME%%#${K2HR3CLI_DBAAS_K8S_OIDC_COOKIENAME}#g"				\
-		-e "s#%%OIDC_COOKIE_EXPIRE%%#${K2HR3CLI_DBAAS_K8S_OIDC_COOKIE_EXPIRE}#g"		\
-		"${K2HR3CLI_DBAAS_K8S_R3APP_PROD_JSON_TEMPL}"									\
-		> "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_APP_PROD_JSON_FILE}"
+	if ! sed -e "s#%%K2HR3_APP_EXTERNAL_HOST%%#${K2HR3CLI_DBAAS_K8S_R3APP_EXTERNAL_HOST}#g"	\
+			-e "s#%%K2HR3_APP_NODE_PORT%%#${_DBAAS_K8S_TMP_R3APP_NODEPORT_PORTNUM}#g"		\
+			-e "s#%%K2HR3_API_EXTERNAL_HOST%%#${K2HR3CLI_DBAAS_K8S_R3API_EXTERNAL_HOST}#g"	\
+			-e "s#%%K2HR3_API_NODE_PORT%%#${_DBAAS_K8S_TMP_R3API_NODEPORT_PORTNUM}#g"		\
+			-e "s#%%OIDC_ISSUER_URL%%#${K2HR3CLI_DBAAS_K8S_OIDC_ISSUER_URL}#g"				\
+			-e "s#%%OIDC_CLIENT_SECRET%%#${K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_SECRET}#g"		\
+			-e "s#%%OIDC_CLIENT_ID%%#${K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_ID}#g"				\
+			-e "s#%%OIDC_USERNAME_KEY%%#${K2HR3CLI_DBAAS_K8S_OIDC_USERNAME_KEY}#g"			\
+			-e "s#%%OIDC_COOKIENAME%%#${K2HR3CLI_DBAAS_K8S_OIDC_COOKIENAME}#g"				\
+			-e "s#%%OIDC_COOKIE_EXPIRE%%#${K2HR3CLI_DBAAS_K8S_OIDC_COOKIE_EXPIRE}#g"		\
+			"${K2HR3CLI_DBAAS_K8S_R3APP_PROD_JSON_TEMPL}"									\
+			> "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_APP_PROD_JSON_FILE}"; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed to create ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_APP_PROD_JSON_FILE}."
 		return 1
 	fi
@@ -372,8 +369,7 @@ create_k2hr3_app_production_json_file()
 # 
 create_k2hr3_kustomization_yaml_file()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
@@ -428,7 +424,7 @@ create_k2hr3_kustomization_yaml_file()
 		# for k2hdkc
 		#
 		for _k2hdkc_num in $(seq "${K2HR3CLI_DBAAS_K8S_R3DKC_REPS}"); do
-			if [ ${_DBAAS_K8S_TMP_IS_OUTPUT_FILE_KEY} -eq 0 ]; then
+			if [ "${_DBAAS_K8S_TMP_IS_OUTPUT_FILE_KEY}" -eq 0 ]; then
 				_DBAAS_K8S_TMP_IS_OUTPUT_FILE_KEY=1
 				echo "  files:"
 			fi
@@ -444,7 +440,7 @@ create_k2hr3_kustomization_yaml_file()
 		#
 		# shellcheck disable=SC2153
 		for _api_num in $(seq "${K2HR3CLI_DBAAS_K8S_R3API_REPS}"); do
-			if [ ${_DBAAS_K8S_TMP_IS_OUTPUT_FILE_KEY} -eq 0 ]; then
+			if [ "${_DBAAS_K8S_TMP_IS_OUTPUT_FILE_KEY}" -eq 0 ]; then
 				_DBAAS_K8S_TMP_IS_OUTPUT_FILE_KEY=1
 				echo "  files:"
 			fi
@@ -458,7 +454,7 @@ create_k2hr3_kustomization_yaml_file()
 		#
 		# for k2hr3 app
 		#
-		if [ ${_DBAAS_K8S_TMP_IS_OUTPUT_FILE_KEY} -eq 0 ]; then
+		if [ "${_DBAAS_K8S_TMP_IS_OUTPUT_FILE_KEY}" -eq 0 ]; then
 			_DBAAS_K8S_TMP_IS_OUTPUT_FILE_KEY=1
 			echo "  files:"
 		fi
@@ -487,8 +483,7 @@ create_k2hr3_kustomization_yaml_file()
 	# Create symbolic link
 	#
 	rm -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_KUSTOMIZATION_YAML}"
-	ln -s "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_KUSTOMIZATION_YAML}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_KUSTOMIZATION_YAML}"
-	if [ $? -ne 0 ]; then
+	if ! ln -s "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_KUSTOMIZATION_YAML}" "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_KUSTOMIZATION_YAML}"; then
 		prn_err "Failed to make symbolic link to ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_KUSTOMIZATION_YAML}"
 		return 1
 	fi
@@ -504,8 +499,7 @@ create_k2hr3_kustomization_yaml_file()
 # 
 create_all_k2hr3_pods_yaml_file()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
@@ -520,21 +514,20 @@ create_all_k2hr3_pods_yaml_file()
 	#
 	# Expand k2hr3-k2hdkc.yaml template variables
 	#
-	sed	-e "s#%%CONFIGMAP_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_CONFIGMAP_MOUNTPOINT}#g"	\
-		-e "s#%%SEC_CA_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_SEC_CA_MOUNTPOINT}#g"			\
-		-e "s#%%SEC_CERTS_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_SEC_CERTS_MOUNTPOINT}#g"	\
-		-e "s#%%ANTPICKAX_ETC_DIR%%#${K2HR3CLI_DBAAS_K8S_ANTPICKAX_ETC_MOUTPOINT}#g"	\
-		-e "s#%%K2HDKC_REPLICAS%%#${K2HR3CLI_DBAAS_K8S_R3DKC_REPS}#g"					\
-		-e "s#%%K2HDKC_NAMEBASE%%#${K2HR3CLI_DBAAS_K8S_R3DKC_NAME}#g"					\
-		-e "s#%%K2HR3_API_REPLICAS%%#${K2HR3CLI_DBAAS_K8S_R3API_REPS}#g"				\
-		-e "s#%%K2HR3_API_NAMEBASE%%#${K2HR3CLI_DBAAS_K8S_R3API_NAME}#g"				\
-		-e "s#%%K2HR3_DOMAIN%%#${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}#g"						\
-		-e "s#%%OIDC_ISSUER_URL%%#${K2HR3CLI_DBAAS_K8S_OIDC_ISSUER_URL}#g"				\
-		-e "s#%%OIDC_CLIENT_ID%%#${K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_ID}#g"				\
-		"${K2HR3CLI_DBAAS_K8S_R3DKC_POD_YAML_TEMPL}"									\
-		> "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_DKC_YAML_FILE}"
+	if ! sed -e "s#%%CONFIGMAP_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_CONFIGMAP_MOUNTPOINT}#g"	\
+			-e "s#%%SEC_CA_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_SEC_CA_MOUNTPOINT}#g"			\
+			-e "s#%%SEC_CERTS_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_SEC_CERTS_MOUNTPOINT}#g"	\
+			-e "s#%%ANTPICKAX_ETC_DIR%%#${K2HR3CLI_DBAAS_K8S_ANTPICKAX_ETC_MOUTPOINT}#g"	\
+			-e "s#%%K2HDKC_REPLICAS%%#${K2HR3CLI_DBAAS_K8S_R3DKC_REPS}#g"					\
+			-e "s#%%K2HDKC_NAMEBASE%%#${K2HR3CLI_DBAAS_K8S_R3DKC_NAME}#g"					\
+			-e "s#%%K2HR3_API_REPLICAS%%#${K2HR3CLI_DBAAS_K8S_R3API_REPS}#g"				\
+			-e "s#%%K2HR3_API_NAMEBASE%%#${K2HR3CLI_DBAAS_K8S_R3API_NAME}#g"				\
+			-e "s#%%K2HR3_DOMAIN%%#${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}#g"						\
+			-e "s#%%OIDC_ISSUER_URL%%#${K2HR3CLI_DBAAS_K8S_OIDC_ISSUER_URL}#g"				\
+			-e "s#%%OIDC_CLIENT_ID%%#${K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_ID}#g"				\
+			"${K2HR3CLI_DBAAS_K8S_R3DKC_POD_YAML_TEMPL}"									\
+			> "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_DKC_YAML_FILE}"; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed to create ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_DKC_YAML_FILE}."
 		return 1
 	fi
@@ -543,25 +536,24 @@ create_all_k2hr3_pods_yaml_file()
 	#
 	# Expand k2hr3-k2hapi.yaml template variables
 	#
-	if [ "X${K2HR3CLI_DBAAS_K8S_SUSPEND}" = "X1" ]; then
+	if [ -n "${K2HR3CLI_DBAAS_K8S_SUSPEND}" ] && [ "${K2HR3CLI_DBAAS_K8S_SUSPEND}" = "1" ]; then
 		_DBAAS_K8S_TMP_MANUAL_START=1
 	else
 		_DBAAS_K8S_TMP_MANUAL_START=0
 	fi
-	sed	-e "s#%%CONFIGMAP_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_CONFIGMAP_MOUNTPOINT}#g"	\
-		-e "s#%%SEC_CA_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_SEC_CA_MOUNTPOINT}#g"			\
-		-e "s#%%SEC_CERTS_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_SEC_CERTS_MOUNTPOINT}#g"	\
-		-e "s#%%ANTPICKAX_ETC_DIR%%#${K2HR3CLI_DBAAS_K8S_ANTPICKAX_ETC_MOUTPOINT}#g"	\
-		-e "s#%%K2HDKC_REPLICAS%%#${K2HR3CLI_DBAAS_K8S_R3DKC_REPS}#g"					\
-		-e "s#%%K2HDKC_NAMEBASE%%#${K2HR3CLI_DBAAS_K8S_R3DKC_NAME}#g"					\
-		-e "s#%%K2HR3_API_REPLICAS%%#${K2HR3CLI_DBAAS_K8S_R3API_REPS}#g"				\
-		-e "s#%%K2HR3_API_NAMEBASE%%#${K2HR3CLI_DBAAS_K8S_R3API_NAME}#g"				\
-		-e "s#%%K2HR3_DOMAIN%%#${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}#g"						\
-		-e "s#%%K2HR3_MANUAL_START%%#${_DBAAS_K8S_TMP_MANUAL_START}#g"					\
-		"${K2HR3CLI_DBAAS_K8S_R3API_POD_YAML_TEMPL}"									\
-		> "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_API_YAML_FILE}"
+	if ! sed -e "s#%%CONFIGMAP_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_CONFIGMAP_MOUNTPOINT}#g"	\
+			-e "s#%%SEC_CA_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_SEC_CA_MOUNTPOINT}#g"			\
+			-e "s#%%SEC_CERTS_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_SEC_CERTS_MOUNTPOINT}#g"	\
+			-e "s#%%ANTPICKAX_ETC_DIR%%#${K2HR3CLI_DBAAS_K8S_ANTPICKAX_ETC_MOUTPOINT}#g"	\
+			-e "s#%%K2HDKC_REPLICAS%%#${K2HR3CLI_DBAAS_K8S_R3DKC_REPS}#g"					\
+			-e "s#%%K2HDKC_NAMEBASE%%#${K2HR3CLI_DBAAS_K8S_R3DKC_NAME}#g"					\
+			-e "s#%%K2HR3_API_REPLICAS%%#${K2HR3CLI_DBAAS_K8S_R3API_REPS}#g"				\
+			-e "s#%%K2HR3_API_NAMEBASE%%#${K2HR3CLI_DBAAS_K8S_R3API_NAME}#g"				\
+			-e "s#%%K2HR3_DOMAIN%%#${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}#g"						\
+			-e "s#%%K2HR3_MANUAL_START%%#${_DBAAS_K8S_TMP_MANUAL_START}#g"					\
+			"${K2HR3CLI_DBAAS_K8S_R3API_POD_YAML_TEMPL}"									\
+			> "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_API_YAML_FILE}"; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed to create ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_API_YAML_FILE}."
 		return 1
 	fi
@@ -570,17 +562,16 @@ create_all_k2hr3_pods_yaml_file()
 	#
 	# Expand k2hr3-k2happ.yaml template variables
 	#
-	sed	-e "s#%%CONFIGMAP_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_CONFIGMAP_MOUNTPOINT}#g"	\
-		-e "s#%%SEC_CA_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_SEC_CA_MOUNTPOINT}#g"			\
-		-e "s#%%SEC_CERTS_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_SEC_CERTS_MOUNTPOINT}#g"	\
-		-e "s#%%ANTPICKAX_ETC_DIR%%#${K2HR3CLI_DBAAS_K8S_ANTPICKAX_ETC_MOUTPOINT}#g"	\
-		-e "s#%%K2HR3_APP_REPLICAS%%#${K2HR3CLI_DBAAS_K8S_R3APP_REPS}#g"				\
-		-e "s#%%K2HR3_APP_NAMEBASE%%#${K2HR3CLI_DBAAS_K8S_R3APP_NAME}#g"				\
-		-e "s#%%K2HR3_MANUAL_START%%#${_DBAAS_K8S_TMP_MANUAL_START}#g"					\
-		"${K2HR3CLI_DBAAS_K8S_R3APP_POD_YAML_TEMPL}"									\
-		> "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_APP_YAML_FILE}"
+	if ! sed -e "s#%%CONFIGMAP_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_CONFIGMAP_MOUNTPOINT}#g"	\
+			-e "s#%%SEC_CA_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_SEC_CA_MOUNTPOINT}#g"			\
+			-e "s#%%SEC_CERTS_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_SEC_CERTS_MOUNTPOINT}#g"	\
+			-e "s#%%ANTPICKAX_ETC_DIR%%#${K2HR3CLI_DBAAS_K8S_ANTPICKAX_ETC_MOUTPOINT}#g"	\
+			-e "s#%%K2HR3_APP_REPLICAS%%#${K2HR3CLI_DBAAS_K8S_R3APP_REPS}#g"				\
+			-e "s#%%K2HR3_APP_NAMEBASE%%#${K2HR3CLI_DBAAS_K8S_R3APP_NAME}#g"				\
+			-e "s#%%K2HR3_MANUAL_START%%#${_DBAAS_K8S_TMP_MANUAL_START}#g"					\
+			"${K2HR3CLI_DBAAS_K8S_R3APP_POD_YAML_TEMPL}"									\
+			> "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_APP_YAML_FILE}"; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed to create ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_APP_YAML_FILE}."
 		return 1
 	fi
@@ -589,12 +580,11 @@ create_all_k2hr3_pods_yaml_file()
 	#
 	# Expand k2hr3-sa.yaml template variables
 	#
-	sed	-e "s#%%K8S_NAMESPACE%%#${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}#g"		\
-		-e "s#%%K2HR3_API_NAMEBASE%%#${K2HR3CLI_DBAAS_K8S_R3API_NAME}#g"	\
-		"${K2HR3CLI_DBAAS_K8S_R3_SA_YAML_TEMPL}"							\
-		> "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_SA_YAML_FILE}"
+	if ! sed -e "s#%%K8S_NAMESPACE%%#${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}#g"		\
+			-e "s#%%K2HR3_API_NAMEBASE%%#${K2HR3CLI_DBAAS_K8S_R3API_NAME}#g"	\
+			"${K2HR3CLI_DBAAS_K8S_R3_SA_YAML_TEMPL}"							\
+			> "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_SA_YAML_FILE}"; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed to create ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_SA_YAML_FILE}."
 		return 1
 	fi
@@ -610,16 +600,14 @@ create_all_k2hr3_pods_yaml_file()
 # 
 create_all_k2hr3_pods_file()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
 	#
 	# Create configMap and Secret
 	#
-	"${KUBECTL_BIN}" apply -k "${_DBAAS_K8S_CLUSTER_DIRPATH}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" apply -k "${_DBAAS_K8S_CLUSTER_DIRPATH}" >/dev/null 2>&1; then
 		prn_err "Failed to create configMap and Secert from kustomization.yaml."
 		return 1
 	fi
@@ -628,8 +616,7 @@ create_all_k2hr3_pods_file()
 	#
 	# Create ServiceAccount(SA)
 	#
-	"${KUBECTL_BIN}" apply -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_SA_YAML_FILE}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" apply -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_SA_YAML_FILE}" >/dev/null 2>&1; then
 		prn_err "Failed to create ServiceAccount(SA) from ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_SA_YAML_FILE}."
 		exit 1
 	fi
@@ -638,8 +625,7 @@ create_all_k2hr3_pods_file()
 	#
 	# Create K2HDKC servers
 	#
-	"${KUBECTL_BIN}" apply -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_DKC_YAML_FILE}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" apply -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_DKC_YAML_FILE}" >/dev/null 2>&1; then
 		prn_err "Failed to create K2HDKC server from ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_DKC_YAML_FILE}."
 		exit 1
 	fi
@@ -649,8 +635,7 @@ create_all_k2hr3_pods_file()
 	#
 	# Create K2HR3 API Pod
 	#
-	"${KUBECTL_BIN}" apply -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_API_YAML_FILE}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" apply -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_API_YAML_FILE}" >/dev/null 2>&1; then
 		prn_err "Failed to create K2HR3 API pods from ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_API_YAML_FILE}."
 		exit 1
 	fi
@@ -660,8 +645,7 @@ create_all_k2hr3_pods_file()
 	#
 	# Create K2HR3 APP Pod
 	#
-	"${KUBECTL_BIN}" apply -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_APP_YAML_FILE}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" apply -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_APP_YAML_FILE}" >/dev/null 2>&1; then
 		prn_err "Failed to create K2HR3 APP pods from ${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HR3_APP_YAML_FILE}."
 		exit 1
 	fi
@@ -678,7 +662,7 @@ create_all_k2hr3_pods_file()
 # 
 run_socat_on_minikube()
 {
-	if [ "X${K2HR3CLI_DBAAS_K8S_MINIKUBE}" != "X1" ]; then
+	if [ -z "${K2HR3CLI_DBAAS_K8S_MINIKUBE}" ] || [ "${K2HR3CLI_DBAAS_K8S_MINIKUBE}" != "1" ]; then
 		#
 		# Not minikube
 		#
@@ -688,21 +672,18 @@ run_socat_on_minikube()
 	#
 	# Check socat program
 	#
-	check_socat_program
-	if [ $? -ne 0 ]; then
+	if ! check_socat_program; then
 		return 1
 	fi
 
 	#
 	# Get port number
 	#
-	_DBAAS_K8S_TMP_R3API_NODEPORT_PORTNUM=$(get_k8s_one_nodeport_port_number "${K2HR3CLI_DBAAS_K8S_K2HR3_API_NODEPORT_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}")
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_TMP_R3API_NODEPORT_PORTNUM=$(get_k8s_one_nodeport_port_number "${K2HR3CLI_DBAAS_K8S_K2HR3_API_NODEPORT_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}"); then
 		prn_err "Could not get port number K2HR3 API NodePort."
 		return 1
 	fi
-	_DBAAS_K8S_TMP_R3APP_NODEPORT_PORTNUM=$(get_k8s_one_nodeport_port_number "${K2HR3CLI_DBAAS_K8S_K2HR3_APP_NODEPORT_PREFIX}${K2HR3CLI_DBAAS_K8S_R3APP_NAME}")
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_TMP_R3APP_NODEPORT_PORTNUM=$(get_k8s_one_nodeport_port_number "${K2HR3CLI_DBAAS_K8S_K2HR3_APP_NODEPORT_PREFIX}${K2HR3CLI_DBAAS_K8S_R3APP_NAME}"); then
 		prn_err "Could not get port number K2HR3 APP NodePort."
 		return 1
 	fi
@@ -711,6 +692,7 @@ run_socat_on_minikube()
 	# Run socat for K2HR3 API
 	#
 	"${SOCAT_BIN}" "TCP-LISTEN:${_DBAAS_K8S_TMP_R3API_NODEPORT_PORTNUM},fork" "TCP:${K2HR3CLI_DBAAS_K8S_R3API_EP}:${_DBAAS_K8S_TMP_R3API_NODEPORT_PORTNUM}" >/dev/null 2>&1 &
+	# shellcheck disable=SC2181
 	if [ $? -ne 0 ]; then
 		prn_err "Failed to run ${SOCAT_BIN} for K2HR3 API."
 		return 1
@@ -723,6 +705,7 @@ run_socat_on_minikube()
 	#
 	# shellcheck disable=SC2153
 	"${SOCAT_BIN}" "TCP-LISTEN:${_DBAAS_K8S_TMP_R3APP_NODEPORT_PORTNUM},fork" "TCP:${K2HR3CLI_DBAAS_K8S_R3APP_EP}:${_DBAAS_K8S_TMP_R3APP_NODEPORT_PORTNUM}" >/dev/null 2>&1 &
+	# shellcheck disable=SC2181
 	if [ $? -ne 0 ]; then
 		prn_err "Failed to run ${SOCAT_BIN} for K2HR3 APP."
 		return 1
@@ -740,8 +723,7 @@ run_socat_on_minikube()
 # 
 print_k2hr3_system_overview()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
@@ -794,21 +776,18 @@ print_k2hr3_system_overview()
 # 
 create_k2hr3_system()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		#
 		# There is not base directory, then try to create it here.
 		#
-		_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory "1")
-		if [ $? -ne 0 ]; then
+		if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory "1"); then
 			return 1
 		fi
 
 		#
 		# After creating, need to load configuration(if not exist, create the configuration file)
 		#
-		load_dbaas_k8s_k2hr3_configuration
-		if [ $? -ne 0 ]; then
+		if ! load_dbaas_k8s_k2hr3_configuration; then
 			prn_err "Failed to load the configuration for K2HR3 system"
 			return 1
 		fi
@@ -822,8 +801,7 @@ create_k2hr3_system()
 	#
 	# (1) Check and Create(Apply) nodeport, and get Cluster IP/Port number
 	#
-	create_k8s_k2hr3_nodeports
-	if [ $? -ne 0 ]; then
+	if ! create_k8s_k2hr3_nodeports; then
 		prn_err "Could not create K2HR3 API/APP NodePorts"
 		return 1
 	fi
@@ -839,21 +817,17 @@ create_k2hr3_system()
 	#
 	# (2) Check certificates
 	#
-	check_dbaas_k8s_all_domain_certificates
-	if [ $? -ne 0 ]; then
+	if ! check_dbaas_k8s_all_domain_certificates; then
 		prn_dbg "(create_k2hr3_system) Some certificates are not existed."
 
-		check_dbaas_k8s_domain_ca_ertification
-		if [ $? -ne 0 ]; then
+		if ! check_dbaas_k8s_domain_ca_ertification; then
 			#
 			# Create all certificates because CA certificate is not safe
 			#
 			prn_dbg "(create_k2hr3_system) Try to create all certificates with CA certificate."
 
-			# shellcheck disable=SC2034
 			K2HR3CLI_DBAAS_K8S_CERT_TYPE=${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_ALL}
-			create_dbaas_k8s_domain_certificates
-			if [ $? -ne 0 ]; then
+			if ! create_dbaas_k8s_domain_certificates; then
 				prn_err "Failed to create all certificates"
 				return 1
 			fi
@@ -864,26 +838,20 @@ create_k2hr3_system()
 			#
 			prn_dbg "(create_k2hr3_system) Try to create all certificates without CA certificate."
 
-			# shellcheck disable=SC2034
 			K2HR3CLI_DBAAS_K8S_CERT_TYPE=${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}
-			create_dbaas_k8s_domain_certificates
-			if [ $? -ne 0 ]; then
+			if ! create_dbaas_k8s_domain_certificates; then
 				prn_err "Failed to create K2HDKC certificates"
 				return 1
 			fi
 
-			# shellcheck disable=SC2034
 			K2HR3CLI_DBAAS_K8S_CERT_TYPE=${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}
-			create_dbaas_k8s_domain_certificates
-			if [ $? -ne 0 ]; then
+			if ! create_dbaas_k8s_domain_certificates; then
 				prn_err "Failed to create K2HR3 API certificates"
 				return 1
 			fi
 
-			# shellcheck disable=SC2034
 			K2HR3CLI_DBAAS_K8S_CERT_TYPE=${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3APP}
-			create_dbaas_k8s_domain_certificates
-			if [ $? -ne 0 ]; then
+			if ! create_dbaas_k8s_domain_certificates; then
 				prn_err "Failed to create K2HR3 APP certificates"
 				return 1
 			fi
@@ -895,15 +863,13 @@ create_k2hr3_system()
 	#
 	# (3) Create H2HR3 API/APP production.json
 	#
-	create_k2hr3_api_production_json_file "${_DBAAS_K8S_TMP_R3API_NODEPORT_PORTNUM}"
-	if [ $? -ne 0 ]; then
+	if ! create_k2hr3_api_production_json_file "${_DBAAS_K8S_TMP_R3API_NODEPORT_PORTNUM}"; then
 		prn_err "Could not create K2HR3 API prpduction json file."
 		return 1
 	fi
 	prn_msg "${CGRN}Created${CDEF} : The prpduction json file for K2HR3 API."
 
-	create_k2hr3_app_production_json_file "${_DBAAS_K8S_TMP_R3APP_NODEPORT_PORTNUM}" "${_DBAAS_K8S_TMP_R3API_NODEPORT_PORTNUM}"
-	if [ $? -ne 0 ]; then
+	if ! create_k2hr3_app_production_json_file "${_DBAAS_K8S_TMP_R3APP_NODEPORT_PORTNUM}" "${_DBAAS_K8S_TMP_R3API_NODEPORT_PORTNUM}"; then
 		prn_err "Could not create K2HR3 APP prpduction json file."
 		return 1
 	fi
@@ -912,8 +878,7 @@ create_k2hr3_system()
 	#
 	# (4) Create kustomization.yaml
 	#
-	create_k2hr3_kustomization_yaml_file
-	if [ $? -ne 0 ]; then
+	if ! create_k2hr3_kustomization_yaml_file; then
 		prn_err "Failed to make kustomization.yaml."
 		return 1
 	fi
@@ -922,8 +887,7 @@ create_k2hr3_system()
 	#
 	# (5) Create K2HDKC, K2HR3 API, K2HR3 APP Pods, and ServiceAccount(SA)
 	#
-	create_all_k2hr3_pods_yaml_file
-	if [ $? -ne 0 ]; then
+	if ! create_all_k2hr3_pods_yaml_file; then
 		prn_err "Failed to make K2HDKC, K2HR3 API, K2HR3 APP Pods, and ServiceAccount(SA)."
 		return 1
 	fi
@@ -932,8 +896,7 @@ create_k2hr3_system()
 	#
 	# (6) Create All Pods and configMap and Secret
 	#
-	create_all_k2hr3_pods_file
-	if [ $? -ne 0 ]; then
+	if ! create_all_k2hr3_pods_file; then
 		prn_err "Failed to create K2HDKC, K2HR3 API, K2HR3 APP Pods, and ServiceAccount(SA)."
 		return 1
 	fi
@@ -942,12 +905,11 @@ create_k2hr3_system()
 	#
 	# (7) Run socat if run on minikube
 	#
-	run_socat_on_minikube
-	if [ $? -ne 0 ]; then
+	if ! run_socat_on_minikube; then
 		prn_err "Something error occurred."
 		return 1
 	fi
-	if [ "X${K2HR3CLI_DBAAS_K8S_MINIKUBE}" != "X1" ]; then
+	if [ -z "${K2HR3CLI_DBAAS_K8S_MINIKUBE}" ] || [ "${K2HR3CLI_DBAAS_K8S_MINIKUBE}" != "1" ]; then
 		prn_msg "${CGRN}Run${CDEF} : ${SOCAT_BIN} for proxy K2HR3 APP/API."
 	fi
 
@@ -955,8 +917,7 @@ create_k2hr3_system()
 	# (8) Print information
 	#
 	prn_msg "${CGRN}K2HR3 system Information${CDEF}"
-	print_k2hr3_system_overview
-	if [ $? -ne 0 ]; then
+	if ! print_k2hr3_system_overview; then
 		prn_err "Something error occurred during printing overview."
 		return 1
 	fi
@@ -964,124 +925,101 @@ create_k2hr3_system()
 	#
 	# (9) Save variables to configuration file
 	#
-	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3DKC_NAME' "${K2HR3CLI_DBAAS_K8S_R3DKC_NAME}" 
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3DKC_NAME' "${K2HR3CLI_DBAAS_K8S_R3DKC_NAME}"; then
 		prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_R3DKC_NAME) and the value(${K2HR3CLI_DBAAS_K8S_R3DKC_NAME}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 		return 1
 	fi
-	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3API_NAME' "${K2HR3CLI_DBAAS_K8S_R3API_NAME}" 
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3API_NAME' "${K2HR3CLI_DBAAS_K8S_R3API_NAME}"; then
 		prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_R3API_NAME) and the value(${K2HR3CLI_DBAAS_K8S_R3API_NAME}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 		return 1
 	fi
-	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3APP_NAME' "${K2HR3CLI_DBAAS_K8S_R3APP_NAME}" 
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3APP_NAME' "${K2HR3CLI_DBAAS_K8S_R3APP_NAME}"; then
 		prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_R3APP_NAME) and the value(${K2HR3CLI_DBAAS_K8S_R3APP_NAME}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 		return 1
 	fi
-	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3DKC_REPS' "${K2HR3CLI_DBAAS_K8S_R3DKC_REPS}" 
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3DKC_REPS' "${K2HR3CLI_DBAAS_K8S_R3DKC_REPS}"; then
 		prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_R3DKC_REPS) and the value(${K2HR3CLI_DBAAS_K8S_R3DKC_REPS}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 		return 1
 	fi
-	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3API_REPS' "${K2HR3CLI_DBAAS_K8S_R3API_REPS}" 
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3API_REPS' "${K2HR3CLI_DBAAS_K8S_R3API_REPS}"; then
 		prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_R3API_REPS) and the value(${K2HR3CLI_DBAAS_K8S_R3API_REPS}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 		return 1
 	fi
-	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3APP_REPS' "${K2HR3CLI_DBAAS_K8S_R3APP_REPS}" 
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3APP_REPS' "${K2HR3CLI_DBAAS_K8S_R3APP_REPS}"; then
 		prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_R3APP_REPS) and the value(${K2HR3CLI_DBAAS_K8S_R3APP_REPS}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 		return 1
 	fi
-	if [ "X${K2HR3CLI_DBAAS_K8S_MINIKUBE}" = "X1" ] && [ "X${K2HR3CLI_DBAAS_K8S_R3API_EXTERNAL_HOST}" != "X" ]; then
-		save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3API_EP' "${K2HR3CLI_DBAAS_K8S_R3API_EXTERNAL_HOST}"
-		if [ $? -ne 0 ]; then
+	if [ -n "${K2HR3CLI_DBAAS_K8S_MINIKUBE}" ] && [ "${K2HR3CLI_DBAAS_K8S_MINIKUBE}" = "1" ] && [ -n "${K2HR3CLI_DBAAS_K8S_R3API_EXTERNAL_HOST}" ]; then
+		if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3API_EP' "${K2HR3CLI_DBAAS_K8S_R3API_EXTERNAL_HOST}"; then
 			prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_R3API_EP) and the value(${K2HR3CLI_DBAAS_K8S_R3API_EXTERNAL_HOST}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 			return 1
 		fi
 	else
-		save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3API_EP' "${K2HR3CLI_DBAAS_K8S_R3API_EP}"
-		if [ $? -ne 0 ]; then
+		if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3API_EP' "${K2HR3CLI_DBAAS_K8S_R3API_EP}"; then
 			prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_R3API_EP) and the value(${K2HR3CLI_DBAAS_K8S_R3API_EP}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 			return 1
 		fi
 	fi
-	if [ "X${K2HR3CLI_DBAAS_K8S_MINIKUBE}" = "X1" ] && [ "X${K2HR3CLI_DBAAS_K8S_R3APP_EXTERNAL_HOST}" != "X" ]; then
-		save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3APP_EP' "${K2HR3CLI_DBAAS_K8S_R3APP_EXTERNAL_HOST}" 
-		if [ $? -ne 0 ]; then
+	if [ -n "${K2HR3CLI_DBAAS_K8S_MINIKUBE}" ] && [ "${K2HR3CLI_DBAAS_K8S_MINIKUBE}" = "1" ] && [ -n "${K2HR3CLI_DBAAS_K8S_R3APP_EXTERNAL_HOST}" ]; then
+		if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3APP_EP' "${K2HR3CLI_DBAAS_K8S_R3APP_EXTERNAL_HOST}"; then
 			prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_R3APP_EP) and the value(${K2HR3CLI_DBAAS_K8S_R3APP_EXTERNAL_HOST}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 			return 1
 		fi
 	else
-		save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3APP_EP' "${K2HR3CLI_DBAAS_K8S_R3APP_EP}" 
-		if [ $? -ne 0 ]; then
+		if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3APP_EP' "${K2HR3CLI_DBAAS_K8S_R3APP_EP}"; then
 			prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_R3APP_EP) and the value(${K2HR3CLI_DBAAS_K8S_R3APP_EP}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 			return 1
 		fi
 	fi
-	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3API_NPNUM' "${K2HR3CLI_DBAAS_K8S_R3API_NPNUM}" 
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3API_NPNUM' "${K2HR3CLI_DBAAS_K8S_R3API_NPNUM}"; then
 		prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_R3API_NPNUM) and the value(${K2HR3CLI_DBAAS_K8S_R3API_NPNUM}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 		return 1
 	fi
-	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3APP_NPNUM' "${K2HR3CLI_DBAAS_K8S_R3APP_NPNUM}" 
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_R3APP_NPNUM' "${K2HR3CLI_DBAAS_K8S_R3APP_NPNUM}"; then
 		prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_R3APP_NPNUM) and the value(${K2HR3CLI_DBAAS_K8S_R3APP_NPNUM}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 		return 1
 	fi
-	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_NODE_IPS' "${K2HR3CLI_DBAAS_K8S_NODE_IPS}" 
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_NODE_IPS' "${K2HR3CLI_DBAAS_K8S_NODE_IPS}"; then
 		prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_NODE_IPS) and the value(${K2HR3CLI_DBAAS_K8S_NODE_IPS}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 		return 1
 	fi
-	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CERT_C' "${K2HR3CLI_DBAAS_K8S_CERT_C}" 
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CERT_C' "${K2HR3CLI_DBAAS_K8S_CERT_C}"; then
 		prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_CERT_C) and the value(${K2HR3CLI_DBAAS_K8S_CERT_C}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 		return 1
 	fi
-	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CERT_S' "${K2HR3CLI_DBAAS_K8S_CERT_S}" 
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CERT_S' "${K2HR3CLI_DBAAS_K8S_CERT_S}"; then
 		prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_CERT_S) and the value(${K2HR3CLI_DBAAS_K8S_CERT_S}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 		return 1
 	fi
-	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CERT_O' "${K2HR3CLI_DBAAS_K8S_CERT_O}" 
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CERT_O' "${K2HR3CLI_DBAAS_K8S_CERT_O}"; then
 		prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_CERT_O) and the value(${K2HR3CLI_DBAAS_K8S_CERT_O}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 		return 1
 	fi
-	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CERT_EXPIRE' "${K2HR3CLI_DBAAS_K8S_CERT_EXPIRE}" 
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_CERT_EXPIRE' "${K2HR3CLI_DBAAS_K8S_CERT_EXPIRE}"; then
 		prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_CERT_EXPIRE) and the value(${K2HR3CLI_DBAAS_K8S_CERT_EXPIRE}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 		return 1
 	fi
-	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_SECRET' "${K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_SECRET}" 
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_SECRET' "${K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_SECRET}"; then
 		prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_SECRET) and the value(${K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_SECRET}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 		return 1
 	fi
-	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_ID' "${K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_ID}" 
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_ID' "${K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_ID}"; then
 		prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_ID) and the value(${K2HR3CLI_DBAAS_K8S_OIDC_CLIENT_ID}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 		return 1
 	fi
-	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_OIDC_ISSUER_URL' "${K2HR3CLI_DBAAS_K8S_OIDC_ISSUER_URL}" 
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_OIDC_ISSUER_URL' "${K2HR3CLI_DBAAS_K8S_OIDC_ISSUER_URL}"; then
 		prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_OIDC_ISSUER_URL) and the value(${K2HR3CLI_DBAAS_K8S_OIDC_ISSUER_URL}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 		return 1
 	fi
-	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_OIDC_USERNAME_KEY' "${K2HR3CLI_DBAAS_K8S_OIDC_USERNAME_KEY}" 
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_OIDC_USERNAME_KEY' "${K2HR3CLI_DBAAS_K8S_OIDC_USERNAME_KEY}"; then
 		prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_OIDC_USERNAME_KEY) and the value(${K2HR3CLI_DBAAS_K8S_OIDC_USERNAME_KEY}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 		return 1
 	fi
-	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_OIDC_COOKIENAME' "${K2HR3CLI_DBAAS_K8S_OIDC_COOKIENAME}" 
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_OIDC_COOKIENAME' "${K2HR3CLI_DBAAS_K8S_OIDC_COOKIENAME}"; then
 		prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_OIDC_COOKIENAME) and the value(${K2HR3CLI_DBAAS_K8S_OIDC_COOKIENAME}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 		return 1
 	fi
-	save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_OIDC_COOKIE_EXPIRE' "${K2HR3CLI_DBAAS_K8S_OIDC_COOKIE_EXPIRE}" 
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hr3_configuration 'K2HR3CLI_DBAAS_K8S_OIDC_COOKIE_EXPIRE' "${K2HR3CLI_DBAAS_K8S_OIDC_COOKIE_EXPIRE}"; then
 		prn_err "Failed updating the key(K2HR3CLI_DBAAS_K8S_OIDC_COOKIE_EXPIRE) and the value(${K2HR3CLI_DBAAS_K8S_OIDC_COOKIE_EXPIRE}) the K2HR3 system configuration for K2HDKC DBaaS K8S(${K2HR3CLI_DBAAS_K8S_DOMAIN})."
 		return 1
 	fi
@@ -1171,7 +1109,7 @@ print_k2hr3_k8s_resource_overview()
 # 
 stop_socat_on_minikube()
 {
-	if [ "X${K2HR3CLI_DBAAS_K8S_MINIKUBE}" != "X1" ]; then
+	if [ -z "${K2HR3CLI_DBAAS_K8S_MINIKUBE}" ] || [ "${K2HR3CLI_DBAAS_K8S_MINIKUBE}" != "1" ]; then
 		#
 		# Not minikube
 		#
@@ -1185,7 +1123,7 @@ stop_socat_on_minikube()
 	# Since the startup is not linked, find the target socat and stop it.
 	#
 	_DBAAS_K8S_TMP_SOCAT_PROCS=$(pgrep -f "${SOCAT_BIN}")
-	if [ "X${_DBAAS_K8S_TMP_SOCAT_PROCS}" != "X" ]; then
+	if [ -n "${_DBAAS_K8S_TMP_SOCAT_PROCS}" ]; then
 		kill -HUP "${_DBAAS_K8S_TMP_SOCAT_PROCS}"
 		prn_dbg "(stop_socat_on_minikube) Stopped ${SOCAT_BIN} processes(PID: ${_DBAAS_K8S_TMP_SOCAT_PROCS})."
 	else
@@ -1201,8 +1139,7 @@ stop_socat_on_minikube()
 # 
 delete_k2hr3_system()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
@@ -1214,19 +1151,17 @@ delete_k2hr3_system()
 	#
 	# If minikube and socat is running, stop it
 	#
-	stop_socat_on_minikube
-	if [ $? -ne 0 ]; then
+	if ! stop_socat_on_minikube; then
 		return 1
 	fi
-	if [ "X${K2HR3CLI_DBAAS_K8S_MINIKUBE}" != "X1" ]; then
+	if [ -z "${K2HR3CLI_DBAAS_K8S_MINIKUBE}" ] || [ "${K2HR3CLI_DBAAS_K8S_MINIKUBE}" != "1" ]; then
 		prn_msg "${CGRN}Stopped${CDEF} : ${SOCAT_BIN} for proxy K2HR3 APP/API."
 	fi
 
 	#
 	# Delete NodePort for K2HR3 APP
 	#
-	"${KUBECTL_BIN}" delete services "${K2HR3CLI_DBAAS_K8S_K2HR3_APP_NODEPORT_PREFIX}${K2HR3CLI_DBAAS_K8S_R3APP_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" delete services "${K2HR3CLI_DBAAS_K8S_K2HR3_APP_NODEPORT_PREFIX}${K2HR3CLI_DBAAS_K8S_R3APP_NAME}" >/dev/null 2>&1; then
 		prn_msg "${CGRN}Failed${CDEF} : Could not stop K2HR3 APP NodePort Service(${K2HR3CLI_DBAAS_K8S_K2HR3_APP_NODEPORT_PREFIX}${K2HR3CLI_DBAAS_K8S_R3APP_NAME})"
 	else
 		prn_msg "${CGRN}Stopped${CDEF} : K2HR3 APP NodePort Service(${K2HR3CLI_DBAAS_K8S_K2HR3_APP_NODEPORT_PREFIX}${K2HR3CLI_DBAAS_K8S_R3APP_NAME})"
@@ -1235,8 +1170,7 @@ delete_k2hr3_system()
 	#
 	# Delete NodePort for K2HR3 API
 	#
-	"${KUBECTL_BIN}" delete services "${K2HR3CLI_DBAAS_K8S_K2HR3_API_NODEPORT_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" delete services "${K2HR3CLI_DBAAS_K8S_K2HR3_API_NODEPORT_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}" >/dev/null 2>&1; then
 		prn_msg "${CGRN}Failed${CDEF} : Could not stop K2HR3 API NodePort Service(${K2HR3CLI_DBAAS_K8S_K2HR3_API_NODEPORT_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME})"
 	else
 		prn_msg "${CGRN}Stopped${CDEF} : K2HR3 API NodePort Service(${K2HR3CLI_DBAAS_K8S_K2HR3_API_NODEPORT_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME})"
@@ -1245,8 +1179,7 @@ delete_k2hr3_system()
 	#
 	# Delete Deployment for K2HR3 APP
 	#
-	"${KUBECTL_BIN}" delete deployments "${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3APP_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" delete deployments "${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3APP_NAME}" >/dev/null 2>&1; then
 		prn_msg "${CGRN}Failed${CDEF} : Could not stop K2HR3 APP Deployment Service(${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3APP_NAME})"
 	else
 		prn_msg "${CGRN}Stopped${CDEF} : K2HR3 APP Deployment Service(${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3APP_NAME})"
@@ -1255,8 +1188,7 @@ delete_k2hr3_system()
 	#
 	# Delete Service for K2HR3 API
 	#
-	"${KUBECTL_BIN}" delete services "${K2HR3CLI_DBAAS_K8S_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" delete services "${K2HR3CLI_DBAAS_K8S_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}" >/dev/null 2>&1; then
 		prn_msg "${CGRN}Failed${CDEF} : Could not stop K2HR3 API Service(${K2HR3CLI_DBAAS_K8S_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME})"
 	else
 		prn_msg "${CGRN}Stopped${CDEF} : K2HR3 API Service(${K2HR3CLI_DBAAS_K8S_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME})"
@@ -1265,8 +1197,7 @@ delete_k2hr3_system()
 	#
 	# Delete StatefulSet for K2HR3 API
 	#
-	"${KUBECTL_BIN}" delete statefulset "${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" delete statefulset "${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}" >/dev/null 2>&1; then
 		prn_msg "${CGRN}Failed${CDEF} : Could not stop K2HR3 API StatefulSet(${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME})"
 	else
 		prn_msg "${CGRN}Stopped${CDEF} : K2HR3 API StatefusSet(${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME})"
@@ -1275,8 +1206,7 @@ delete_k2hr3_system()
 	#
 	# Delete Service for K2HDKC
 	#
-	"${KUBECTL_BIN}" delete services "${K2HR3CLI_DBAAS_K8S_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3DKC_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" delete services "${K2HR3CLI_DBAAS_K8S_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3DKC_NAME}" >/dev/null 2>&1; then
 		prn_msg "${CGRN}Failed${CDEF} : Could not stop K2HDKC Service(${K2HR3CLI_DBAAS_K8S_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3DKC_NAME})"
 	else
 		prn_msg "${CGRN}Stopped${CDEF} : K2HDKC Service(${K2HR3CLI_DBAAS_K8S_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3DKC_NAME})"
@@ -1285,8 +1215,7 @@ delete_k2hr3_system()
 	#
 	# Delete StatefulSet for K2HDKC
 	#
-	"${KUBECTL_BIN}" delete statefulset "${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3DKC_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" delete statefulset "${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3DKC_NAME}" >/dev/null 2>&1; then
 		prn_msg "${CGRN}Failed${CDEF} : Could not stop K2HDKC StatefulSet(${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3DKC_NAME})"
 	else
 		prn_msg "${CGRN}Stopped${CDEF} : K2HDKC StatefusSet(${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3DKC_NAME})"
@@ -1297,8 +1226,7 @@ delete_k2hr3_system()
 	#
 	_DBAAS_K8S_TMP_PODS_LIST=$("${KUBECTL_BIN}" get pods 2>/dev/null | grep "^${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3APP_NAME}" | awk '{print $1}')
 	for _pod_name in ${_DBAAS_K8S_TMP_PODS_LIST}; do
-		"${KUBECTL_BIN}" delete pods "${_pod_name}" >/dev/null 2>&1
-		if [ $? -ne 0 ]; then
+		if ! "${KUBECTL_BIN}" delete pods "${_pod_name}" >/dev/null 2>&1; then
 			prn_msg "${CGRN}Failed${CDEF} : Could not stop K2HR3 APP Pod(${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3APP_NAME})"
 		else
 			prn_msg "${CGRN}Stopped${CDEF} : K2HR3 APP Pod(${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3APP_NAME})"
@@ -1310,8 +1238,7 @@ delete_k2hr3_system()
 	#
 	_DBAAS_K8S_TMP_PODS_LIST=$("${KUBECTL_BIN}" get pods 2>/dev/null | grep "^${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}" | awk '{print $1}')
 	for _pod_name in ${_DBAAS_K8S_TMP_PODS_LIST}; do
-		"${KUBECTL_BIN}" delete pods "${_pod_name}" >/dev/null 2>&1
-		if [ $? -ne 0 ]; then
+		if ! "${KUBECTL_BIN}" delete pods "${_pod_name}" >/dev/null 2>&1; then
 			prn_msg "${CGRN}Failed${CDEF} : Could not stop K2HR3 API Pod(${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME})"
 		else
 			prn_msg "${CGRN}Stopped${CDEF} : K2HR3 API Pod(${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME})"
@@ -1323,8 +1250,7 @@ delete_k2hr3_system()
 	#
 	_DBAAS_K8S_TMP_PODS_LIST=$("${KUBECTL_BIN}" get pods 2>/dev/null | grep "^${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3DKC_NAME}" | awk '{print $1}')
 	for _pod_name in ${_DBAAS_K8S_TMP_PODS_LIST}; do
-		"${KUBECTL_BIN}" delete pods "${_pod_name}" >/dev/null 2>&1
-		if [ $? -ne 0 ]; then
+		if ! "${KUBECTL_BIN}" delete pods "${_pod_name}" >/dev/null 2>&1; then
 			prn_msg "${CGRN}Failed${CDEF} : Could not stop K2HDKC Pod(${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3DKC_NAME})"
 		else
 			prn_msg "${CGRN}Stopped${CDEF} : K2HDKC Pod(${K2HR3CLI_DBAAS_K8S_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3DKC_NAME})"
@@ -1334,15 +1260,13 @@ delete_k2hr3_system()
 	#
 	# Delete Secrets
 	#
-	"${KUBECTL_BIN}" delete secrets "${K2HR3CLI_DBAAS_K8S_SECRET_CA_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" delete secrets "${K2HR3CLI_DBAAS_K8S_SECRET_CA_NAME}" >/dev/null 2>&1; then
 		prn_msg "${CGRN}Failed${CDEF} : Could not remove Secret CA(${K2HR3CLI_DBAAS_K8S_SECRET_CA_NAME})"
 	else
 		prn_msg "${CGRN}Removed${CDEF} : Secret CA(${K2HR3CLI_DBAAS_K8S_SECRET_CA_NAME})"
 	fi
 
-	"${KUBECTL_BIN}" delete secrets "${K2HR3CLI_DBAAS_K8S_SECRET_CERT_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" delete secrets "${K2HR3CLI_DBAAS_K8S_SECRET_CERT_NAME}" >/dev/null 2>&1; then
 		prn_msg "${CGRN}Failed${CDEF} : Could not remove Secret Certs(${K2HR3CLI_DBAAS_K8S_SECRET_CERT_NAME})"
 	else
 		prn_msg "${CGRN}Removed${CDEF} : Secret Certs(${K2HR3CLI_DBAAS_K8S_SECRET_CERT_NAME})"
@@ -1351,8 +1275,7 @@ delete_k2hr3_system()
 	#
 	# Delete configMap
 	#
-	"${KUBECTL_BIN}" delete configmaps "${K2HR3CLI_DBAAS_K8S_CONFIGMAP_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" delete configmaps "${K2HR3CLI_DBAAS_K8S_CONFIGMAP_NAME}" >/dev/null 2>&1; then
 		prn_msg "${CGRN}Failed${CDEF} : Could not remove configMap(${K2HR3CLI_DBAAS_K8S_CONFIGMAP_NAME})"
 	else
 		prn_msg "${CGRN}Removed${CDEF} : configMap(${K2HR3CLI_DBAAS_K8S_CONFIGMAP_NAME})"
@@ -1361,22 +1284,19 @@ delete_k2hr3_system()
 	#
 	# Delete ServiceAccount etc
 	#
-	"${KUBECTL_BIN}" delete serviceaccount "${K2HR3CLI_DBAAS_K8S_SERVICE_ACCOUNT_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" delete serviceaccount "${K2HR3CLI_DBAAS_K8S_SERVICE_ACCOUNT_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}" >/dev/null 2>&1; then
 		prn_msg "${CGRN}Failed${CDEF} : Could not remove ServiceAccount for K2HR3 API(${K2HR3CLI_DBAAS_K8S_SERVICE_ACCOUNT_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME})"
 	else
 		prn_msg "${CGRN}Removed${CDEF} : ServiceAccount for K2HR3 API(${K2HR3CLI_DBAAS_K8S_SERVICE_ACCOUNT_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME})"
 	fi
 
-	"${KUBECTL_BIN}" delete clusterrolebinding "${K2HR3CLI_DBAAS_K8S_CLUSTER_ROLEBINDING_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" delete clusterrolebinding "${K2HR3CLI_DBAAS_K8S_CLUSTER_ROLEBINDING_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}" >/dev/null 2>&1; then
 		prn_msg "${CGRN}Failed${CDEF} : Could not remove Cluster Rolebinding for K2HR3 API(${K2HR3CLI_DBAAS_K8S_CLUSTER_ROLEBINDING_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME})"
 	else
 		prn_msg "${CGRN}Removed${CDEF} : Cluster Rolebinding for K2HR3 API(${K2HR3CLI_DBAAS_K8S_CLUSTER_ROLEBINDING_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME})"
 	fi
 
-	"${KUBECTL_BIN}" delete clusterrole "${K2HR3CLI_DBAAS_K8S_CLUSTER_ROLE_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" delete clusterrole "${K2HR3CLI_DBAAS_K8S_CLUSTER_ROLE_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}" >/dev/null 2>&1; then
 		prn_msg "${CGRN}Failed${CDEF} : Could not remove Cluster Role for K2HR3 API(${K2HR3CLI_DBAAS_K8S_CLUSTER_ROLE_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME})"
 	else
 		prn_msg "${CGRN}Removed${CDEF} : Cluster Role for K2HR3 API(${K2HR3CLI_DBAAS_K8S_CLUSTER_ROLE_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME})"
@@ -1408,7 +1328,7 @@ delete_k2hr3_system()
 	#
 	# Delete all certificates
 	#
-	if [ "X${K2HR3CLI_DBAAS_K8S_RM_CERTS}" = "X1" ]; then
+	if [ -n "${K2HR3CLI_DBAAS_K8S_RM_CERTS}" ] && [ "${K2HR3CLI_DBAAS_K8S_RM_CERTS}" = "1" ]; then
 		rm -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF}"
 		rm -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF_TMP}"
 		rm -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF_NODE_TMP}"
@@ -1446,16 +1366,14 @@ delete_k2hr3_system()
 # 
 get_k2hdkc_role_tokens()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
 	#
 	# Get current K2HDKC cluster directory path and configuration file path
 	#
-	set_dbaas_k8s_k2hdkc_cluster_variables "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}"
-	if [ $? -ne 0 ]; then
+	if ! set_dbaas_k8s_k2hdkc_cluster_variables "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}"; then
 		return 1
 	fi
 	if [ ! -f "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_CONFIG_FILE}" ]; then
@@ -1470,16 +1388,18 @@ get_k2hdkc_role_tokens()
 	# Server Role Token
 	#
 	# shellcheck disable=SC2153
-	_DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT=$(									\
+	if ! _DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT=$(								\
 		K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
 		K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
 		K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
 		K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
 		K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
 		K2HR3CLI_OPT_INTERACTIVE=0											\
-		"${K2HR3CLIBIN}" role token create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server" --expire "0" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}")
+		"${K2HR3CLIBIN}" role token create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server" --expire "0" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}"); then
 
-	if [ $? -ne 0 ] || [ -z "${_DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT}" ]; then
+		prn_err "Failed getting the K2HR3 Role Token for \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server\" for K2HDKC cluster."
+		return 1
+	elif [ -z "${_DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT}" ]; then
 		prn_err "Failed getting the K2HR3 Role Token for \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server\" for K2HDKC cluster."
 		return 1
 	fi
@@ -1488,13 +1408,15 @@ get_k2hdkc_role_tokens()
 	#
 	# Parse Result
 	#
-	jsonparser_parse_json_string "${_DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_string "${_DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT}"; then
 		prn_dbg "Failed to parse Role Token from result(${_DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT}) for \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server\" role."
 		return 1
 	fi
-	jsonparser_get_key_value '%"token"%' "${JP_PAERSED_FILE}"
-	if [ $? -ne 0 ] || [ -z "${JSONPARSER_FIND_STR_VAL}" ]; then
+	if ! jsonparser_get_key_value '%"token"%' "${JP_PAERSED_FILE}"; then
+		prn_dbg "Failed to Role Token result(${_DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT}) for \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server\" role is wrong format."
+		rm -f "${JP_PAERSED_FILE}"
+		return 1
+	elif [ -z "${JSONPARSER_FIND_STR_VAL}" ]; then
 		prn_dbg "Failed to Role Token result(${_DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT}) for \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server\" role is wrong format."
 		rm -f "${JP_PAERSED_FILE}"
 		return 1
@@ -1507,16 +1429,18 @@ get_k2hdkc_role_tokens()
 	#
 	# Slave Role Token
 	#
-	_DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT=$(									\
+	if ! _DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT=$(								\
 		K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
 		K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
 		K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
 		K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
 		K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
 		K2HR3CLI_OPT_INTERACTIVE=0											\
-		"${K2HR3CLIBIN}" role token create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave" --expire "0" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}")
+		"${K2HR3CLIBIN}" role token create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave" --expire "0" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}"); then
 
-	if [ $? -ne 0 ] || [ -z "${_DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT}" ]; then
+		prn_err "Failed getting K2HR3 Role Token for \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave\" for K2HDKC cluster."
+		return 1
+	elif [ -z "${_DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT}" ]; then
 		prn_err "Failed getting K2HR3 Role Token for \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave\" for K2HDKC cluster."
 		return 1
 	fi
@@ -1525,13 +1449,15 @@ get_k2hdkc_role_tokens()
 	#
 	# Parse Result
 	#
-	jsonparser_parse_json_string "${_DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_string "${_DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT}"; then
 		prn_dbg "Failed to parse Role Token from result(${_DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT}) for \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave\" role."
 		return 1
 	fi
-	jsonparser_get_key_value '%"token"%' "${JP_PAERSED_FILE}"
-	if [ $? -ne 0 ] || [ -z "${JSONPARSER_FIND_STR_VAL}" ]; then
+	if ! jsonparser_get_key_value '%"token"%' "${JP_PAERSED_FILE}"; then
+		prn_dbg "Failed to Role Token result(${_DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT}) for \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave\" role is wrong format."
+		rm -f "${JP_PAERSED_FILE}"
+		return 1
+	elif [ -z "${JSONPARSER_FIND_STR_VAL}" ]; then
 		prn_dbg "Failed to Role Token result(${_DBAAS_K8S_TMP_K2HDKC_TOKEN_RESULT}) for \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave\" role is wrong format."
 		rm -f "${JP_PAERSED_FILE}"
 		return 1
@@ -1559,8 +1485,7 @@ get_k2hdkc_role_tokens()
 # 
 setup_k2hdkc_k2hr3_data()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
@@ -1577,7 +1502,6 @@ setup_k2hdkc_k2hr3_data()
 	fi
 	K2HR3CLI_SCOPED_TOKEN=""
 	K2HR3CLI_API_URI="https://${K2HR3CLI_DBAAS_K8S_R3API_EP}:${K2HR3CLI_DBAAS_K8S_R3API_NPNUM}"
-	# shellcheck disable=SC2034
 	K2HR3CLI_TENANT=${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}
 
 	if [ -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME}" ]; then
@@ -1587,9 +1511,10 @@ setup_k2hdkc_k2hr3_data()
 	#
 	# Check K2HR3 unscoped token
 	#
-	complement_dbaas_k2hr3_unscoped_token
-	# shellcheck disable=SC2153
-	if [ $? -ne 0 ] || [ -z "${K2HR3CLI_UNSCOPED_TOKEN}" ]; then
+	if ! complement_dbaas_k2hr3_unscoped_token; then
+		prn_err "Use the K2HR3 system for \"${K2HR3CLI_DBAAS_K8S_DOMAIN}\" kubernetes cluster to execute this command. However, no scoped token for \"${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}\" namespace(tenant) was created to operate the K2HR3 system."
+		return 1
+	elif [ -z "${K2HR3CLI_UNSCOPED_TOKEN}" ]; then
 		prn_err "Use the K2HR3 system for \"${K2HR3CLI_DBAAS_K8S_DOMAIN}\" kubernetes cluster to execute this command. However, no scoped token for \"${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}\" namespace(tenant) was created to operate the K2HR3 system."
 		return 1
 	fi
@@ -1598,8 +1523,7 @@ setup_k2hdkc_k2hr3_data()
 	#
 	# Check K2HR3 Scoped token
 	#
-	complement_scoped_token
-	if [ $? -ne 0 ]; then
+	if ! complement_scoped_token; then
 		prn_err "Use the K2HR3 system for \"${K2HR3CLI_DBAAS_K8S_DOMAIN}\" kubernetes cluster to execute this command. However, no scoped token for \"${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}\" namespace(tenant) was created to operate the K2HR3 system."
 		return 1
 	fi
@@ -1608,8 +1532,7 @@ setup_k2hdkc_k2hr3_data()
 	#-----------------------------------------------------------
 	# (1) Check / Create / Load K2HDKC cluster configuration
 	#-----------------------------------------------------------
-	set_dbaas_k8s_k2hdkc_cluster_variables "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}"
-	if [ $? -ne 0 ]; then
+	if ! set_dbaas_k8s_k2hdkc_cluster_variables "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}"; then
 		return 1
 	fi
 	if [ -f "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_CONFIG_FILE}" ]; then
@@ -1620,8 +1543,7 @@ setup_k2hdkc_k2hr3_data()
 		return 1
 	fi
 
-	load_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" "1"
-	if [ $? -ne 0 ]; then
+	if ! load_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" "1"; then
 		prn_err "Failed initializing \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\" cluster configuration."
 		return 1
 	fi
@@ -1666,15 +1588,14 @@ setup_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3
 	#
-	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
-	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
-	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
-	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
-	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" resource create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" -type string --datafile "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_INI_FILE}" --keys "${_DBAAS_K8S_TMP_K2HDKC_RES_MAIN_KEYS}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" > /dev/null
+	if ! K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
+		K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
+		K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
+		K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
+		K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
+		K2HR3CLI_OPT_INTERACTIVE=0											\
+		"${K2HR3CLIBIN}" resource create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" -type string --datafile "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_INI_FILE}" --keys "${_DBAAS_K8S_TMP_K2HDKC_RES_MAIN_KEYS}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" > /dev/null; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed setup K2HR3 Resource \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\" for K2HDKC cluster."
 		return 1
 	fi
@@ -1696,15 +1617,14 @@ setup_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3 for server resource
 	#
-	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
-	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
-	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
-	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
-	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" resource create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server" --keys "${_DBAAS_K8S_TMP_K2HDKC_RES_SERVER_KEYS}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" > /dev/null
+	if ! K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
+		K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
+		K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
+		K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
+		K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
+		K2HR3CLI_OPT_INTERACTIVE=0											\
+		"${K2HR3CLIBIN}" resource create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server" --keys "${_DBAAS_K8S_TMP_K2HDKC_RES_SERVER_KEYS}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" > /dev/null; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed setup K2HR3 Resource \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server\" for K2HDKC cluster."
 		return 1
 	fi
@@ -1713,15 +1633,14 @@ setup_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3 for slave resource
 	#
-	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
-	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
-	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
-	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
-	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" resource create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave" --keys "${_DBAAS_K8S_TMP_K2HDKC_RES_SLAVE_KEYS}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" > /dev/null
+	if ! K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
+		K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
+		K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
+		K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
+		K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
+		K2HR3CLI_OPT_INTERACTIVE=0											\
+		"${K2HR3CLIBIN}" resource create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave" --keys "${_DBAAS_K8S_TMP_K2HDKC_RES_SLAVE_KEYS}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" > /dev/null; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed setup K2HR3 Resource \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave\" for K2HDKC cluster."
 		return 1
 	fi
@@ -1738,15 +1657,14 @@ setup_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3
 	#
-	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
-	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
-	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
-	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
-	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" policy create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --effect 'allow' --action 'yrn:yahoo::::action:read' --resource "${_DBAAS_K8S_TMP_K2HDKC_POL_RESVAL}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null
+	if ! K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
+		K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
+		K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
+		K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
+		K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
+		K2HR3CLI_OPT_INTERACTIVE=0											\
+		"${K2HR3CLIBIN}" policy create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --effect 'allow' --action 'yrn:yahoo::::action:read' --resource "${_DBAAS_K8S_TMP_K2HDKC_POL_RESVAL}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed setup K2HR3 Policy \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\" for K2HDKC cluster."
 		return 1
 	fi
@@ -1763,15 +1681,14 @@ setup_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3
 	#
-	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
-	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
-	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
-	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
-	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" role create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --policies "${_DBAAS_K8S_TMP_K2HDKC_ROLE_POLVAL}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null
+	if ! K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
+		K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
+		K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
+		K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
+		K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
+		K2HR3CLI_OPT_INTERACTIVE=0											\
+		"${K2HR3CLIBIN}" role create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --policies "${_DBAAS_K8S_TMP_K2HDKC_ROLE_POLVAL}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed setup K2HR3 Role \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\" for K2HDKC cluster."
 		return 1
 	fi
@@ -1783,15 +1700,14 @@ setup_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3 for server role
 	#
-	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
-	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
-	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
-	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
-	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" role create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null
+	if ! K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
+		K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
+		K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
+		K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
+		K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
+		K2HR3CLI_OPT_INTERACTIVE=0											\
+		"${K2HR3CLIBIN}" role create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed setup K2HR3 Role \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server\" for K2HDKC cluster."
 		return 1
 	fi
@@ -1800,15 +1716,14 @@ setup_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3 for slave role
 	#
-	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
-	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
-	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
-	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
-	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" role create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null
+	if ! K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
+		K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
+		K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
+		K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
+		K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
+		K2HR3CLI_OPT_INTERACTIVE=0											\
+		"${K2HR3CLIBIN}" role create "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed setup K2HR3 Role \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave\" for K2HDKC cluster."
 		return 1
 	fi
@@ -1820,8 +1735,7 @@ setup_k2hdkc_k2hr3_data()
 	#
 	# Create Role Tokens
 	#
-	get_k2hdkc_role_tokens
-	if [ $? -ne 0 ]; then
+	if ! get_k2hdkc_role_tokens; then
 		prn_err "Failed setup Role Token for \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\" K2HDKC cluster."
 		return 1
 	fi
@@ -1830,18 +1744,15 @@ setup_k2hdkc_k2hr3_data()
 	#-----------------------------------------------------------
 	# (8) Save variables to configuration file
 	#-----------------------------------------------------------
-	save_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" 'K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_PORT'		"${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_PORT}"
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" 'K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_PORT'		"${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_PORT}"; then
 		prn_err "Failed updating the configuration for K2HDKC DBaaS Cluster Server port(${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_PORT})."
 		return 1
 	fi
-	save_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" 'K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CTLPORT'	"${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CTLPORT}"
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" 'K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CTLPORT'	"${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CTLPORT}"; then
 		prn_err "Failed updating the configuration for K2HDKC DBaaS Cluster Server control port(${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CTLPORT})."
 		return 1
 	fi
-	save_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" 'K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CTLPORT'	"${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CTLPORT}"
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" 'K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CTLPORT'	"${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CTLPORT}"; then
 		prn_err "Failed updating the configuration for K2HDKC DBaaS Cluster Slave control port(${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CTLPORT})."
 		return 1
 	fi
@@ -1857,16 +1768,14 @@ setup_k2hdkc_k2hr3_data()
 # 
 create_k2hdkc_cluster()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
 	#-----------------------------------------------------------
 	# (1) Check / Create / Load K2HDKC cluster configuration
 	#-----------------------------------------------------------
-	set_dbaas_k8s_k2hdkc_cluster_variables "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}"
-	if [ $? -ne 0 ]; then
+	if ! set_dbaas_k8s_k2hdkc_cluster_variables "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}"; then
 		return 1
 	fi
 	if [ ! -f "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_CONFIG_FILE}" ]; then
@@ -1877,8 +1786,7 @@ create_k2hdkc_cluster()
 		return 1
 	fi
 
-	load_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" "1"
-	if [ $? -ne 0 ]; then
+	if ! load_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" "1"; then
 		prn_err "Failed initializing \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\" cluster configuration."
 		return 1
 	fi
@@ -1892,13 +1800,11 @@ create_k2hdkc_cluster()
 	#-----------------------------------------------------------
 	# (2) Create K2HDKC cluster server/slave certificates
 	#-----------------------------------------------------------
-	check_dbaas_k2hdkc_certificates "all"
-	if [ $? -ne 0 ]; then
+	if ! check_dbaas_k2hdkc_certificates "all"; then
 		#
 		# Missing some certificate, thus create those
 		#
-		create_dbaas_k2hdkc_certificate_files "all" "0"
-		if [ $? -ne 0 ]; then
+		if ! create_dbaas_k2hdkc_certificate_files "all" "0"; then
 			prn_err "Failed creating some certificates for K2HDKC DBaaS Ckuster."
 			return 1
 		fi
@@ -1914,15 +1820,13 @@ create_k2hdkc_cluster()
 	if [ ! -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME}" ]; then
 		prn_warn "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME} file is not existed."
 	else
-		cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME}"
-		if [ $? -ne 0 ]; then
+		if ! cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME}"; then
 			prn_err "Failed to copy \"${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME}\"."
 			return 1
 		fi
 	fi
 	if [ ! -d "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}" ]; then
-		mkdir -p "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}"
-		if [ $? -ne 0 ]; then
+		if ! mkdir -p "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}"; then
 			prn_err "Failed to create \"${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}\" directory."
 			return 1
 		fi
@@ -1986,8 +1890,7 @@ create_k2hdkc_cluster()
 				if [ ! -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}" ]; then
 					prn_warn "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1} file is not existed."
 				else
-					cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}"
-					if [ $? -ne 0 ]; then
+					if ! cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}"; then
 						prn_err "Failed to copy \"${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}\"."
 						return 1
 					fi
@@ -1997,8 +1900,7 @@ create_k2hdkc_cluster()
 				else
 					# key file does not have writable permission
 					rm -f "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}"
-					cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}"
-					if [ $? -ne 0 ]; then
+					if ! cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}"; then
 						prn_err "Failed to copy \"${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}\"."
 						return 1
 					fi
@@ -2006,8 +1908,7 @@ create_k2hdkc_cluster()
 				if [ ! -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}" ]; then
 					prn_warn "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2} file is not existed."
 				else
-					cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}"
-					if [ $? -ne 0 ]; then
+					if ! cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}"; then
 						prn_err "Failed to copy \"${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}\"."
 						return 1
 					fi
@@ -2017,8 +1918,7 @@ create_k2hdkc_cluster()
 				else
 					# key file does not have writable permission
 					rm -f "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}"
-					cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}"
-					if [ $? -ne 0 ]; then
+					if ! cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}"; then
 						prn_err "Failed to copy \"${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}\"."
 						return 1
 					fi
@@ -2059,8 +1959,7 @@ create_k2hdkc_cluster()
 				if [ ! -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}" ]; then
 					prn_warn "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1} file is not existed."
 				else
-					cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}"
-					if [ $? -ne 0 ]; then
+					if ! cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}"; then
 						prn_err "Failed to copy \"${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}\"."
 						return 1
 					fi
@@ -2070,8 +1969,7 @@ create_k2hdkc_cluster()
 				else
 					# key file does not have writable permission
 					rm -f "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}"
-					cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}"
-					if [ $? -ne 0 ]; then
+					if ! cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}"; then
 						prn_err "Failed to copy \"${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}\"."
 						return 1
 					fi
@@ -2079,8 +1977,7 @@ create_k2hdkc_cluster()
 				if [ ! -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}" ]; then
 					prn_warn "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2} file is not existed."
 				else
-					cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}"
-					if [ $? -ne 0 ]; then
+					if ! cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}"; then
 						prn_err "Failed to copy \"${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}\"."
 						return 1
 					fi
@@ -2090,8 +1987,7 @@ create_k2hdkc_cluster()
 				else
 					# key file does not have writable permission
 					rm -f "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}"
-					cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}"
-					if [ $? -ne 0 ]; then
+					if ! cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}"; then
 						prn_err "Failed to copy \"${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}\"."
 						return 1
 					fi
@@ -2130,8 +2026,7 @@ create_k2hdkc_cluster()
 	# Make symbolic link
 	#
 	rm -f "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_KUSTOMIZATION_YAML}"
-	ln -s "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_KUSTOMIZATION_YAML}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_KUSTOMIZATION_YAML}"
-	if [ $? -ne 0 ]; then
+	if ! ln -s "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_KUSTOMIZATION_YAML}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_KUSTOMIZATION_YAML}"; then
 		prn_err "Failed to make symbolic link to ${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_KUSTOMIZATION_YAML}"
 		return 1
 	fi
@@ -2142,20 +2037,19 @@ create_k2hdkc_cluster()
 	#-----------------------------------------------------------
 	_DBAAS_K8S_K2HDKC_TMP_R3API_RR_URL="https://${K2HR3CLI_DBAAS_K8S_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_R3API_NAME}.${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}.${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}:443"
 
-	sed	-e "s#%%CONFIGMAP_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_CONFIGMAP_MOUNTPOINT}#g"				\
-		-e "s#%%SEC_K2HR3_TOKEN_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_SEC_K2HR3_TOKEN_MOUNTPOINT}#g"	\
-		-e "s#%%SEC_CERTS_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_SEC_CERTS_MOUNTPOINT}#g"				\
-		-e "s#%%ANTPICKAX_ETC_DIR%%#${K2HR3CLI_DBAAS_K8S_ANTPICKAX_ETC_MOUTPOINT}#g"				\
-		-e "s#%%K2HR3_API_URL%%#${_DBAAS_K8S_K2HDKC_TMP_R3API_RR_URL}#g"							\
-		-e "s#%%K2HDKC_DOMAIN%%#${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}#g"									\
-		-e "s#%%K2HKDC_CLUSTER_NAME%%#${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}#g"							\
-		-e "s#%%K2HKDC_SERVER_PORT%%#${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_PORT}#g"						\
-		-e "s#%%K2HKDC_SERVER_CTLPORT%%#${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CTLPORT}#g"				\
-		-e "s#%%K2HDKC_SERVER_COUNT%%#${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CNT}#g"						\
-		"${K2HR3CLI_DBAAS_K8S_K2HDKC_SVR_YAML_TEMPL}"												\
-		> "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_SVR_YAML_FILE}"
+	if ! sed -e "s#%%CONFIGMAP_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_CONFIGMAP_MOUNTPOINT}#g"				\
+			-e "s#%%SEC_K2HR3_TOKEN_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_SEC_K2HR3_TOKEN_MOUNTPOINT}#g"	\
+			-e "s#%%SEC_CERTS_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_SEC_CERTS_MOUNTPOINT}#g"				\
+			-e "s#%%ANTPICKAX_ETC_DIR%%#${K2HR3CLI_DBAAS_K8S_ANTPICKAX_ETC_MOUTPOINT}#g"				\
+			-e "s#%%K2HR3_API_URL%%#${_DBAAS_K8S_K2HDKC_TMP_R3API_RR_URL}#g"							\
+			-e "s#%%K2HDKC_DOMAIN%%#${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}#g"									\
+			-e "s#%%K2HKDC_CLUSTER_NAME%%#${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}#g"							\
+			-e "s#%%K2HKDC_SERVER_PORT%%#${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_PORT}#g"						\
+			-e "s#%%K2HKDC_SERVER_CTLPORT%%#${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CTLPORT}#g"				\
+			-e "s#%%K2HDKC_SERVER_COUNT%%#${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CNT}#g"						\
+			"${K2HR3CLI_DBAAS_K8S_K2HDKC_SVR_YAML_TEMPL}"												\
+			> "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_SVR_YAML_FILE}"; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed to create ${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_SVR_YAML_FILE}."
 		return 1
 	fi
@@ -2164,19 +2058,18 @@ create_k2hdkc_cluster()
 	#----------------------------------------------------------
 	# (5) Create dbaas-k2hdkc-slave.yaml
 	#-----------------------------------------------------------
-	sed	-e "s#%%CONFIGMAP_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_CONFIGMAP_MOUNTPOINT}#g"				\
-		-e "s#%%SEC_K2HR3_TOKEN_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_SEC_K2HR3_TOKEN_MOUNTPOINT}#g"	\
-		-e "s#%%SEC_CERTS_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_SEC_CERTS_MOUNTPOINT}#g"				\
-		-e "s#%%ANTPICKAX_ETC_DIR%%#${K2HR3CLI_DBAAS_K8S_ANTPICKAX_ETC_MOUTPOINT}#g"				\
-		-e "s#%%K2HR3_API_URL%%#${_DBAAS_K8S_K2HDKC_TMP_R3API_RR_URL}#g"							\
-		-e "s#%%K2HDKC_DOMAIN%%#${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}#g"									\
-		-e "s#%%K2HKDC_CLUSTER_NAME%%#${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}#g"							\
-		-e "s#%%K2HKDC_SLAVE_CTLPORT%%#${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CTLPORT}#g"					\
-		-e "s#%%K2HDKC_SLAVE_COUNT%%#${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CNT}#g"						\
-		"${K2HR3CLI_DBAAS_K8S_K2HDKC_SLV_YAML_TEMPL}"												\
-		> "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_SLV_YAML_FILE}"
+	if ! sed -e "s#%%CONFIGMAP_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_CONFIGMAP_MOUNTPOINT}#g"				\
+			-e "s#%%SEC_K2HR3_TOKEN_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_SEC_K2HR3_TOKEN_MOUNTPOINT}#g"	\
+			-e "s#%%SEC_CERTS_MOUNTPOINT%%#${K2HR3CLI_DBAAS_K8S_SEC_CERTS_MOUNTPOINT}#g"				\
+			-e "s#%%ANTPICKAX_ETC_DIR%%#${K2HR3CLI_DBAAS_K8S_ANTPICKAX_ETC_MOUTPOINT}#g"				\
+			-e "s#%%K2HR3_API_URL%%#${_DBAAS_K8S_K2HDKC_TMP_R3API_RR_URL}#g"							\
+			-e "s#%%K2HDKC_DOMAIN%%#${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}#g"									\
+			-e "s#%%K2HKDC_CLUSTER_NAME%%#${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}#g"							\
+			-e "s#%%K2HKDC_SLAVE_CTLPORT%%#${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CTLPORT}#g"					\
+			-e "s#%%K2HDKC_SLAVE_COUNT%%#${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CNT}#g"						\
+			"${K2HR3CLI_DBAAS_K8S_K2HDKC_SLV_YAML_TEMPL}"												\
+			> "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_SLV_YAML_FILE}"; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed to create ${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_SLV_YAML_FILE}."
 		return 1
 	fi
@@ -2185,9 +2078,7 @@ create_k2hdkc_cluster()
 	#----------------------------------------------------------
 	# (6) Create configMap / Secret
 	#-----------------------------------------------------------
-	"${KUBECTL_BIN}" apply -k "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}" >/dev/null 2>&1
-
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" apply -k "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}" >/dev/null 2>&1; then
 		prn_err "Failed to create(apply) configMap and Secrets by kustomization.yaml."
 		return 1
 	fi
@@ -2199,9 +2090,7 @@ create_k2hdkc_cluster()
 	#
 	# Run servers
 	#
-	"${KUBECTL_BIN}" apply -f "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_SVR_YAML_FILE}" >/dev/null 2>&1
-
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" apply -f "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_SVR_YAML_FILE}" >/dev/null 2>&1; then
 		prn_err "Failed to create(apply) K2HDKC DBaaS Cluster Servers by ${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_SVR_YAML_FILE}."
 		return 1
 	fi
@@ -2215,9 +2104,7 @@ create_k2hdkc_cluster()
 	#
 	# Run slaves
 	#
-	"${KUBECTL_BIN}" apply -f "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_SLV_YAML_FILE}" >/dev/null 2>&1
-
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" apply -f "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_SLV_YAML_FILE}" >/dev/null 2>&1; then
 		prn_err "Failed to create(apply) K2HDKC DBaaS Cluster Servers by ${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_SLV_YAML_FILE}."
 		return 1
 	fi
@@ -2226,13 +2113,11 @@ create_k2hdkc_cluster()
 	#----------------------------------------------------------
 	# (8) Save configuration
 	#-----------------------------------------------------------
-	save_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" 'K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CNT'		"${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CNT}"
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" 'K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CNT'		"${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CNT}"; then
 		prn_err "Failed updating the configuration for K2HDKC DBaaS Cluster Server count(${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CNT})."
 		return 1
 	fi
-	save_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" 'K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CNT'		"${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CNT}"
-	if [ $? -ne 0 ]; then
+	if ! save_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" 'K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CNT'		"${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CNT}"; then
 		prn_err "Failed updating the configuration for K2HDKC DBaaS Cluster Slave count(${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CNT})."
 		return 1
 	fi
@@ -2251,8 +2136,7 @@ print_k2hdkc_k8s_resource_overview()
 	#
 	# Check K2HDKC cluster configuration
 	#
-	set_dbaas_k8s_k2hdkc_cluster_variables "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}"
-	if [ $? -ne 0 ]; then
+	if ! set_dbaas_k8s_k2hdkc_cluster_variables "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}"; then
 		return 1
 	fi
 	if [ ! -f "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_CONFIG_FILE}" ]; then
@@ -2310,8 +2194,7 @@ print_k2hdkc_k8s_resource_overview()
 # 
 scale_k2hdkc_cluster()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
@@ -2334,8 +2217,7 @@ scale_k2hdkc_cluster()
 	#-----------------------------------------------------------
 	# (1) Check / Create / Load K2HDKC cluster configuration
 	#-----------------------------------------------------------
-	set_dbaas_k8s_k2hdkc_cluster_variables "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}"
-	if [ $? -ne 0 ]; then
+	if ! set_dbaas_k8s_k2hdkc_cluster_variables "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}"; then
 		return 1
 	fi
 	if [ ! -f "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_CONFIG_FILE}" ]; then
@@ -2343,8 +2225,7 @@ scale_k2hdkc_cluster()
 		return 1
 	fi
 
-	load_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" "0"
-	if [ $? -ne 0 ]; then
+	if ! load_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" "0"; then
 		prn_err "Failed loading \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\" cluster configuration."
 		return 1
 	fi
@@ -2372,13 +2253,11 @@ scale_k2hdkc_cluster()
 	# (2) Check certificates and create it if not existed
 	#----------------------------------------------------------
 	if [ "${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CNT}" -ne "${_DBAAS_K8S_CLUSTER_TMP_SVR_CNT}" ]; then
-		check_dbaas_k2hdkc_certificates "server"
-		if [ $? -ne 0 ]; then
+		if ! check_dbaas_k2hdkc_certificates "server"; then
 			#
 			# Missing some certificate, thus create those
 			#
-			create_dbaas_k2hdkc_certificate_files "server" "0"
-			if [ $? -ne 0 ]; then
+			if ! create_dbaas_k2hdkc_certificate_files "server" "0"; then
 				prn_err "Failed creating some certificates for K2HDKC DBaaS Ckuster."
 				return 1
 			fi
@@ -2386,13 +2265,11 @@ scale_k2hdkc_cluster()
 		fi
 	fi
 	if [ "${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CNT}" -ne "${_DBAAS_K8S_CLUSTER_TMP_SLV_CNT}" ]; then
-		check_dbaas_k2hdkc_certificates "slave"
-		if [ $? -ne 0 ]; then
+		if ! check_dbaas_k2hdkc_certificates "slave"; then
 			#
 			# Missing some certificate, thus create those
 			#
-			create_dbaas_k2hdkc_certificate_files "slave" "0"
-			if [ $? -ne 0 ]; then
+			if ! create_dbaas_k2hdkc_certificate_files "slave" "0"; then
 				prn_err "Failed creating some certificates for K2HDKC DBaaS Ckuster."
 				return 1
 			fi
@@ -2410,16 +2287,14 @@ scale_k2hdkc_cluster()
 		if [ ! -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME}" ]; then
 			prn_warn "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME} file is not existed."
 		else
-			cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME}"
-			if [ $? -ne 0 ]; then
+			if ! cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME}"; then
 				prn_err "Failed to copy \"${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME}\"."
 				return 1
 			fi
 		fi
 	fi
 	if [ ! -d "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}" ]; then
-		mkdir -p "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}"
-		if [ $? -ne 0 ]; then
+		if ! mkdir -p "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}"; then
 			prn_err "Failed to create \"${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}\" directory."
 			return 1
 		fi
@@ -2491,8 +2366,7 @@ scale_k2hdkc_cluster()
 				if [ ! -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}" ]; then
 					prn_warn "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1} file is not existed."
 				else
-					cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}"
-					if [ $? -ne 0 ]; then
+					if ! cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}"; then
 						prn_err "Failed to copy \"${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}\"."
 						return 1
 					fi
@@ -2500,8 +2374,7 @@ scale_k2hdkc_cluster()
 				if [ ! -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}" ]; then
 					prn_warn "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1} file is not existed."
 				else
-					cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}"
-					if [ $? -ne 0 ]; then
+					if ! cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}"; then
 						prn_err "Failed to copy \"${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}\"."
 						return 1
 					fi
@@ -2509,8 +2382,7 @@ scale_k2hdkc_cluster()
 				if [ ! -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}" ]; then
 					prn_warn "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2} file is not existed."
 				else
-					cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}"
-					if [ $? -ne 0 ]; then
+					if ! cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}"; then
 						prn_err "Failed to copy \"${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}\"."
 						return 1
 					fi
@@ -2518,8 +2390,7 @@ scale_k2hdkc_cluster()
 				if [ ! -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}" ]; then
 					prn_warn "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2} file is not existed."
 				else
-					cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}"
-					if [ $? -ne 0 ]; then
+					if ! cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}"; then
 						prn_err "Failed to copy \"${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}\"."
 						return 1
 					fi
@@ -2568,8 +2439,7 @@ scale_k2hdkc_cluster()
 				if [ ! -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}" ]; then
 					prn_warn "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1} file is not existed."
 				else
-					cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}"
-					if [ $? -ne 0 ]; then
+					if ! cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}"; then
 						prn_err "Failed to copy \"${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_1}\"."
 						return 1
 					fi
@@ -2577,8 +2447,7 @@ scale_k2hdkc_cluster()
 				if [ ! -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}" ]; then
 					prn_warn "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1} file is not existed."
 				else
-					cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}"
-					if [ $? -ne 0 ]; then
+					if ! cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}"; then
 						prn_err "Failed to copy \"${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_1}\"."
 						return 1
 					fi
@@ -2586,8 +2455,7 @@ scale_k2hdkc_cluster()
 				if [ ! -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}" ]; then
 					prn_warn "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2} file is not existed."
 				else
-					cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}"
-					if [ $? -ne 0 ]; then
+					if ! cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}"; then
 						prn_err "Failed to copy \"${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_CRT_FILE_2}\"."
 						return 1
 					fi
@@ -2595,8 +2463,7 @@ scale_k2hdkc_cluster()
 				if [ ! -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}" ]; then
 					prn_warn "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2} file is not existed."
 				else
-					cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}"
-					if [ $? -ne 0 ]; then
+					if ! cp "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}"; then
 						prn_err "Failed to copy \"${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CERTS_DIRNAME}/${_DBAAS_K8S_K2HDKC_TMP_SRC_SERVER_KEY_FILE_2}\"."
 						return 1
 					fi
@@ -2635,8 +2502,7 @@ scale_k2hdkc_cluster()
 	# Make symbolic link
 	#
 	rm -f "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_KUSTOMIZATION_YAML}"
-	ln -s "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_KUSTOMIZATION_YAML}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_KUSTOMIZATION_YAML}"
-	if [ $? -ne 0 ]; then
+	if ! ln -s "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_K2HDKC_KUSTOMIZATION_YAML}" "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_KUSTOMIZATION_YAML}"; then
 		prn_err "Failed to make symbolic link to ${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_KUSTOMIZATION_YAML}"
 		return 1
 	fi
@@ -2645,8 +2511,7 @@ scale_k2hdkc_cluster()
 	#----------------------------------------------------------
 	# (4) Apply configMap / Secret
 	#-----------------------------------------------------------
-	"${KUBECTL_BIN}" apply -k "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" apply -k "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_DIRPATH}" >/dev/null 2>&1; then
 		prn_err "Failed to apply configMap and Secrets by kustomization.yaml."
 		return 1
 	fi
@@ -2659,16 +2524,13 @@ scale_k2hdkc_cluster()
 	# Scale servers
 	#
 	if [ "${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CNT}" -ne "${_DBAAS_K8S_CLUSTER_TMP_SVR_CNT}" ]; then
-		"${KUBECTL_BIN}" scale statefulsets "${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --replicas="${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CNT}" >/dev/null 2>&1
-
-		if [ $? -ne 0 ]; then
+		if ! "${KUBECTL_BIN}" scale statefulsets "${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --replicas="${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CNT}" >/dev/null 2>&1; then
 			prn_err "Failed scaling K2HDKC DBaaS Cluster Servers to ${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CNT}."
 			return 1
 		fi
 		prn_msg "${CGRN}Applied${CDEF} : The K2HDKC Servers statefulset(\"${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\") to set replicas(\"${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CNT}\")"
 
-		save_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" 'K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CNT' "${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CNT}"
-		if [ $? -ne 0 ]; then
+		if ! save_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" 'K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CNT' "${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CNT}"; then
 			prn_err "Failed updating the configuration for K2HDKC DBaaS Cluster Server count(${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_CNT})."
 			return 1
 		fi
@@ -2679,16 +2541,13 @@ scale_k2hdkc_cluster()
 	# Scale slaves
 	#
 	if [ "${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CNT}" -ne "${_DBAAS_K8S_CLUSTER_TMP_SLV_CNT}" ]; then
-		"${KUBECTL_BIN}" scale statefulsets "${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --replicas="${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CNT}" >/dev/null 2>&1
-
-		if [ $? -ne 0 ]; then
+		if ! "${KUBECTL_BIN}" scale statefulsets "${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --replicas="${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CNT}" >/dev/null 2>&1; then
 			prn_err "Failed scaling K2HDKC DBaaS Cluster Slaves to ${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CNT}."
 			return 1
 		fi
 		prn_msg "${CGRN}Applied${CDEF} : The K2HDKC Slaves statefulset(\"${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\") to set replicas(\"${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CNT}\")"
 
-		save_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" 'K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CNT' "${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CNT}"
-		if [ $? -ne 0 ]; then
+		if ! save_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" 'K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CNT' "${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CNT}"; then
 			prn_err "Failed updating the configuration for K2HDKC DBaaS Cluster Slave count(${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_CNT})."
 			return 1
 		fi
@@ -2705,21 +2564,18 @@ scale_k2hdkc_cluster()
 # 
 delete_k2hdkc_k2hr3_data()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
 	#
 	# Get and Check K2HDKC cluster configuration directory path
 	#
-	set_dbaas_k8s_k2hdkc_cluster_variables "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}"
-	if [ $? -ne 0 ]; then
+	if ! set_dbaas_k8s_k2hdkc_cluster_variables "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}"; then
 		return 1
 	fi
 
-	load_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" "0"
-	if [ $? -ne 0 ]; then
+	if ! load_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" "0"; then
 		prn_err "Failed loading \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\" cluster configuration."
 		return 1
 	fi
@@ -2738,7 +2594,6 @@ delete_k2hdkc_k2hr3_data()
 	fi
 	K2HR3CLI_SCOPED_TOKEN=""
 	K2HR3CLI_API_URI="https://${K2HR3CLI_DBAAS_K8S_R3API_EP}:${K2HR3CLI_DBAAS_K8S_R3API_NPNUM}"
-	# shellcheck disable=SC2034
 	K2HR3CLI_TENANT=${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}
 
 	if [ -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_CA_CERT_FILENAME}" ]; then
@@ -2748,8 +2603,10 @@ delete_k2hdkc_k2hr3_data()
 	#
 	# Check K2HR3 Unscoped token
 	#
-	complement_dbaas_k2hr3_unscoped_token
-	if [ $? -ne 0 ] || [ -z "${K2HR3CLI_UNSCOPED_TOKEN}" ]; then
+	if ! complement_dbaas_k2hr3_unscoped_token; then
+		prn_err "Use the K2HR3 system for \"${K2HR3CLI_DBAAS_K8S_DOMAIN}\" kubernetes cluster to execute this command. However, no scoped token for \"${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}\" namespace(tenant) was created to operate the K2HR3 system."
+		return 1
+	elif [ -z "${K2HR3CLI_UNSCOPED_TOKEN}" ]; then
 		prn_err "Use the K2HR3 system for \"${K2HR3CLI_DBAAS_K8S_DOMAIN}\" kubernetes cluster to execute this command. However, no scoped token for \"${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}\" namespace(tenant) was created to operate the K2HR3 system."
 		return 1
 	fi
@@ -2758,8 +2615,7 @@ delete_k2hdkc_k2hr3_data()
 	#
 	# Check K2HR3 Scoped token
 	#
-	complement_scoped_token
-	if [ $? -ne 0 ]; then
+	if ! complement_scoped_token; then
 		prn_err "Use the K2HR3 system for \"${K2HR3CLI_DBAAS_K8S_DOMAIN}\" kubernetes cluster to execute this command. However, no scoped token for \"${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}\" namespace(tenant) was created to operate the K2HR3 system."
 		return 1
 	fi
@@ -2768,15 +2624,14 @@ delete_k2hdkc_k2hr3_data()
 	#-----------------------------------------------------------
 	# (1) Delete ROLE(server/slave) to K2HR3
 	#-----------------------------------------------------------
-	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
-	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
-	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
-	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
-	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" role delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null
+	if ! K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
+		K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
+		K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
+		K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
+		K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
+		K2HR3CLI_OPT_INTERACTIVE=0											\
+		"${K2HR3CLIBIN}" role delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed removed K2HDKC Role \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server\" for K2HDKC cluster."
 		return 1
 	fi
@@ -2785,15 +2640,14 @@ delete_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3 for slave role
 	#
-	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
-	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
-	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
-	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
-	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" role delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null
+	if ! K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
+		K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
+		K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
+		K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
+		K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
+		K2HR3CLI_OPT_INTERACTIVE=0											\
+		"${K2HR3CLIBIN}" role delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed removed K2HR3 Role \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave\" for K2HDKC cluster."
 		return 1
 	fi
@@ -2807,15 +2661,14 @@ delete_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3
 	#
-	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
-	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
-	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
-	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
-	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" role delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null
+	if ! K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
+		K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
+		K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
+		K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
+		K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
+		K2HR3CLI_OPT_INTERACTIVE=0											\
+		"${K2HR3CLIBIN}" role delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed removed K2HR3 Role \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\" for K2HDKC cluster."
 		return 1
 	fi
@@ -2829,15 +2682,14 @@ delete_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3
 	#
-	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
-	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
-	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
-	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
-	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" policy delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null
+	if ! K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
+		K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
+		K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
+		K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
+		K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
+		K2HR3CLI_OPT_INTERACTIVE=0											\
+		"${K2HR3CLIBIN}" policy delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" >/dev/null; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed removed K2HR3 Policy \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\" for K2HDKC cluster."
 		return 1
 	fi
@@ -2846,15 +2698,14 @@ delete_k2hdkc_k2hr3_data()
 	#-----------------------------------------------------------
 	# (4) Delete RESOURCE(server/slave) to K2HR3
 	#-----------------------------------------------------------
-	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
-	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
-	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
-	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
-	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" resource delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" > /dev/null
+	if ! K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
+		K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
+		K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
+		K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
+		K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
+		K2HR3CLI_OPT_INTERACTIVE=0											\
+		"${K2HR3CLIBIN}" resource delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" > /dev/null; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed removed K2HR3 Resource \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/server\" for K2HDKC cluster."
 		return 1
 	fi
@@ -2863,15 +2714,14 @@ delete_k2hdkc_k2hr3_data()
 	#
 	# Run k2hr3 for slave resource
 	#
-	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
-	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
-	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
-	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
-	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" resource delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" > /dev/null
+	if ! K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
+		K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
+		K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
+		K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
+		K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
+		K2HR3CLI_OPT_INTERACTIVE=0											\
+		"${K2HR3CLIBIN}" resource delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" > /dev/null; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed removed K2HR3 Resource \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}/slave\" for K2HDKC cluster."
 		return 1
 	fi
@@ -2881,15 +2731,14 @@ delete_k2hdkc_k2hr3_data()
 	#-----------------------------------------------------------
 	# (5) Delete RESOURCE(main) to K2HR3
 	#-----------------------------------------------------------
-	K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
-	K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
-	K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
-	K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
-	K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
-	K2HR3CLI_OPT_INTERACTIVE=0											\
-	"${K2HR3CLIBIN}" resource delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" > /dev/null
+	if ! K2HR3CLI_OPT_CONFIG="${K2HR3CLI_OPT_CONFIG}"						\
+		K2HR3CLI_MSGLEVEL="${K2HR3CLI_MSGLEVEL_VALUE}"						\
+		K2HR3CLI_OPT_CURLDBG="${K2HR3CLI_OPT_CURLDBG}"						\
+		K2HR3CLI_OPT_CURLBODY="${K2HR3CLI_OPT_CURLBODY}"					\
+		K2HR3CLI_SCOPED_TOKEN_VERIFIED="${K2HR3CLI_SCOPED_TOKEN_VERIFIED}"	\
+		K2HR3CLI_OPT_INTERACTIVE=0											\
+		"${K2HR3CLIBIN}" resource delete "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" --apiuri "${K2HR3CLI_API_URI}" --unscopedtoken "${K2HR3CLI_UNSCOPED_TOKEN}" --scopedtoken "${K2HR3CLI_SCOPED_TOKEN}" > /dev/null; then
 
-	if [ $? -ne 0 ]; then
 		prn_err "Failed removed K2HR3 Resource \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\" for K2HDKC cluster."
 		return 1
 	fi
@@ -2913,16 +2762,14 @@ delete_k2hdkc_k2hr3_data()
 # 
 delete_k2hdkc_cluster()
 {
-	_DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory)
-	if [ $? -ne 0 ]; then
+	if ! _DBAAS_K8S_CLUSTER_DIRPATH=$(get_dbaas_k8s_cluster_directory); then
 		return 1
 	fi
 
 	#-----------------------------------------------------------
 	# (1) Check / Create / Load K2HDKC cluster configuration
 	#-----------------------------------------------------------
-	set_dbaas_k8s_k2hdkc_cluster_variables "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}"
-	if [ $? -ne 0 ]; then
+	if ! set_dbaas_k8s_k2hdkc_cluster_variables "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}"; then
 		return 1
 	fi
 	if [ ! -f "${K2HR3CLI_DBAAS_K8S_K2HDKC_CLUSTER_CONFIG_FILE}" ]; then
@@ -2930,8 +2777,7 @@ delete_k2hdkc_cluster()
 		return 1
 	fi
 
-	load_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" "0"
-	if [ $? -ne 0 ]; then
+	if ! load_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" "0"; then
 		prn_err "Failed loading \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\" cluster configuration."
 		return 1
 	fi
@@ -2943,8 +2789,7 @@ delete_k2hdkc_cluster()
 	#
 	# Delete K2HDKC Slave Service
 	#
-	"${KUBECTL_BIN}" delete services "${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" delete services "${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" >/dev/null 2>&1; then
 		prn_msg "${CGRN}Failed${CDEF} : Could not delete K2HDKC Slave Service(${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME})"
 	else
 		prn_msg "${CGRN}Removed${CDEF} : K2HDKC Slave Service(${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME})"
@@ -2953,8 +2798,7 @@ delete_k2hdkc_cluster()
 	#
 	# Delete K2HDKC Slave StatefulSet
 	#
-	"${KUBECTL_BIN}" delete statefulset "${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" delete statefulset "${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" >/dev/null 2>&1; then
 		prn_msg "${CGRN}Failed${CDEF} : Could not delete K2HDKC Slave StatefulSet(${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME})"
 	else
 		prn_msg "${CGRN}Removed${CDEF} : K2HDKC Slave StatefulSet(${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME})"
@@ -2965,8 +2809,7 @@ delete_k2hdkc_cluster()
 	#
 	_DBAAS_K8S_TMP_PODS_LIST=$("${KUBECTL_BIN}" get pods 2>/dev/null | grep "^${K2HR3CLI_DBAAS_K8S_CLUSTER_SLV_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" | awk '{print $1}')
 	for _slave_pod_name in ${_DBAAS_K8S_TMP_PODS_LIST}; do
-		"${KUBECTL_BIN}" delete pods "${_slave_pod_name}" >/dev/null 2>&1
-		if [ $? -ne 0 ]; then
+		if ! "${KUBECTL_BIN}" delete pods "${_slave_pod_name}" >/dev/null 2>&1; then
 			prn_msg "${CGRN}Failed${CDEF} : Could not delete K2HDKC Slave Pod(${_slave_pod_name})"
 		else
 			prn_msg "${CGRN}Removed${CDEF} : K2HDKC Slave Pod(${_slave_pod_name})"
@@ -2976,8 +2819,7 @@ delete_k2hdkc_cluster()
 	#
 	# Delete K2HDKC Server Service
 	#
-	"${KUBECTL_BIN}" delete services "${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" delete services "${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" >/dev/null 2>&1; then
 		prn_msg "${CGRN}Failed${CDEF} : Could not delete K2HDKC Server Service(${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME})"
 	else
 		prn_msg "${CGRN}Removed${CDEF} : K2HDKC Server Service(${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_SVC_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME})"
@@ -2986,8 +2828,7 @@ delete_k2hdkc_cluster()
 	#
 	# Delete K2HDKC Server StatefulSet
 	#
-	"${KUBECTL_BIN}" delete statefulset "${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" delete statefulset "${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" >/dev/null 2>&1; then
 		prn_msg "${CGRN}Failed${CDEF} : Could not delete K2HDKC Server StatefulSet(${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME})"
 	else
 		prn_msg "${CGRN}Removed${CDEF} : K2HDKC Server StatefulSet(${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME})"
@@ -2998,8 +2839,7 @@ delete_k2hdkc_cluster()
 	#
 	_DBAAS_K8S_TMP_PODS_LIST=$("${KUBECTL_BIN}" get pods 2>/dev/null | grep "^${K2HR3CLI_DBAAS_K8S_CLUSTER_SVR_POD_NAME_PREFIX}${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" | awk '{print $1}')
 	for _slave_pod_name in ${_DBAAS_K8S_TMP_PODS_LIST}; do
-		"${KUBECTL_BIN}" delete pods "${_slave_pod_name}" >/dev/null 2>&1
-		if [ $? -ne 0 ]; then
+		if ! "${KUBECTL_BIN}" delete pods "${_slave_pod_name}" >/dev/null 2>&1; then
 			prn_msg "${CGRN}Failed${CDEF} : Could not delete K2HDKC Server Pod(${_slave_pod_name})"
 		else
 			prn_msg "${CGRN}Removed${CDEF} : K2HDKC Server Pod(${_slave_pod_name})"
@@ -3009,8 +2849,7 @@ delete_k2hdkc_cluster()
 	#
 	# Delete Secret for K2HDKC DBaaS
 	#
-	"${KUBECTL_BIN}" delete secrets "secret-${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}-certs" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" delete secrets "secret-${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}-certs" >/dev/null 2>&1; then
 		prn_msg "${CGRN}Failed${CDEF} : Could not delete K2HDKC DBaaS Secret for certificates(secret-${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}-certs)"
 	else
 		prn_msg "${CGRN}Removed${CDEF} : K2HDKC DBaaS Secret for certificates(secret-${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}-certs)"
@@ -3019,8 +2858,7 @@ delete_k2hdkc_cluster()
 	#
 	# Delete Token for K2HDKC DBaaS
 	#
-	"${KUBECTL_BIN}" delete secrets "secret-${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}-k2hr3-token" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" delete secrets "secret-${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}-k2hr3-token" >/dev/null 2>&1; then
 		prn_msg "${CGRN}Failed${CDEF} : Could not delete K2HDKC DBaaS Secret for Token(secret-${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}-k2hr3-token)"
 	else
 		prn_msg "${CGRN}Removed${CDEF} : K2HDKC DBaaS Secret for Token(secret-${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}-k2hr3-token)"
@@ -3029,8 +2867,7 @@ delete_k2hdkc_cluster()
 	#
 	# Delete configMap for K2HDKC DBaaS
 	#
-	"${KUBECTL_BIN}" delete configmaps "configmap-${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! "${KUBECTL_BIN}" delete configmaps "configmap-${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}" >/dev/null 2>&1; then
 		prn_msg "${CGRN}Failed${CDEF} : Could not delete K2HDKC DBaaS configMap(configmap-${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME})"
 	else
 		prn_msg "${CGRN}Removed${CDEF} : K2HDKC DBaaS Secret for configMap(configmap-${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME})"
@@ -3084,8 +2921,7 @@ delete_k2hdkc_cluster()
 	#----------------------------------------------------------
 	# (5) All K2HR3 data and configuration for K2HDKC Cluster
 	#-----------------------------------------------------------
-	delete_k2hdkc_k2hr3_data
-	if [ $? -ne 0 ]; then
+	if ! delete_k2hdkc_k2hr3_data; then
 		return 1
 	fi
 

@@ -50,8 +50,7 @@ if [ ! -f "${CONFIGMAP_PRODUCTION_FILE}" ]; then
 	exit 1
 fi
 
-ln -s "${CONFIGMAP_PRODUCTION_FILE}" "${PRODUCTION_FILE}"
-if [ $? -ne 0 ]; then
+if ! ln -s "${CONFIGMAP_PRODUCTION_FILE}" "${PRODUCTION_FILE}"; then
 	exit 1
 fi
 
@@ -63,8 +62,7 @@ fi
 #
 CHMPX_UP=0
 while [ "${CHMPX_UP}" -eq 0 ]; do
-	chmpxstatus -conf "${INI_FILE_PATH}" -self -wait -live up -ring slave -nosuspend -timeout "${SLEEP_SHORT}" >/dev/null 2>&1
-	if [ $? -eq 0 ]; then
+	if chmpxstatus -conf "${INI_FILE_PATH}" -self -wait -live up -ring slave -nosuspend -timeout "${SLEEP_SHORT}" >/dev/null 2>&1; then
 		CHMPX_UP=1
 	else
 		sleep "${SLEEP_SHORT}"
@@ -83,7 +81,7 @@ fi
 #
 set -e
 
-if [ "X${K2HR3_MANUAL_START}" = "X1" ]; then
+if [ -n "${K2HR3_MANUAL_START}" ] && [ "${K2HR3_MANUAL_START}" = "1" ]; then
 	while true; do
 		sleep "${SLEEP_LONG_MANUAL}"
 	done

@@ -31,7 +31,7 @@ _LOCAL_TESTDIR=$(cd "${_INIT_TESTDIR}/../test" || exit 1; pwd)
 #
 # Set own file path to K2HR3CLI_REQUEST_FILE if it is empty
 #
-if [ "X${K2HR3CLI_REQUEST_FILE}" = "X" ]; then
+if [ -z "${K2HR3CLI_REQUEST_FILE}" ]; then
 	export K2HR3CLI_REQUEST_FILE="${_LOCAL_TESTDIR}/util_dbaas_k8s_request.sh"
 fi
 
@@ -54,19 +54,14 @@ fi
 #
 # Response Header File
 #
-# shellcheck disable=SC2034
 K2HR3CLI_REQUEST_RESHEADER_FILE="/tmp/.${BINNAME}_$$_curl.header"
 
 #
 # Test for common values
 #
-# shellcheck disable=SC2034,SC2037
 _TEST_K2HR3_USER="test"
-# shellcheck disable=SC2034
 _TEST_K2HR3_PASS="password"
-# shellcheck disable=SC2034
 _TEST_K2HR3_TENANT="test1"
-# shellcheck disable=SC2034
 _TEST_K2HDKC_CLUSTER_NAME="testcluster"
 
 #
@@ -99,15 +94,14 @@ util_search_header()
 	_UTIL_SEARCH_HEADER_KEYWORD=$(to_upper "$1")
 	shift
 
-	if [ "X${_UTIL_SEARCH_HEADER_KEYWORD}" = "X" ]; then
+	if [ -z "${_UTIL_SEARCH_HEADER_KEYWORD}" ]; then
 		pecho -n ""
 		return 1
 	fi
 
 	while [ $# -gt 0 ]; do
 		_UTIL_ONE_HEADER_PAIR=$(to_upper "$1")
-		pecho -n "${_UTIL_ONE_HEADER_PAIR}" | grep -q "^${_UTIL_SEARCH_HEADER_KEYWORD}"
-		if [ $? -eq 0 ]; then
+		if pecho -n "${_UTIL_ONE_HEADER_PAIR}" | grep -q "^${_UTIL_SEARCH_HEADER_KEYWORD}"; then
 			_UTIL_ONE_HEADER_VALUE=$(pecho -n "$1" | sed -e 's/:/ /g' | awk '{print $2}')
 			pecho -n "${_UTIL_ONE_HEADER_VALUE}"
 			return 0
@@ -128,18 +122,17 @@ util_search_header()
 #
 util_search_usertoken()
 {
-	_UTIL_SEARCH_TOKEN=$(util_search_header "x-auth-token" "$@")
-	if [ $? -ne 0 ]; then
+	if ! _UTIL_SEARCH_TOKEN=$(util_search_header "x-auth-token" "$@"); then
 		prn_dbg "Not found \"x-auth-token\" header"
 		return 1
 	fi
 	_UTIL_SEARCH_TOKEN_TMP=$(pecho -n "${_UTIL_SEARCH_TOKEN}" | cut -c 1-2)
-	if [ "X${_UTIL_SEARCH_TOKEN_TMP}" != "XU=" ]; then
+	if [ -z "${_UTIL_SEARCH_TOKEN_TMP}" ] || [ "${_UTIL_SEARCH_TOKEN_TMP}" != "U=" ]; then
 		prn_err "\"x-auth-token\" header value does not start \"U=\"(x-auth-token: ${_UTIL_SEARCH_TOKEN})."
 		return 1
 	fi
 	_UTIL_SEARCH_TOKEN_TMP=$(pecho -n "${_UTIL_SEARCH_TOKEN}" | cut -c 3-)
-	if [ "X${_UTIL_SEARCH_TOKEN_TMP}" = "X" ]; then
+	if [ -z "${_UTIL_SEARCH_TOKEN_TMP}" ]; then
 		prn_err "\"x-auth-token\" header value is empty(x-auth-token: ${_UTIL_SEARCH_TOKEN})."
 		return 1
 	fi
@@ -201,7 +194,7 @@ create_dummy_dbaas_k8s_response_sub()
 	# Check Parameters
 	#
 	_DUMMY_METHOD="$1"
-	if [ "X${_DUMMY_METHOD}" != "XGET" ] && [ "X${_DUMMY_METHOD}" != "XHEAD" ] && [ "X${_DUMMY_METHOD}" != "XPUT" ] && [ "X${_DUMMY_METHOD}" != "XPOST" ] && [ "X${_DUMMY_METHOD}" != "XDELETE" ]; then
+	if [ -z "${_DUMMY_METHOD}" ] || { [ "${_DUMMY_METHOD}" != "GET" ] && [ "${_DUMMY_METHOD}" != "HEAD" ] && [ "${_DUMMY_METHOD}" != "PUT" ] && [ "${_DUMMY_METHOD}" != "POST" ] && [ "${_DUMMY_METHOD}" != "DELETE" ]; }; then
 		prn_err "Unknown Method($1) options for calling requet."
 		return 2
 	fi
@@ -209,19 +202,15 @@ create_dummy_dbaas_k8s_response_sub()
 	_DUMMY_URL_FULL="$2"
 	_DUMMY_URL_PATH=$(echo "${_DUMMY_URL_FULL}" | sed -e 's/?.*$//g' -e 's/&.*$//g')
 
-	pecho -n "${_DUMMY_URL_FULL}" | grep -q '[?|&]'
-	if [ $? -eq 0 ]; then
+	if pecho -n "${_DUMMY_URL_FULL}" | grep -q '[?|&]'; then
 		_DUMMY_URL_ARGS=$(pecho -n "${_DUMMY_URL_FULL}" | sed -e 's/^.*?//g')
 	else
 		_DUMMY_URL_ARGS=""
 	fi
 	prn_dbg "(create_dummy_dbaas_k8s_response_sub) all url(${_DUMMY_METHOD}: ${_DUMMY_URL_FULL}) => url(${_DUMMY_METHOD}: ${_DUMMY_URL_PATH}) + args(${_DUMMY_URL_ARGS})"
 
-	# shellcheck disable=SC2034
 	_DUMMY_BODY_STRING="$3"
-	# shellcheck disable=SC2034
 	_DUMMY_BODY_FILE="$4"
-	# shellcheck disable=SC2034
 	_DUMMY_CONTENT_TYPE="$5"
 	if [ $# -le 5 ]; then
 		shift $#
@@ -236,7 +225,7 @@ create_dummy_dbaas_k8s_response_sub()
 		#------------------------------------------------------
 		# K2HR3 Role API
 		#------------------------------------------------------
-		if [ "X${_DUMMY_METHOD}" = "XDELETE" ]; then
+		if [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "DELETE" ]; then
 			#
 			# Get Role Token(/v1/role/token/...)
 			#
@@ -244,28 +233,23 @@ create_dummy_dbaas_k8s_response_sub()
 			_DUMMY_URL_PATH_FIRST_PART=$(pecho -n "${_DUMMY_URL_PATH_AFTER_PART}" | sed -e 's#/# #g' | awk '{print $1}')
 			_DUMMY_URL_PATH_SECOND_PART=$(pecho -n "${_DUMMY_URL_PATH_AFTER_PART}" | sed -e 's#/# #g' | awk '{print $2}')
 
-			if [ "X${_DUMMY_URL_PATH_FIRST_PART}" = "X" ]; then
-				# shellcheck disable=SC2034
+			if [ -z "${_DUMMY_URL_PATH_FIRST_PART}" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Url first or seond path is empty(${_DUMMY_URL_PATH})."
 				return 1
 			fi
-			if [ "X${_DUMMY_URL_PATH_SECOND_PART}" = "X" ]; then
+			if [ -z "${_DUMMY_URL_PATH_SECOND_PART}" ]; then
 				prn_dbg "Url seond path is ${_DUMMY_URL_PATH_SECOND_PART}"
 			fi
 
 			#
 			# Scoped token
 			#
-			# shellcheck disable=SC2034
-			_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-			if [ $? -ne 0 ]; then
-				# shellcheck disable=SC2034
+			if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				return 1
 			fi
 
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=204
 			_UTIL_RESPONSE_CONTENT=""
 			pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
@@ -276,7 +260,7 @@ create_dummy_dbaas_k8s_response_sub()
 		#------------------------------------------------------
 		# K2HR3 Role API
 		#------------------------------------------------------
-		if [ "X${_DUMMY_METHOD}" = "XPUT" ]; then
+		if [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "PUT" ]; then
 			#
 			# Create Role(/v1/role)
 			#
@@ -284,10 +268,7 @@ create_dummy_dbaas_k8s_response_sub()
 			#
 			# Scoped token
 			#
-			# shellcheck disable=SC2034
-			_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-			if [ $? -ne 0 ]; then
-				# shellcheck disable=SC2034
+			if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				return 1
 			fi
@@ -298,20 +279,18 @@ create_dummy_dbaas_k8s_response_sub()
 			_UTIL_TMP_ROLENAME=$(util_search_urlarg "name" "${_DUMMY_URL_ARGS}")
 			_UTIL_TMP_POLICIES=$(util_search_urlarg "policies" "${_DUMMY_URL_ARGS}")
 			_UTIL_TMP_ALIAS=$(util_search_urlarg "alias" "${_DUMMY_URL_ARGS}")
-			if [ "X${_UTIL_TMP_ROLENAME}" = "X" ]; then
-				# shellcheck disable=SC2034
+			if [ -z "${_UTIL_TMP_ROLENAME}" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Not found role name."
 				return 1
 			fi
-			if [ "X${_UTIL_TMP_POLICIES}" = "X" ]; then
+			if [ -z "${_UTIL_TMP_POLICIES}" ]; then
 				prn_dbg "Not found policies(optional)."
 			fi
-			if [ "X${_UTIL_TMP_ALIAS}" = "X" ]; then
+			if [ -z "${_UTIL_TMP_ALIAS}" ]; then
 				prn_dbg "Not found alias(optional)."
 			fi
 
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=201
 			_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":null}"
 			pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
@@ -323,7 +302,7 @@ create_dummy_dbaas_k8s_response_sub()
 		#------------------------------------------------------
 		# K2HR3 Role Token API
 		#------------------------------------------------------
-		if [ "X${_DUMMY_METHOD}" = "XGET" ]; then
+		if [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "GET" ]; then
 			#
 			# Get Role Token(/v1/role/token/...)
 			#
@@ -331,8 +310,7 @@ create_dummy_dbaas_k8s_response_sub()
 			_DUMMY_URL_PATH_FIRST_PART=$(pecho -n "${_DUMMY_URL_PATH_AFTER_PART}" | sed -e 's#/# #g' | awk '{print $1}')
 			_DUMMY_URL_PATH_SECOND_PART=$(pecho -n "${_DUMMY_URL_PATH_AFTER_PART}" | sed -e 's#/# #g' | awk '{print $2}')
 
-			if [ "X${_DUMMY_URL_PATH_FIRST_PART}" = "X" ] || [ "X${_DUMMY_URL_PATH_SECOND_PART}" = "X" ]; then
-				# shellcheck disable=SC2034
+			if [ -z "${_DUMMY_URL_PATH_FIRST_PART}" ] || [ -z "${_DUMMY_URL_PATH_SECOND_PART}" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Url first or seond path is empty(${_DUMMY_URL_PATH})."
 				return 1
@@ -341,10 +319,7 @@ create_dummy_dbaas_k8s_response_sub()
 			#
 			# Scoped token
 			#
-			# shellcheck disable=SC2034
-			_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-			if [ $? -ne 0 ]; then
-				# shellcheck disable=SC2034
+			if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				return 1
 			fi
@@ -355,13 +330,11 @@ create_dummy_dbaas_k8s_response_sub()
 			_UTIL_TMP_EXPIRE=$(util_search_urlarg "expire" "${_DUMMY_URL_ARGS}")
 			prn_dbg "(create_dummy_response) all url args(${_DUMMY_URL_ARGS}) => expire(${_UTIL_TMP_EXPIRE})"
 			if ! is_positive_number "${_UTIL_TMP_EXPIRE}" >/dev/null 2>&1; then
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "\"expire\" URL argument value is wrong.(${_DUMMY_URL_ARGS})."
 				return 1
 			fi
 
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=200
 			_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":null,\"token\":\"TEST_TOKEN_ROLE_${_DUMMY_URL_PATH_FIRST_PART}_EXPIRE_${_UTIL_TMP_EXPIRE}\",\"registerpath\":\"TEST_REGISTERPATH_ROLE_${_DUMMY_URL_PATH_FIRST_PART}_EXPIRE_${_UTIL_TMP_EXPIRE}\"}"
 			pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
@@ -369,57 +342,46 @@ create_dummy_dbaas_k8s_response_sub()
 			return 0
 		fi
 
-	elif [ "X${_DUMMY_URL_PATH}" = "X/v1/user/tokens" ]; then
+	elif [ -n "${_DUMMY_URL_PATH}" ] && [ "${_DUMMY_URL_PATH}" = "/v1/user/tokens" ]; then
 		#------------------------------------------------------
 		# K2HR3 User Token API
 		#------------------------------------------------------
-		if [ "X${_DUMMY_METHOD}" = "XHEAD" ]; then
+		if [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "HEAD" ]; then
 			#
 			# HEAD Token(/v1/user/tokens)
 			#
-			if [ "X${_DUMMY_URL_ARGS}" != "X" ]; then
-				# shellcheck disable=SC2034
+			if [ -n "${_DUMMY_URL_ARGS}" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "There is an unnecessary URL arguments.(${_DUMMY_URL_ARGS})."
 				return 1
 			fi
-
-			# shellcheck disable=SC2034
-			_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-			if [ $? -ne 0 ]; then
-				# shellcheck disable=SC2034
+			if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				return 1
 			fi
 
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=204
 			_UTIL_RESPONSE_CONTENT=''
 			pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
 			return 0
 
-		elif [ "X${_DUMMY_METHOD}" = "XPOST" ]; then
+		elif [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "POST" ]; then
 			#
 			# POST Token(/v1/user/tokens)
 			#
-			# shellcheck disable=SC2034
-			_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-			if [ $? -ne 0 ]; then
-				# shellcheck disable=SC2034
+			if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 				_UTIL_TMP_TOKENVAL=""
 			fi
 
-			if [ "X${_DUMMY_BODY_STRING}" = "X" ]; then
-				# shellcheck disable=SC2034
+			if [ -z "${_DUMMY_BODY_STRING}" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "There is no body to create scoped token."
 				return 1
 			fi
 
 			_UTIL_TMP_TENANT=$(echo "${_DUMMY_BODY_STRING}" | sed -e 's/^{"auth":{"tenantName":"//g' -e 's/"}}$//g')
-			if [ "X${_UTIL_TMP_TENANT}" != "Xdefault" ]; then
-				# shellcheck disable=SC2034
+			if [ -z "${_UTIL_TMP_TENANT}" ] || [ "${_UTIL_TMP_TENANT}" != "default" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "The tenant name must be \"default\"."
 				return 1
@@ -428,7 +390,6 @@ create_dummy_dbaas_k8s_response_sub()
 			#
 			# Create Scoped Token from credential
 			#
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=201
 			_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":\"succeed\",\"scoped\":true,\"token\":\"TEST_TOKEN_SCOPED_FOR_TENANT_${_UTIL_TMP_TENANT}\"}"
 			pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
@@ -440,33 +401,28 @@ create_dummy_dbaas_k8s_response_sub()
 		#------------------------------------------------------
 		# K2HR3 Policy API
 		#------------------------------------------------------
-		if [ "X${_DUMMY_METHOD}" = "XDELETE" ]; then
+		if [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "DELETE" ]; then
 			_DUMMY_URL_PATH_AFTER_PART=$(pecho -n "${_DUMMY_URL_PATH}" | sed -e 's#/v1/resource/##g')
 			_DUMMY_URL_PATH_FIRST_PART=$(pecho -n "${_DUMMY_URL_PATH_AFTER_PART}" | sed -e 's#/# #g' | awk '{print $1}')
 			_DUMMY_URL_PATH_SECOND_PART=$(pecho -n "${_DUMMY_URL_PATH_AFTER_PART}" | sed -e 's#/# #g' | awk '{print $2}')
 
-			if [ "X${_DUMMY_URL_PATH_FIRST_PART}" = "X" ]; then
-				# shellcheck disable=SC2034
+			if [ -z "${_DUMMY_URL_PATH_FIRST_PART}" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Url first or seond path is empty(${_DUMMY_URL_PATH})."
 				return 1
 			fi
-			if [ "X${_DUMMY_URL_PATH_SECOND_PART}" = "X" ]; then
+			if [ -z "${_DUMMY_URL_PATH_SECOND_PART}" ]; then
 				prn_dbg "Url seond path is ${_DUMMY_URL_PATH_SECOND_PART}"
 			fi
 
 			#
 			# Scoped token
 			#
-			# shellcheck disable=SC2034
-			_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-			if [ $? -ne 0 ]; then
-				# shellcheck disable=SC2034
+			if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				return 1
 			fi
 
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=204
 			_UTIL_RESPONSE_CONTENT=""
 			pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
@@ -474,42 +430,36 @@ create_dummy_dbaas_k8s_response_sub()
 			return 0
 		fi
 
-	elif [ "X${_DUMMY_URL_PATH}" = "X/v1/resource" ]; then
+	elif [ -n "${_DUMMY_URL_PATH}" ] && [ "${_DUMMY_URL_PATH}" = "/v1/resource" ]; then
 		#------------------------------------------------------
 		# K2HR3 Resource API
 		#------------------------------------------------------
-		# shellcheck disable=SC2034
-		_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-		if [ $? -ne 0 ]; then
-			# shellcheck disable=SC2034
+		if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			return 1
 		fi
 
-		if [ "X${_DUMMY_METHOD}" = "XPOST" ]; then
+		if [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "POST" ]; then
 			#
 			# POST: Url arguments
 			#
-			if [ "X${_DUMMY_BODY_FILE}" != "X" ] && [ "X${_DUMMY_BODY_STRING}" != "X" ]; then
-				# shellcheck disable=SC2034
+			if [ -n "${_DUMMY_BODY_FILE}" ] && [ -n "${_DUMMY_BODY_STRING}" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Both post body file and data are specified."
 				return 1
-			elif [ "X${_DUMMY_BODY_FILE}" = "X" ] && [ "X${_DUMMY_BODY_STRING}" = "X" ]; then
-				# shellcheck disable=SC2034
+			elif [ -z "${_DUMMY_BODY_FILE}" ] && [ -z "${_DUMMY_BODY_STRING}" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Both post body file and data is not specified."
 				return 1
 			fi
 
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=201
 			_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":null}"
 			pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
 			return 0
 
-		elif [ "X${_DUMMY_METHOD}" = "XPUT" ]; then
+		elif [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "PUT" ]; then
 			#
 			# PUT: Url arguments
 			#
@@ -519,43 +469,41 @@ create_dummy_dbaas_k8s_response_sub()
 			_UTIL_TMP_KEYS=$(util_search_urlarg "keys" "${_DUMMY_URL_ARGS}")
 			_UTIL_TMP_ALIAS=$(util_search_urlarg "alias" "${_DUMMY_URL_ARGS}")
 
-			if [ "X${_UTIL_TMP_RESOURCENAME}" = "X" ]; then
-				# shellcheck disable=SC2034
+			if [ -z "${_UTIL_TMP_RESOURCENAME}" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Not found role name."
 				return 1
 			fi
 
 			_UTIL_TMP_TYPE=$(to_upper "${_UTIL_TMP_TYPE}")
-			if [ "X${_UTIL_TMP_TYPE}" = "X" ]; then
+			if [ -z "${_UTIL_TMP_TYPE}" ]; then
 				prn_dbg "\"type\" url argument is empty(not update data)."
-			elif [ "X${_UTIL_TMP_TYPE}" = "XNULL" ]; then
+			elif [ "${_UTIL_TMP_TYPE}" = "NULL" ]; then
 				prn_dbg "\"type\" url argument is null(not update data)."
-			elif [ "X${_UTIL_TMP_TYPE}" = "XSTRING" ]; then
+			elif [ "${_UTIL_TMP_TYPE}" = "STRING" ]; then
 				prn_dbg "\"type\" url argument is string."
-			elif [ "X${_UTIL_TMP_TYPE}" = "XOBJECT" ]; then
+			elif [ "${_UTIL_TMP_TYPE}" = "OBJECT" ]; then
 				prn_dbg "\"type\" url argument is object."
 			fi
 
 			_UTIL_TMP_KEYS=$(to_upper "${_UTIL_TMP_DATA}")
-			if [ "X${_UTIL_TMP_DATA}" = "XNULL" ]; then
-				prn_dbg "\"data\" url argument is null(not update data)."
-			elif [ "X${_UTIL_TMP_DATA}" = "X" ]; then
+			if [ -z "${_UTIL_TMP_DATA}" ]; then
 				prn_dbg "\"data\" url argument is empty(not update date)."
+			elif [ "${_UTIL_TMP_DATA}" = "NULL" ]; then
+				prn_dbg "\"data\" url argument is null(not update data)."
 			fi
 
 			_UTIL_TMP_KEYS=$(to_upper "${_UTIL_TMP_KEYS}")
-			if [ "X${_UTIL_TMP_KEYS}" = "X" ]; then
+			if [ -z "${_UTIL_TMP_KEYS}" ]; then
 				prn_dbg "\"keys\" url argument is empty(not update kesy)."
-			elif [ "X${_UTIL_TMP_KEYS}" = "XNULL" ]; then
+			elif [ "${_UTIL_TMP_KEYS}" = "NULL" ]; then
 				prn_dbg "\"keys\" url argument is null(not update keys)."
 			fi
 
-			if [ "X${_UTIL_TMP_ALIAS}" = "X" ]; then
+			if [ -z "${_UTIL_TMP_ALIAS}" ]; then
 				prn_dbg "Not found alias(optional)."
 			fi
 
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=201
 			_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":null}"
 			pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
@@ -563,19 +511,16 @@ create_dummy_dbaas_k8s_response_sub()
 			return 0
 		fi
 
-	elif [ "X${_DUMMY_URL_PATH}" = "X/v1/policy" ]; then
+	elif [ -n "${_DUMMY_URL_PATH}" ] && [ "${_DUMMY_URL_PATH}" = "/v1/policy" ]; then
 		#------------------------------------------------------
 		# K2HR3 Policy API
 		#------------------------------------------------------
-		# shellcheck disable=SC2034
-		_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-		if [ $? -ne 0 ]; then
-			# shellcheck disable=SC2034
+		if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			return 1
 		fi
 
-		if [ "X${_DUMMY_METHOD}" = "XPUT" ]; then
+		if [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "PUT" ]; then
 			#
 			# Url arguments
 			#
@@ -585,44 +530,41 @@ create_dummy_dbaas_k8s_response_sub()
 			_UTIL_TMP_RESOURCE=$(util_search_urlarg "resource" "${_DUMMY_URL_ARGS}")
 			_UTIL_TMP_ALIAS=$(util_search_urlarg "alias" "${_DUMMY_URL_ARGS}")
 
-			if [ "X${_UTIL_TMP_POLICYNAME}" = "X" ]; then
-				# shellcheck disable=SC2034
+			if [ -z "${_UTIL_TMP_POLICYNAME}" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Not found policy name."
 				return 1
 			fi
 
 			_UTIL_TMP_EFFECT=$(to_upper "${_UTIL_TMP_EFFECT}")
-			if [ "X${_UTIL_TMP_EFFECT}" = "XALLOW" ]; then
+			if [ -n "${_UTIL_TMP_EFFECT}" ] && [ "${_UTIL_TMP_EFFECT}" = "ALLOW" ]; then
 				prn_dbg "\"effect\" url argument is allow."
-			elif [ "X${_UTIL_TMP_EFFECT}" = "XDENY" ]; then
+			elif [ -n "${_UTIL_TMP_EFFECT}" ] && [ "${_UTIL_TMP_EFFECT}" = "DENY" ]; then
 				prn_dbg "\"type\" url argument is deny."
 			else
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "\"effect\" URL argument has unknown value or empty(${_UTIL_TMP_EFFECT})."
 				return 1
 			fi
 
-			if [ "X${_UTIL_TMP_ACTION}" != "X" ]; then
+			if [ -n "${_UTIL_TMP_ACTION}" ]; then
 				prn_dbg "\"action\" URL argument is \"${_UTIL_TMP_ACTION}\"."
 			else
 				prn_dbg "\"action\" URL argument is empty."
 			fi
 
-			if [ "X${_UTIL_TMP_RESOURCE}" != "X" ]; then
+			if [ -n "${_UTIL_TMP_RESOURCE}" ]; then
 				prn_dbg "\"resource\" URL argument is \"${_UTIL_TMP_RESOURCE}\"."
 			else
 				prn_dbg "\"resource\" URL argument is empty."
 			fi
 
-			if [ "X${_UTIL_TMP_ALIAS}" != "X" ]; then
+			if [ -n "${_UTIL_TMP_ALIAS}" ]; then
 				prn_dbg "\"alias\" URL argument is \"${_UTIL_TMP_ALIAS}\"."
 			else
 				prn_dbg "\"alias\" URL argument is empty."
 			fi
 
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=201
 			_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":null}"
 			pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
@@ -634,12 +576,11 @@ create_dummy_dbaas_k8s_response_sub()
 		#------------------------------------------------------
 		# K2HR3 Policy API
 		#------------------------------------------------------
-		if [ "X${_DUMMY_METHOD}" = "XDELETE" ]; then
+		if [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "DELETE" ]; then
 			_DUMMY_URL_PATH_AFTER_PART=$(pecho -n "${_DUMMY_URL_PATH}" | sed -e 's#/v1/policy/##g')
 			_DUMMY_URL_PATH_FIRST_PART=$(pecho -n "${_DUMMY_URL_PATH_AFTER_PART}" | sed -e 's#/# #g' | awk '{print $1}')
 
-			if [ "X${_DUMMY_URL_PATH_FIRST_PART}" = "X" ]; then
-				# shellcheck disable=SC2034
+			if [ -z "${_DUMMY_URL_PATH_FIRST_PART}" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Url first or seond path is empty(${_DUMMY_URL_PATH})."
 				return 1
@@ -648,15 +589,11 @@ create_dummy_dbaas_k8s_response_sub()
 			#
 			# Scoped token
 			#
-			# shellcheck disable=SC2034
-			_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-			if [ $? -ne 0 ]; then
-				# shellcheck disable=SC2034
+			if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				return 1
 			fi
 
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=204
 			_UTIL_RESPONSE_CONTENT=""
 			pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"

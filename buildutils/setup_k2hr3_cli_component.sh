@@ -83,29 +83,29 @@ IS_CLEANUP=0
 USE_ARCHIVE=0
 _TMP_K2HR3_CLI_REPO_NAME=""
 while [ $# -ne 0 ]; do
-	if [ "X$1" = "X" ]; then
+	if [ -z "$1" ]; then
 		break;
 
-	elif [ "X$1" = "X-h" ] || [ "X$1" = "X-help" ]; then
+	elif [ "$1" = "-h" ] || [ "$1" = "-help" ]; then
 		func_usage "${PRGNAME}"
 		exit 0
 
-	elif [ "X$1" = "X--clean" ] || [ "X$1" = "X--CLEAN" ] || [ "X$1" = "X-c" ] || [ "X$1" = "X-C" ]; then
+	elif [ "$1" = "--clean" ] || [ "$1" = "--CLEAN" ] || [ "$1" = "-c" ] || [ "$1" = "-C" ]; then
 		if [ "${IS_CLEANUP}" -eq 1 ]; then
 			echo "[ERROR] ${PRGNAME} - Already specified \"$1\" option." 1>&2
 			exit 1
 		fi
 		IS_CLEANUP=1
 
-	elif [ "X$1" = "X--force_archive" ] || [ "X$1" = "X--FORCE_ARCHIVE" ] || [ "X$1" = "X-f" ] || [ "X$1" = "X-F" ]; then
+	elif [ "$1" = "--force_archive" ] || [ "$1" = "--FORCE_ARCHIVE" ] || [ "$1" = "-f" ] || [ "$1" = "-F" ]; then
 		if [ "${USE_ARCHIVE}" -eq 1 ]; then
 			echo "[ERROR] ${PRGNAME} - Already specified \"$1\" option." 1>&2
 			exit 1
 		fi
 		USE_ARCHIVE=1
 
-	elif [ "X$1" = "X--k2hr3_cli_repo" ] || [ "X$1" = "X--K2HR3_CLI_REPO" ]; then
-		if [ "X${_TMP_K2HR3_CLI_REPO_NAME}" != "X" ]; then
+	elif [ "$1" = "--k2hr3_cli_repo" ] || [ "$1" = "--K2HR3_CLI_REPO" ]; then
+		if [ -n "${_TMP_K2HR3_CLI_REPO_NAME}" ]; then
 			echo "[ERROR] ${PRGNAME} - Already specified \"$1\" option." 1>&2
 			exit 1
 		fi
@@ -123,7 +123,7 @@ while [ $# -ne 0 ]; do
 	fi
 	shift
 done
-if [ "X${_TMP_K2HR3_CLI_REPO_NAME}" != "X" ]; then
+if [ -n "${_TMP_K2HR3_CLI_REPO_NAME}" ]; then
 	K2HR3_CLI_REPO_NAME="${_TMP_K2HR3_CLI_REPO_NAME}"
 fi
 
@@ -134,10 +134,14 @@ fi
 # Cleanup
 #
 
+# [NOTE]
+# Changed not to delete the VERSION file, as it is always overwritten.
+# Revert to delete if necessary.
 #
-# [TODO] ... Directories may still be added.
+# [TODO] 
+# Directories may still be added.
 #
-rm -f "${SRCTOP}/src/libexec/database-k8s/VERSION"
+#rm -f "${SRCTOP}/src/libexec/database/VERSION"
 rm -f "${SRCTOP}/src/k2hr3"
 rm -rf "${SRCTOP}/src/libexec/common"
 rm -rf "${SRCTOP}/src/libexec/config"
@@ -173,14 +177,14 @@ if [ "${USE_GIT_CONFIG}" -eq 1 ]; then
 
 	GIT_URL_THIS_REPO=$(grep '^[[:space:]]*url[[:space:]]*=[[:space:]]*' .git/config | grep '.git$' | head -1 | sed -e 's/^[[:space:]]*url[[:space:]]*=[[:space:]]*//g')
 
-	if [ "X${GIT_URL_THIS_REPO}" != "X" ]; then
+	if [ -n "${GIT_URL_THIS_REPO}" ]; then
 		#
 		# Get git domain and organaization
 		#
 		GIT_DOMAIN_NAME=$(echo "${GIT_URL_THIS_REPO}" | sed -e 's/^git@//g' -e 's#^http[s]*://##g' -e 's/:/ /g' -e 's#/# #g' | awk '{print $1}')
 		GIT_ORG_NAME=$(echo "${GIT_URL_THIS_REPO}" | sed -e 's/^git@//g' -e 's#^http[s]*://##g' -e 's/:/ /g' -e 's#/# #g' | awk '{print $2}')
 
-		if [ "X${GIT_DOMAIN_NAME}" = "X" ] || [ "X${GIT_ORG_NAME}" = "X" ]; then
+		if [ -z "${GIT_DOMAIN_NAME}" ] || [ -z "${GIT_ORG_NAME}" ]; then
 			echo "[WARNING] ${PRGNAME} - Unknown git dmain and organaization in .git/config" 1>&2
 			USE_ARCHIVE=1
 			GIT_DOMAIN_NAME=${DEFAULT_GIT_DOMAIN}
@@ -215,8 +219,8 @@ if [ "${USE_ARCHIVE}" -ne 1 ]; then
 
 	CURRENT_DIR=$(pwd)
 	cd "${EXPAND_TOP_DIR}" || exit 1
-	git clone "${K2HR3_CLI_GIT_URI}"
-	if [ $? -eq 0 ]; then
+
+	if git clone "${K2HR3_CLI_GIT_URI}"; then
 		if [ -d "${K2HR3_CLI_REPO_NAME}" ]; then
 			K2HR3_CLI_EXPAND_DIR="${EXPAND_TOP_DIR}/${K2HR3_CLI_REPO_NAME}"
 		else
@@ -233,14 +237,13 @@ else
 
 	K2HR3_CLI_ZIP_NAME="master.zip"
 	K2HR3_CLI_ZIP_URI="https://${GIT_DOMAIN_NAME}/${GIT_ORG_NAME}/${K2HR3_CLI_REPO_NAME}/archive/${K2HR3_CLI_ZIP_NAME}"
-	curl -s -L "${K2HR3_CLI_ZIP_URI}" --output "${EXPAND_TOP_DIR}/${K2HR3_CLI_ZIP_NAME}"
-	if [ $? -eq 0 ]; then
+
+	if curl -s -L "${K2HR3_CLI_ZIP_URI}" --output "${EXPAND_TOP_DIR}/${K2HR3_CLI_ZIP_NAME}"; then
 		if [ -f "${EXPAND_TOP_DIR}/${K2HR3_CLI_ZIP_NAME}" ]; then
 			CURRENT_DIR=$(pwd)
 			cd "${EXPAND_TOP_DIR}" || exit 1
 
-			unzip "${K2HR3_CLI_ZIP_NAME}" >/dev/null
-			if [ $? -eq 0 ]; then
+			if unzip "${K2HR3_CLI_ZIP_NAME}" >/dev/null; then
 				if [ -d "${K2HR3_CLI_REPO_NAME}-master" ]; then
 					mv "${K2HR3_CLI_REPO_NAME}-master" "${K2HR3_CLI_REPO_NAME}"
 					K2HR3_CLI_EXPAND_DIR="${EXPAND_TOP_DIR}/${K2HR3_CLI_REPO_NAME}"
@@ -262,7 +265,7 @@ fi
 #
 # Check download
 #
-if [ "X${K2HR3_CLI_EXPAND_DIR}" = "X" ]; then
+if [ -z "${K2HR3_CLI_EXPAND_DIR}" ]; then
 	rm -rf "${EXPAND_TOP_DIR}"
 	exit 1
 fi
