@@ -32,17 +32,17 @@ set -e
 #----------------------------------------------------------
 # Check enviroment values
 #----------------------------------------------------------
-if [ "X${ANTPICKAX_ETC_DIR}" = "X" ]; then
+if [ -z "${ANTPICKAX_ETC_DIR}" ]; then
 	exit 1
 fi
 
 #
 # Allow empty value
 #
-if [ "X${SEC_CA_MOUNTPOINT}" != "X" ] && [ ! -d "${SEC_CA_MOUNTPOINT}" ]; then
+if [ -n "${SEC_CA_MOUNTPOINT}" ] && [ ! -d "${SEC_CA_MOUNTPOINT}" ]; then
 	exit 1
 fi
-if [ "X${SEC_CERTS_MOUNTPOINT}" != "X" ] && [ ! -d "${SEC_CERTS_MOUNTPOINT}" ]; then
+if [ -n "${SEC_CERTS_MOUNTPOINT}" ] && [ ! -d "${SEC_CERTS_MOUNTPOINT}" ]; then
 	exit 1
 fi
 
@@ -51,24 +51,24 @@ fi
 #----------------------------------------------------------
 SELF_HOSTNAME=$(hostname | sed 's/\(pod-[^-]*\)\(-.*\)$/\1/g')
 
-if [ "X${SEC_CA_MOUNTPOINT}" != "X" ]; then
+if [ -n "${SEC_CA_MOUNTPOINT}" ]; then
 	SECRET_CA_CERT_FILE=$(find "${SEC_CA_MOUNTPOINT}/" -name '*_CA.crt' | head -1)
 
-	if [ "X${SECRET_CA_CERT_FILE}" != "X" ]; then
+	if [ -n "${SECRET_CA_CERT_FILE}" ]; then
 		cp "${SECRET_CA_CERT_FILE}" "${ANTPICKAX_ETC_DIR}/ca.crt"	|| exit 1
 		chmod 0444 "${ANTPICKAX_ETC_DIR}/ca.crt"					|| exit 1
 	fi
 fi
 
-if [ "X${SEC_CERTS_MOUNTPOINT}" != "X" ]; then
+if [ -n "${SEC_CERTS_MOUNTPOINT}" ]; then
 	SECRET_SELF_SERVER_CRT=$(find "${SEC_CERTS_MOUNTPOINT}/" -name "${SELF_HOSTNAME}.*server.crt" | head -1)
 	SECRET_SELF_SERVER_KEY=$(find "${SEC_CERTS_MOUNTPOINT}/" -name "${SELF_HOSTNAME}.*server.key" | head -1)
 
-	if [ "X${SECRET_SELF_SERVER_CRT}" != "X" ] && [ "X${SECRET_SELF_SERVER_KEY}" != "X" ]; then
+	if [ -n "${SECRET_SELF_SERVER_CRT}" ] && [ -n "${SECRET_SELF_SERVER_KEY}" ]; then
 		cp "${SECRET_SELF_SERVER_CRT}" "${ANTPICKAX_ETC_DIR}/server.crt"	|| exit 1
 		cp "${SECRET_SELF_SERVER_KEY}" "${ANTPICKAX_ETC_DIR}/server.key"	|| exit 1
-		chmod 0444 "${ANTPICKAX_ETC_DIR}/server.crt"	|| exit 1
-		chmod 0400 "${ANTPICKAX_ETC_DIR}/server.key"	|| exit 1
+		chmod 0444 "${ANTPICKAX_ETC_DIR}/server.crt"						|| exit 1
+		chmod 0400 "${ANTPICKAX_ETC_DIR}/server.key"						|| exit 1
 	fi
 fi
 

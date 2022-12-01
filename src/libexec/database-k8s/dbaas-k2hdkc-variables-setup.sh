@@ -104,55 +104,59 @@ K2HDKC_CONTAINER_ID=""
 #------------------------------------------------------------------------------
 # Check Environments
 #------------------------------------------------------------------------------
-if [ "X${K2HR3_API_URL}" = "X" ]; then
+if [ -z "${K2HR3_API_URL}" ]; then
 	echo "[ERROR] ${PRGNAME} : K2HR3_API_URL environment is not set." 1>&2
 	exit 1
 fi
-if [ "X${K2HR3_YRN_PREFIX}" = "X" ]; then
+if [ -z "${K2HR3_YRN_PREFIX}" ]; then
 	K2HR3_YRN_PREFIX="yrn:yahoo:::"
 fi
-if [ "X${K2HDKC_DOMAIN}" = "X" ]; then
+if [ -z "${K2HDKC_DOMAIN}" ]; then
 	echo "[ERROR] ${PRGNAME} : K2HDKC_DOMAIN environment is not set." 1>&2
 	exit 1
 fi
-if [ "X${K2HKDC_CLUSTER_NAME}" = "X" ]; then
+if [ -z "${K2HKDC_CLUSTER_NAME}" ]; then
 	echo "[ERROR] ${PRGNAME} : K2HKDC_CLUSTER_NAME environment is not set." 1>&2
 	exit 1
 fi
-if [ "X${K2HDKC_MODE}" = "XSERVER" ] || [ "X${K2HDKC_MODE}" = "Xserver" ]; then
+if [ -z "${K2HDKC_MODE}" ]; then
+	echo "[ERROR] ${PRGNAME} : K2HDKC_MODE environment is not set or wrong value, it must be set \"server\" or \"slave\"." 1>&2
+	exit 1
+elif [ "${K2HDKC_MODE}" = "SERVER" ] || [ "${K2HDKC_MODE}" = "server" ]; then
 	K2HDKC_MODE="server"
-elif [ "X${K2HDKC_MODE}" = "XSLAVE" ] || [ "X${K2HDKC_MODE}" = "Xslave" ]; then
+elif [ "${K2HDKC_MODE}" = "SLAVE" ] || [ "${K2HDKC_MODE}" = "slave" ]; then
 	K2HDKC_MODE="slave"
 else
 	echo "[ERROR] ${PRGNAME} : K2HDKC_MODE environment is not set or wrong value, it must be set \"server\" or \"slave\"." 1>&2
 	exit 1
 fi
-if [ "X${K2HDKC_NODE_NAME}" = "X" ]; then
+if [ -z "${K2HDKC_NODE_NAME}" ]; then
 	echo "[ERROR] ${PRGNAME} : K2HDKC_NODE_NAME environment is not set." 1>&2
 	exit 1
 fi
-if [ "X${K2HDKC_NODE_IP}" = "X" ]; then
+# shellcheck disable=SC2153
+if [ -z "${K2HDKC_NODE_IP}" ]; then
 	echo "[ERROR] ${PRGNAME} : K2HDKC_NODE_IP environment is not set." 1>&2
 	exit 1
 fi
-if [ "X${K2HDKC_POD_NAME}" = "X" ]; then
+if [ -z "${K2HDKC_POD_NAME}" ]; then
 	echo "[ERROR] ${PRGNAME} : K2HDKC_POD_NAME environment is not set." 1>&2
 	exit 1
 fi
-if [ "X${K2HDKC_NAMESPACE}" = "X" ]; then
+if [ -z "${K2HDKC_NAMESPACE}" ]; then
 	echo "[ERROR] ${PRGNAME} : K2HDKC_NAMESPACE environment is not set." 1>&2
 	exit 1
 fi
-if [ "X${K2HDKC_POD_SERVICE_ACCOUNT}" = "X" ]; then
+if [ -z "${K2HDKC_POD_SERVICE_ACCOUNT}" ]; then
 	echo "[ERROR] ${PRGNAME} : K2HDKC_POD_SERVICE_ACCOUNT environment is not set." 1>&2
 	exit 1
 fi
-if [ "X${K2HDKC_POD_ID}" = "X" ]; then
+if [ -z "${K2HDKC_POD_ID}" ]; then
 	echo "[ERROR] ${PRGNAME} : K2HDKC_POD_ID environment is not set." 1>&2
 	exit 1
 fi
 # shellcheck disable=SC2153
-if [ "X${K2HDKC_POD_IP}" = "X" ]; then
+if [ -z "${K2HDKC_POD_IP}" ]; then
 	echo "[ERROR] ${PRGNAME} : K2HDKC_POD_IP environment is not set." 1>&2
 	exit 1
 fi
@@ -164,8 +168,7 @@ fi
 # Make CONTAINER_ID with checking pod id
 #
 # shellcheck disable=SC2010
-POC_FILE_NAMES=$(ls -1 /proc/ | grep -E "[0-9]+" 2>/dev/null)
-if [ $? -ne 0 ]; then
+if ! POC_FILE_NAMES=$(ls -1 /proc/ | grep -E "[0-9]+" 2>/dev/null); then
 	echo "[ERROR] ${PRGNAME} : Could not find any /proc/<process id> directory." 1>&2
 	exit 1
 fi
@@ -175,32 +178,30 @@ for local_procid in ${POC_FILE_NAMES}; do
 	if [ ! -f /proc/"${local_procid}"/cgroup ]; then
 		continue
 	fi
-	local_all_line=$(cat /proc/"${local_procid}"/cgroup)
-	if [ $? -ne 0 ]; then
+	if ! local_all_line=$(cat /proc/"${local_procid}"/cgroup); then
 		continue
 	fi
 	for local_line in ${local_all_line}; do
-		CONTAINER_ID_UIDS=$(echo "${local_line}" | sed -e 's#.*pod##g' -e 's#\.slice##g' -e 's#\.scope##g' -e 's#docker-##g' 2>/dev/null)
-		if [ $? -ne 0 ]; then
+		if ! CONTAINER_ID_UIDS=$(echo "${local_line}" | sed -e 's#.*pod##g' -e 's#\.slice##g' -e 's#\.scope##g' -e 's#docker-##g' 2>/dev/null); then
 			continue
 		fi
-		if [ "X${CONTAINER_ID_UIDS}" != "X" ]; then
+		if [ -n "${CONTAINER_ID_UIDS}" ]; then
 			break
 		fi
 	done
-	if [ "X${CONTAINER_ID_UIDS}" != "X" ]; then
+	if [ -n "${CONTAINER_ID_UIDS}" ]; then
 		break
 	fi
 done
 
-if [ "X${CONTAINER_ID_UIDS}" != "X" ]; then
+if [ -n "${CONTAINER_ID_UIDS}" ]; then
 	K2HDKC_TMP_POD_ID=$(echo "${CONTAINER_ID_UIDS}" | sed -e 's#/# #g' 2>/dev/null | awk '{print $1}' 2>/dev/null)
 	K2HDKC_CONTAINER_ID=$(echo "${CONTAINER_ID_UIDS}" | sed -e 's#/# #g' 2>/dev/null | awk '{print $2}' 2>/dev/null)
 
-	if [ "X${K2HDKC_POD_ID}" = "X" ]; then
+	if [ -z "${K2HDKC_POD_ID}" ]; then
 		K2HDKC_POD_ID=${K2HDKC_TMP_POD_ID}
 	else
-		if [ "X${K2HDKC_POD_ID}" != "X${K2HDKC_TMP_POD_ID}" ]; then
+		if [ -z "${K2HDKC_TMP_POD_ID}" ] || [ "${K2HDKC_POD_ID}" != "${K2HDKC_TMP_POD_ID}" ]; then
 			echo "[WARNING] ${PRGNAME} : Specified pod id(${K2HDKC_POD_ID}) is not correct, so that use current pod id(${K2HDKC_TMP_POD_ID}) instead of it." 1>&2
 			K2HDKC_POD_ID=${K2HDKC_TMP_POD_ID}
 		fi
@@ -232,8 +233,7 @@ fi
 #	'/'				to '_'
 #	'='(end word)	to '%3d'
 #
-K2HDKC_REG_RAND=$(od -vAn -tx8 -N16 < /dev/urandom 2>/dev/null | tr -d '[:blank:]' 2>/dev/null)
-if [ $? -ne 0 ]; then
+if ! K2HDKC_REG_RAND=$(od -vAn -tx8 -N16 < /dev/urandom 2>/dev/null | tr -d '[:blank:]' 2>/dev/null); then
 	echo "[ERROR] ${PRGNAME} : Could not make 64 bytes random value for CUK value." 1>&2
 	exit 1
 fi
@@ -251,13 +251,11 @@ CUK_STRING="{\
 \"k8s_service_account\":\"${K2HDKC_POD_SERVICE_ACCOUNT}\"\
 }"
 
-CUK_BASE64_STRING=$(echo "${CUK_STRING}" 2>/dev/null | tr -d '\n' | sed -e 's/ //g' 2>/dev/null | base64 2>/dev/null | tr -d '\n' 2>/dev/null)
-if [ $? -ne 0 ]; then
+if ! CUK_BASE64_STRING=$(echo "${CUK_STRING}" 2>/dev/null | tr -d '\n' | sed -e 's/ //g' 2>/dev/null | base64 2>/dev/null | tr -d '\n' 2>/dev/null); then
 	echo "[ERROR] ${PRGNAME} : Could not make base64 string for CUK value." 1>&2
 	exit 1
 fi
-CUK_BASE64_URLENC=$(echo "${CUK_BASE64_STRING}" 2>/dev/null | tr -d '\n' | sed -e 's/+/-/g' -e 's#/#_#g' -e 's/=/%3d/g' 2>/dev/null)
-if [ $? -ne 0 ]; then
+if ! CUK_BASE64_URLENC=$(echo "${CUK_BASE64_STRING}" 2>/dev/null | tr -d '\n' | sed -e 's/+/-/g' -e 's#/#_#g' -e 's/=/%3d/g' 2>/dev/null); then
 	echo "[ERROR] ${PRGNAME} : Could not make base64 url encode string for CUK value." 1>&2
 	exit 1
 fi
@@ -302,8 +300,7 @@ cp ${SECRET_K2HR3_TOKEN_DIR}/role-token-${K2HDKC_MODE}        ${ANTPICKAX_ETC_DI
 #
 # Certificate files are copied
 #
-stat "${SECRET_K2HR3_CERTS}/${K2HR3_FILE_CA_CERT}" >/dev/null 2>&1
-if [ $? -eq 0 ]; then
+if stat "${SECRET_K2HR3_CERTS}/${K2HR3_FILE_CA_CERT}" >/dev/null 2>&1; then
 	cp ${SECRET_K2HR3_CERTS}/${K2HR3_FILE_CA_CERT} ${ANTPICKAX_ETC_DIR}/	|| exit 1
 	chmod 0444 ${ANTPICKAX_ETC_DIR}/${K2HR3_FILE_CA_CERT}					|| exit 1
 fi
@@ -318,15 +315,15 @@ SELF_CLIENT_CRT=$(ls -1 "${SECRET_K2HR3_CERTS}"/"${SELF_HOSTNAME}".*client.crt |
 # shellcheck disable=SC2012
 SELF_CLIENT_KEY=$(ls -1 "${SECRET_K2HR3_CERTS}"/"${SELF_HOSTNAME}".*client.key | sed -e "s#${SECRET_K2HR3_CERTS}/##g" -e '/^$/d' | head -1)
 
-if [ "X${SELF_SERVER_CRT}" != "X" ] && [ "X${SELF_SERVER_KEY}" != "X" ] && [ "X${SELF_CLIENT_CRT}" != "X" ] && [ "X${SELF_CLIENT_KEY}" != "X" ]; then
+if [ -n "${SELF_SERVER_CRT}" ] && [ -n "${SELF_SERVER_KEY}" ] && [ -n "${SELF_CLIENT_CRT}" ] && [ -n "${SELF_CLIENT_KEY}" ]; then
 	cp "${SECRET_K2HR3_CERTS}/${SELF_SERVER_CRT}" "${ANTPICKAX_ETC_DIR}/${K2HR3_FILE_SERVER_CERT}"	|| exit 1
 	cp "${SECRET_K2HR3_CERTS}/${SELF_SERVER_KEY}" "${ANTPICKAX_ETC_DIR}/${K2HR3_FILE_SERVER_KEY}"	|| exit 1
 	cp "${SECRET_K2HR3_CERTS}/${SELF_CLIENT_CRT}" "${ANTPICKAX_ETC_DIR}/${K2HR3_FILE_CLIENT_CERT}"	|| exit 1
 	cp "${SECRET_K2HR3_CERTS}/${SELF_CLIENT_KEY}" "${ANTPICKAX_ETC_DIR}/${K2HR3_FILE_CLIENT_KEY}"	|| exit 1
-	chmod 0444 ${ANTPICKAX_ETC_DIR}/${K2HR3_FILE_SERVER_CERT}									|| exit 1
-	chmod 0400 ${ANTPICKAX_ETC_DIR}/${K2HR3_FILE_SERVER_KEY}									|| exit 1
-	chmod 0444 ${ANTPICKAX_ETC_DIR}/${K2HR3_FILE_CLIENT_CERT}									|| exit 1
-	chmod 0400 ${ANTPICKAX_ETC_DIR}/${K2HR3_FILE_CLIENT_KEY}									|| exit 1
+	chmod 0444 ${ANTPICKAX_ETC_DIR}/${K2HR3_FILE_SERVER_CERT}										|| exit 1
+	chmod 0400 ${ANTPICKAX_ETC_DIR}/${K2HR3_FILE_SERVER_KEY}										|| exit 1
+	chmod 0444 ${ANTPICKAX_ETC_DIR}/${K2HR3_FILE_CLIENT_CERT}										|| exit 1
+	chmod 0400 ${ANTPICKAX_ETC_DIR}/${K2HR3_FILE_CLIENT_KEY}										|| exit 1
 fi
 
 exit 0

@@ -24,13 +24,11 @@
 #
 # k2hr3 bin
 #
-# shellcheck disable=SC2034
 K2HR3CLIBIN="${BINDIR}/${BINNAME}"
 
 #
 # Directry Path
 #
-# shellcheck disable=SC2034
 K2HR3CLI_DBAAS_K8S_CURDIR=${LIBEXECDIR}/${K2HR3CLI_MODE}
 
 #
@@ -76,16 +74,14 @@ fi
 #
 # kubectl command check
 #
-check_kubectl_command
-if [ $? -ne 0 ]; then
+if ! check_kubectl_command; then
 	exit 1
 fi
 
 #
 # Check DBaaS K8S options
 #
-parse_dbaas_k8s_option "$@"
-if [ $? -ne 0 ]; then
+if ! parse_dbaas_k8s_option "$@"; then
 	exit 1
 else
 	# shellcheck disable=SC2086
@@ -105,16 +101,14 @@ fi
 # [NOTE]
 # Need to call this function here, because it needs to load option parameteres
 #
-check_dbaas_k8s_cluster_domain
-if [ $? -ne 0 ]; then
+if ! check_dbaas_k8s_cluster_domain; then
 	exit 1
 fi
 
 #
 # Load K2HR3 configuration
 #
-load_dbaas_k8s_k2hr3_configuration
-if [ $? -ne 0 ]; then
+if ! load_dbaas_k8s_k2hr3_configuration; then
 	prn_err "Failed loading K2HR3 configuration for K2HDKC DBaaS K8S."
 	exit 1
 fi
@@ -125,11 +119,10 @@ fi
 #
 # Sub Command
 #
-parse_noprefix_option "$@"
-if [ $? -ne 0 ]; then
+if ! parse_noprefix_option "$@"; then
 	exit 1
 fi
-if [ "X${K2HR3CLI_OPTION_NOPREFIX}" = "X" ]; then
+if [ -z "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 	K2HR3CLI_SUBCOMMAND=""
 else
 	#
@@ -143,11 +136,10 @@ set -- ${K2HR3CLI_OPTION_PARSER_REST}
 #
 # Execute type after Sub Command
 #
-parse_noprefix_option "$@"
-if [ $? -ne 0 ]; then
+if ! parse_noprefix_option "$@"; then
 	exit 1
 fi
-if [ "X${K2HR3CLI_OPTION_NOPREFIX}" = "X" ]; then
+if [ -z "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 	K2HR3CLI_DBAAS_K8S_EXEC=""
 else
 	#
@@ -161,25 +153,35 @@ set -- ${K2HR3CLI_OPTION_PARSER_REST}
 #
 # Parameters after execute type
 #
-if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CONFIG}" ]; then
+if [ -z "${K2HR3CLI_SUBCOMMAND}" ]; then
+	#
+	# Nothing to do
+	#
+	:
+
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CONFIG}" ]; then
 	#
 	# Config sub command(nothind to do)
 	#
 	:
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; then
 	#
 	# Cert sub command
 	#
-	if [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SHOW}" ]; then
+	if [ -z "${K2HR3CLI_DBAAS_K8S_EXEC}" ]; then
+		#
+		# Nothing to do
+		#
+		:
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SHOW}" ]; then
 		#
 		# Show cerfification list or certificate file
 		#
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			exit 1
 		fi
-		if [ "X${K2HR3CLI_OPTION_NOPREFIX}" = "X" ]; then
+		if [ -z "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 			K2HR3CLI_DBAAS_K8S_CERT_NAME=""
 		else
 			K2HR3CLI_DBAAS_K8S_CERT_NAME=${K2HR3CLI_OPTION_NOPREFIX}
@@ -187,7 +189,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 		# shellcheck disable=SC2086
 		set -- ${K2HR3CLI_OPTION_PARSER_REST}
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SET}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SET}" ]; then
 		#
 		# Set certificate file
 		#
@@ -195,11 +197,10 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 		#
 		# 1'st cert file path
 		#
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			exit 1
 		fi
-		if [ "X${K2HR3CLI_OPTION_NOPREFIX}" = "X" ]; then
+		if [ -z "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 			K2HR3CLI_DBAAS_K8S_CERT_PARAM_CERT_1=""
 		else
 			K2HR3CLI_DBAAS_K8S_CERT_PARAM_CERT_1=${K2HR3CLI_OPTION_NOPREFIX}
@@ -210,11 +211,10 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 		#
 		# 1'st cert key file path
 		#
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			exit 1
 		fi
-		if [ "X${K2HR3CLI_OPTION_NOPREFIX}" = "X" ]; then
+		if [ -z "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 			K2HR3CLI_DBAAS_K8S_CERT_PARAM_KEY_1=""
 		else
 			K2HR3CLI_DBAAS_K8S_CERT_PARAM_KEY_1=${K2HR3CLI_OPTION_NOPREFIX}
@@ -225,11 +225,10 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 		#
 		# 2'nd cert file path
 		#
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			exit 1
 		fi
-		if [ "X${K2HR3CLI_OPTION_NOPREFIX}" = "X" ]; then
+		if [ -z "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 			K2HR3CLI_DBAAS_K8S_CERT_PARAM_CERT_2=""
 		else
 			K2HR3CLI_DBAAS_K8S_CERT_PARAM_CERT_2=${K2HR3CLI_OPTION_NOPREFIX}
@@ -240,11 +239,10 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 		#
 		# 2'nd cert key file path
 		#
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			exit 1
 		fi
-		if [ "X${K2HR3CLI_OPTION_NOPREFIX}" = "X" ]; then
+		if [ -z "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 			K2HR3CLI_DBAAS_K8S_CERT_PARAM_KEY_2=""
 		else
 			K2HR3CLI_DBAAS_K8S_CERT_PARAM_KEY_2=${K2HR3CLI_OPTION_NOPREFIX}
@@ -252,36 +250,42 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 		# shellcheck disable=SC2086
 		set -- ${K2HR3CLI_OPTION_PARSER_REST}
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_CREATE}" ] || [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_APPLY}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_CREATE}" ] || [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_APPLY}" ]; then
 		#
 		# Create certificate file(nothing to do)
 		#
 		:
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_DELETE}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_DELETE}" ]; then
 		#
 		# Delete certificate file(nothing to do)
 		#
 		:
 	fi
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HR3}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HR3}" ]; then
 	#
 	# K2HR3 sub command
 	#
-	if [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SHOW}" ]; then
+	if [ -z "${K2HR3CLI_DBAAS_K8S_EXEC}" ]; then
+		#
+		# Nothing to do
+		#
+		:
+
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SHOW}" ]; then
 		#
 		# Show K2HR3 information(nothing to do)
 		#
 		:
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_CREATE}" ] || [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_APPLY}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_CREATE}" ] || [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_APPLY}" ]; then
 		#
 		# Create/Apply K2HR3 system(nothing to do)
 		#
 		:
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_DELETE}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_DELETE}" ]; then
 		#
 		# Delete K2HR3 system(nothing to do)
 		#
@@ -289,7 +293,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HR3}" ];
 
 	fi
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HDKC}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HDKC}" ]; then
 	#
 	# K2HDKC sub command
 	#
@@ -297,11 +301,10 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HDKC}" ]
 	#
 	# All exec command needs "cluster name", so check it here
 	#
-	parse_noprefix_option "$@"
-	if [ $? -ne 0 ]; then
+	if ! parse_noprefix_option "$@"; then
 		exit 1
 	fi
-	if [ "X${K2HR3CLI_OPTION_NOPREFIX}" = "X" ]; then
+	if [ -z "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 		prn_err "\"K2HDKC Cluster name\" is not specified. \"K2HDKC Cluster name\" is required for this command."
 		exit 1
 	fi
@@ -315,36 +318,41 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HDKC}" ]
 	#
 	load_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}"
 
-	if [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SHOW}" ]; then
+	if [ -z "${K2HR3CLI_DBAAS_K8S_EXEC}" ]; then
+		#
+		# Nothing to do
+		#
+		:
+
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SHOW}" ]; then
 		#
 		# Show K2HDKC Cluster information(nothing to do)
 		#
 		:
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SETUP}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SETUP}" ]; then
 		#
 		# Show K2HDKC Cluster information(nothing to do)
 		#
 		:
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_CREATE}" ] || [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_APPLY}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_CREATE}" ] || [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_APPLY}" ]; then
 		#
 		# Create/Apply K2HDKC Cluster (nothing to do)
 		#
 		:
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SCALE}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SCALE}" ]; then
 		#
 		# Show K2HDKC Cluster information(nothing to do)
 		#
 		:
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_DELETE}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_DELETE}" ]; then
 		#
 		# Delete K2HDKC Cluster (nothing to do)
 		#
 		:
-
 	fi
 fi
 
@@ -359,31 +367,37 @@ set_localhost_name_ip_variables
 #
 # Main
 #
-if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CONFIG}" ]; then
+if [ -z "${K2HR3CLI_SUBCOMMAND}" ]; then
+	prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must also specify the subcommand(${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CONFIG}, ${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}, ${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HR3} or ${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HDKC}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
+	exit 1
+
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CONFIG}" ]; then
 	#
 	# CONFIGRATION SUB COMMAND
 	#
-	if [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_LIST}" ]; then
+	if [ -z "${K2HR3CLI_DBAAS_K8S_EXEC}" ]; then
+		prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_SUBCOMMAND}\" must also specify the execute type(${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_LIST} or ${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SHOW}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
+		exit 1
+
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_LIST}" ]; then
 		#
 		# LIST CONFIGRATION
 		#
-		get_dbaas_k8s_all_configurations
-		if [ $? -ne 0 ]; then
+		if ! get_dbaas_k8s_all_configurations; then
 			prn_msg "${CRED}Failed${CDEF} : Something error occurred."
 			return 1
 		fi
 		prn_msg "${CGRN}Succeed${CDEF} : Completed listing the configuration of K2HDKC DBaaS K8S"
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SHOW}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SHOW}" ]; then
 		#
 		# SHOW CONFIGRATION
 		#
-		get_dbaas_k8s_cluster_k2hr3_config_contents
-		if [ $? -ne 0 ]; then
+		if ! get_dbaas_k8s_cluster_k2hr3_config_contents; then
 			prn_msg "${CRED}Failed${CDEF} : Something error occurred."
 			return 1
 		fi
-		if [ "X${K2HR3CLI_OPT_JSON}" != "X1" ]; then
+		if [ -z "${K2HR3CLI_OPT_JSON}" ] || [ "${K2HR3CLI_OPT_JSON}" != "1" ]; then
 			prn_msg "${CGRN}Succeed${CDEF} : Print configuration."
 		fi
 
@@ -392,24 +406,27 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CONFIG}" ]; 
 		exit 1
 	fi
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; then
 	#
 	# CERTIFICATE SUB COMMAND
 	#
-	if [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SHOW}" ]; then
+	if [ -z "${K2HR3CLI_DBAAS_K8S_EXEC}" ]; then
+		prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_SUBCOMMAND}\" must also specify the execute type(${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SHOW}, ${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SET}, ${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_CREATE}, ${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_APPLY} or ${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_DELETE}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
+		exit 1
+
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SHOW}" ]; then
 		#
 		# SHOW CERTIFICATE
 		#
-		if [ "X${K2HR3CLI_DBAAS_K8S_CERT_NAME}" = "X" ]; then
+		if [ -z "${K2HR3CLI_DBAAS_K8S_CERT_NAME}" ]; then
 			#
 			# Certificate file name is not specified, then list all certificates
 			#
-			get_dbaas_k8s_domain_certificates
-			if [ $? -ne 0 ]; then
+			if ! get_dbaas_k8s_domain_certificates; then
 				prn_msg "${CRED}Failed${CDEF} : Could not get certificates for \"${K2HR3CLI_DBAAS_K8S_DOMAIN}\" domain."
 				return 1
 			fi
-			if [ "X${K2HR3CLI_OPT_JSON}" != "X1" ]; then
+			if [ -z "${K2HR3CLI_OPT_JSON}" ] || [ "${K2HR3CLI_OPT_JSON}" != "1" ]; then
 				prn_msg "${CGRN}Succeed${CDEF} : Completed listing the certificates for K2HDKC DBaaS K8S"
 			fi
 
@@ -417,17 +434,16 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 			#
 			# Certificate file name is specified, then print that certificate
 			#
-			print_dbaas_k8s_domain_certificate
-			if [ $? -ne 0 ]; then
+			if ! print_dbaas_k8s_domain_certificate; then
 				prn_msg "${CRED}Failed${CDEF} : Something error occurred."
 				exit $?
 			fi
-			if [ "X${K2HR3CLI_OPT_JSON}" != "X1" ]; then
+			if [ -z "${K2HR3CLI_OPT_JSON}" ] || [ "${K2HR3CLI_OPT_JSON}" != "1" ]; then
 				prn_msg "${CGRN}Succeed${CDEF} : Completed showing the certificate"
 			fi
 		fi
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SET}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SET}" ]; then
 		#
 		# SET CERTIFICATE
 		#
@@ -435,7 +451,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 		#
 		# Check type option
 		#
-		if [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" != "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_CA}" ] && [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" != "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ] && [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" != "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ] && [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" != "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3APP}" ]; then
+		if [ -z "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" ] || { [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" != "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_CA}" ] && [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" != "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ] && [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" != "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ] && [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" != "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3APP}" ]; }; then
 			prn_msg "${CRED}Failed${CDEF} : There is an error in the type(${K2HR3CLI_DBAAS_K8S_CERT_TYPE}) of certificate to be set."
 			return 1
 		fi
@@ -447,7 +463,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 			prn_msg "${CRED}Failed${CDEF} : The first certificate or private key have not been set."
 			return 1
 		fi
-		if [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ] || [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ]; then
+		if [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ] || [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ]; then
 			if [ -z "${K2HR3CLI_DBAAS_K8S_CERT_PARAM_CERT_2}" ] || [ -z "${K2HR3CLI_DBAAS_K8S_CERT_PARAM_KEY_2}" ]; then
 				prn_msg "${CRED}Failed${CDEF} : The second certificate or private key have not been set."
 				return 1
@@ -461,17 +477,17 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 		complement_dbaas_k2hr3api_name
 		complement_dbaas_k2hr3app_name
 
-		if [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ]; then
+		if [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ]; then
 			if [ -z "${K2HR3CLI_DBAAS_K8S_R3DKC_NAME}" ] || [ -z "${K2HR3CLI_DBAAS_K8S_HOST_NUM}" ]; then
 				prn_msg "${CRED}Failed${CDEF} : Need to specify the part of host name and host number to set the \"${K2HR3CLI_DBAAS_K8S_CERT_TYPE}\" type certificate."
 				return 1
 			fi
-		elif [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ]; then
+		elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ]; then
 			if [ -z "${K2HR3CLI_DBAAS_K8S_R3API_NAME}" ] || [ -z "${K2HR3CLI_DBAAS_K8S_HOST_NUM}" ]; then
 				prn_msg "${CRED}Failed${CDEF} : Need to specify the part of host name and host number to set the \"${K2HR3CLI_DBAAS_K8S_CERT_TYPE}\" type certificate."
 				return 1
 			fi
-		elif [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3APP}" ]; then
+		elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3APP}" ]; then
 			if [ -z "${K2HR3CLI_DBAAS_K8S_R3APP_NAME}" ]; then
 				prn_msg "${CRED}Failed${CDEF} : Need to specify the part of host name to set the \"${K2HR3CLI_DBAAS_K8S_CERT_TYPE}\" type certificate."
 				return 1
@@ -481,14 +497,13 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 		#
 		# Set certificate files
 		#
-		set_dbaas_k8s_domain_certificates "${K2HR3CLI_DBAAS_K8S_CERT_PARAM_CERT_1}" "${K2HR3CLI_DBAAS_K8S_CERT_PARAM_KEY_1}" "${K2HR3CLI_DBAAS_K8S_CERT_PARAM_CERT_2}" "${K2HR3CLI_DBAAS_K8S_CERT_PARAM_KEY_2}"
-		if [ $? -ne 0 ]; then
+		if ! set_dbaas_k8s_domain_certificates "${K2HR3CLI_DBAAS_K8S_CERT_PARAM_CERT_1}" "${K2HR3CLI_DBAAS_K8S_CERT_PARAM_KEY_1}" "${K2HR3CLI_DBAAS_K8S_CERT_PARAM_CERT_2}" "${K2HR3CLI_DBAAS_K8S_CERT_PARAM_KEY_2}"; then
 			prn_msg "${CRED}Failed${CDEF} : Failed to set certificates"
 			return 1
 		fi
 		prn_msg "${CGRN}Succeed${CDEF} : Set certificates for K2HDKC DBaaS K8S"
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_CREATE}" ] || [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_APPLY}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_CREATE}" ] || [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_APPLY}" ]; then
 		#
 		# CREATE/APPLY CERTIFICATE
 		#
@@ -496,7 +511,11 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 		#
 		# Check type option and other options
 		#
-		if [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_ALL}" ]; then
+		if [ -z "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" ]; then
+			prn_msg "${CRED}Failed${CDEF} : There is an error in the type(${K2HR3CLI_DBAAS_K8S_CERT_TYPE}) of certificate to be set."
+			return 1
+
+		elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_ALL}" ]; then
 			#
 			# Set variables for interactive mode
 			#
@@ -509,13 +528,13 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 				return 1
 			fi
 
-		elif [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_CA}" ]; then
+		elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_CA}" ]; then
 			#
 			# Nothing to check
 			#
 			:
 
-		elif [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ]; then
+		elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ]; then
 			#
 			# Set variables for interactive mode
 			#
@@ -526,7 +545,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 				return 1
 			fi
 
-		elif [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ]; then
+		elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ]; then
 			#
 			# Set variables for interactive mode
 			#
@@ -537,7 +556,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 				return 1
 			fi
 
-		elif [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3APP}" ]; then
+		elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3APP}" ]; then
 			#
 			# Set variables for interactive mode
 			#
@@ -553,14 +572,13 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 			return 1
 		fi
 
-		create_dbaas_k8s_domain_certificates
-		if [ $? -ne 0 ]; then
+		if ! create_dbaas_k8s_domain_certificates; then
 			prn_msg "${CRED}Failed${CDEF} : Failed to create certificates"
 			return 1
 		fi
 		prn_msg "${CGRN}Succeed${CDEF} : Created certificates"
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_DELETE}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_DELETE}" ]; then
 		#
 		# DELETE CERTIFICATE
 		#
@@ -568,7 +586,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 		#
 		# Check type option
 		#
-		if [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" != "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_ALL}" ] && [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" != "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_CA}" ] && [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" != "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ] && [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" != "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ] && [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" != "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3APP}" ]; then
+		if [ -z "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" ] || { [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" != "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_ALL}" ] && [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" != "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_CA}" ] && [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" != "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ] && [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" != "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ] && [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" != "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3APP}" ]; }; then
 			prn_msg "${CRED}Failed${CDEF} : There is an error in the type(${K2HR3CLI_DBAAS_K8S_CERT_TYPE}) of certificate to be deleted."
 			return 1
 		fi
@@ -576,7 +594,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 		#
 		# Check other opstions(some part of host name)
 		#
-		if [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ]; then
+		if [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3DKC}" ]; then
 			#
 			# Set variables for interactive mode
 			#
@@ -587,7 +605,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 				return 1
 			fi
 
-		elif [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ]; then
+		elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3API}" ]; then
 			#
 			# Set variables for interactive mode
 			#
@@ -598,7 +616,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 				return 1
 			fi
 
-		elif [ "X${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3APP}" ]; then
+		elif [ "${K2HR3CLI_DBAAS_K8S_CERT_TYPE}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_CERT_TYPE_R3APP}" ]; then
 			#
 			# Set variables for interactive mode
 			#
@@ -613,8 +631,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 		#
 		# Delete certificates
 		#
-		delete_dbaas_k8s_domain_certificates
-		if [ $? -ne 0 ]; then
+		if ! delete_dbaas_k8s_domain_certificates; then
 			prn_msg "${CRED}Failed${CDEF} : Failed to delete certificates"
 			return 1
 		fi
@@ -625,11 +642,15 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}" ]; 
 		exit 1
 	fi
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HR3}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HR3}" ]; then
 	#
 	# K2HR3 SUB COMMAND
 	#
-	if [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SHOW}" ]; then
+	if [ -z "${K2HR3CLI_DBAAS_K8S_EXEC}" ]; then
+		prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_SUBCOMMAND}\" must also specify the execute type(${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SHOW}, ${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_CREATE}, ${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_APPLY} or ${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_DELETE}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
+		exit 1
+
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SHOW}" ]; then
 		#
 		# SHOW K2HR3 SYSTEM INFORMATION
 		#
@@ -651,20 +672,19 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HR3}" ];
 			exit 1
 		fi
 
-		if [ "X${K2HR3CLI_DBAAS_K8S_SHOW_CONFIG}" = "X1" ]; then
+		if [ -n "${K2HR3CLI_DBAAS_K8S_SHOW_CONFIG}" ] && [ "${K2HR3CLI_DBAAS_K8S_SHOW_CONFIG}" = "1" ]; then
 			#
 			# Show configuration file and some additional information
 			#
-			print_dbaas_k8s_k2hr3_configuration
-			if [ $? -ne 0 ]; then
+			if ! print_dbaas_k8s_k2hr3_configuration; then
 				prn_msg "${CRED}Failed${CDEF} : Failed showing K2HDKC common configuration."
 				return 1
 			fi
-			if [ "X${K2HR3CLI_OPT_JSON}" != "X1" ]; then
+			if [ -z "${K2HR3CLI_OPT_JSON}" ] || [ "${K2HR3CLI_OPT_JSON}" != "1" ]; then
 				prn_msg "${CGRN}Succeed${CDEF} : Succeed showing K2HDKC common configuration."
 			fi
 
-		elif [ "X${K2HR3CLI_DBAAS_K8S_SHOW_RES}" = "X1" ]; then
+		elif [ -n "${K2HR3CLI_DBAAS_K8S_SHOW_RES}" ] && [ "${K2HR3CLI_DBAAS_K8S_SHOW_RES}" = "1" ]; then
 			#
 			# Show kubernetes resources about K2HR3 system
 			#
@@ -679,16 +699,15 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HR3}" ];
 				prn_err "The part of hostnames for K2HR3 system is not specified."
 			fi
 
-			print_k2hr3_k8s_resource_overview
-			if [ $? -ne 0 ]; then
+			if ! print_k2hr3_k8s_resource_overview; then
 				prn_msg "${CRED}Failed${CDEF} : Failed showing Kubernets Resources for K2HDKC DBaaS."
 				return 1
 			fi
-			if [ "X${K2HR3CLI_OPT_JSON}" != "X1" ]; then
+			if [ -z "${K2HR3CLI_OPT_JSON}" ] || [ "${K2HR3CLI_OPT_JSON}" != "1" ]; then
 				prn_msg "${CGRN}Succeed${CDEF} : Succeed showing Kubernets Resources for K2HDKC DBaaS."
 			fi
 
-		elif [ "X${K2HR3CLI_DBAAS_K8S_SHOW_SUMMARY}" = "X1" ]; then
+		elif [ -n "${K2HR3CLI_DBAAS_K8S_SHOW_SUMMARY}" ] && [ "${K2HR3CLI_DBAAS_K8S_SHOW_SUMMARY}" = "1" ]; then
 			#
 			# Show summary(overview) for K2HDKC DBaaS K8S information
 			#
@@ -703,12 +722,11 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HR3}" ];
 				prn_err "The part of hostnames for K2HR3 system is not specified."
 			fi
 
-			print_k2hr3_system_overview
-			if [ $? -ne 0 ]; then
+			if ! print_k2hr3_system_overview; then
 				prn_msg "${CRED}Failed${CDEF} : Failed showing K2HR3 system overview."
 				return 1
 			fi
-			if [ "X${K2HR3CLI_OPT_JSON}" != "X1" ]; then
+			if [ -z "${K2HR3CLI_OPT_JSON}" ] || [ "${K2HR3CLI_OPT_JSON}" != "1" ]; then
 				prn_msg "${CGRN}Succeed${CDEF} : Succeed showing K2HR3 system overview."
 			fi
 
@@ -717,7 +735,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HR3}" ];
 			exit 1
 		fi
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_CREATE}" ] || [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_APPLY}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_CREATE}" ] || [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_APPLY}" ]; then
 		#
 		# CREATE/APPLY K2HR3 SYSTEM
 		#
@@ -736,14 +754,13 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HR3}" ];
 			prn_err "The part of hostnames for K2HR3 system and replica count are not specified."
 		fi
 
-		create_k2hr3_system
-		if [ $? -ne 0 ]; then
+		if ! create_k2hr3_system; then
 			prn_msg "${CRED}Failed${CDEF} : Failed starting the K2HR3 system."
 			return 1
 		fi
 		prn_msg "${CGRN}Succeed${CDEF} : Succeed starting the K2HR3 system"
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_DELETE}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_DELETE}" ]; then
 		#
 		# DELETE K2HR3 SYSTEM
 		#
@@ -758,8 +775,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HR3}" ];
 			prn_err "The part of hostnames for K2HR3 system is not specified."
 		fi
 
-		delete_k2hr3_system
-		if [ $? -ne 0 ]; then
+		if ! delete_k2hr3_system; then
 			prn_msg "${CRED}Failed${CDEF} : Failed deleting the K2HR3 system."
 			return 1
 		fi
@@ -770,11 +786,15 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HR3}" ];
 		exit 1
 	fi
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HDKC}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HDKC}" ]; then
 	#
 	# K2HDKC SUB COMMAND
 	#
-	if [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SHOW}" ]; then
+	if [ -z "${K2HR3CLI_DBAAS_K8S_EXEC}" ]; then
+		prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_SUBCOMMAND}\" must also specify the execute type(${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SHOW}, ${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SETUP}, ${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_CREATE}, ${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_APPLY} or ${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_DELETE}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
+		exit 1
+
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SHOW}" ]; then
 		#
 		# SHOW K2HDKC CLUSTER INFORMATION
 		#
@@ -786,29 +806,27 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HDKC}" ]
 			exit 1
 		fi
 
-		if [ "X${K2HR3CLI_DBAAS_K8S_SHOW_CONFIG}" = "X1" ]; then
+		if [ -n "${K2HR3CLI_DBAAS_K8S_SHOW_CONFIG}" ] && [ "${K2HR3CLI_DBAAS_K8S_SHOW_CONFIG}" = "1" ]; then
 			#
 			# Show K2HDKC Cluster configuratino
 			#
-			print_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}"
-			if [ $? -ne 0 ]; then
+			if ! print_dbaas_k8s_k2hdkc_cluster_configuration "${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}"; then
 				prn_msg "${CRED}Failed${CDEF} : Failed showing K2HDKC Cluster configuration."
 				return 1
 			fi
-			if [ "X${K2HR3CLI_OPT_JSON}" != "X1" ]; then
+			if [ -z "${K2HR3CLI_OPT_JSON}" ] || [ "${K2HR3CLI_OPT_JSON}" != "1" ]; then
 				prn_msg "${CGRN}Succeed${CDEF} : Succeed showing \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\" K2HDKC Cluster configuration."
 			fi
 
-		elif [ "X${K2HR3CLI_DBAAS_K8S_SHOW_RES}" = "X1" ]; then
+		elif [ -n "${K2HR3CLI_DBAAS_K8S_SHOW_RES}" ] && [ "${K2HR3CLI_DBAAS_K8S_SHOW_RES}" = "1" ]; then
 			#
 			# Show kubernetes resources about K2HDKC Cluster
 			#
-			print_k2hdkc_k8s_resource_overview
-			if [ $? -ne 0 ]; then
+			if ! print_k2hdkc_k8s_resource_overview; then
 				prn_msg "${CRED}Failed${CDEF} : Failed showing Kubernets Resources for K2HDKC Cluster."
 				return 1
 			fi
-			if [ "X${K2HR3CLI_OPT_JSON}" != "X1" ]; then
+			if [ -z "${K2HR3CLI_OPT_JSON}" ] || [ "${K2HR3CLI_OPT_JSON}" != "1" ]; then
 				prn_msg "${CGRN}Succeed${CDEF} : Succeed showing Kubernets Resources for \"${K2HR3CLI_DBAAS_K8S_CLUSTER_NAME}\" K2HDKC Cluster."
 			fi
 
@@ -817,7 +835,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HDKC}" ]
 			exit 1
 		fi
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SETUP}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SETUP}" ]; then
 		#
 		# SETUP K2HDKC CLUSTER(SETUP K2HR3 FOR K2HDKC CLUSTER)
 		#
@@ -826,14 +844,13 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HDKC}" ]
 			prn_err "The K2HDKC Cluster server/slave port number must be specified."
 		fi
 
-		setup_k2hdkc_k2hr3_data
-		if [ $? -ne 0 ]; then
+		if ! setup_k2hdkc_k2hr3_data; then
 			prn_msg "${CRED}Failed${CDEF} : Failed initializing K2HR3 role/policy/resource for K2HDKC DBaaS K8S cluster."
 			return 1
 		fi
 		prn_msg "${CGRN}Succeed${CDEF} : Succeed initializing K2HR3 role/policy/resource for K2HDKC DBaaS K8S cluster."
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_CREATE}" ] || [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_APPLY}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_CREATE}" ] || [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_APPLY}" ]; then
 		#
 		# CREATE/APPLY K2HDKC CLUSTER
 		#
@@ -847,14 +864,13 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HDKC}" ]
 			prn_err "The K2HDKC Cluster server/slave port number must be specified."
 		fi
 
-		create_k2hdkc_cluster
-		if [ $? -ne 0 ]; then
+		if ! create_k2hdkc_cluster; then
 			prn_msg "${CRED}Failed${CDEF} : Failed creating(applying) K2HDKC DBaaS K8S Cluster."
 			return 1
 		fi
 		prn_msg "${CGRN}Succeed${CDEF} : Succeed creating(applying) K2HDKC DBaaS K8S Cluster."
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SCALE}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_SCALE}" ]; then
 		#
 		# SCALE K2HDKC CLUSTER
 		#
@@ -863,19 +879,17 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HDKC}" ]
 			prn_err "The K2HDKC Cluster server/slave count must be specified."
 		fi
 
-		scale_k2hdkc_cluster
-		if [ $? -ne 0 ]; then
+		if ! scale_k2hdkc_cluster; then
 			prn_msg "${CRED}Failed${CDEF} : Failed scaling K2HDKC DBaaS K8S Cluster."
 			return 1
 		fi
 		prn_msg "${CGRN}Succeed${CDEF} : Succeed scaling K2HDKC DBaaS K8S Cluster."
 
-	elif [ "X${K2HR3CLI_DBAAS_K8S_EXEC}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_DELETE}" ]; then
+	elif [ "${K2HR3CLI_DBAAS_K8S_EXEC}" = "${K2HR3CLI_DBAAS_K8S_COMMAND_EXEC_DELETE}" ]; then
 		#
 		# DELETE 
 		#
-		delete_k2hdkc_cluster
-		if [ $? -ne 0 ]; then
+		if ! delete_k2hdkc_cluster; then
 			prn_msg "${CRED}Failed${CDEF} : Failed deleting K2HDKC DBaaS K8S Cluster."
 			return 1
 		fi
@@ -886,9 +900,6 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HDKC}" ]
 		exit 1
 	fi
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X" ]; then
-	prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must also specify the subcommand(${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CONFIG}, ${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_CERT}, ${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HR3} or ${K2HR3CLI_DBAAS_K8S_COMMAND_SUB_K2HDKC}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
-	exit 1
 else
 	prn_err "Unknown subcommand(\"${K2HR3CLI_SUBCOMMAND}\") is specified, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 	exit 1

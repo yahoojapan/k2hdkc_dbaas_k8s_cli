@@ -97,10 +97,10 @@ prn_msg()
 # Main loop - This script is run as daemon
 #
 FILE_NOT_UPDATED_YET=1
-while [ ${FILE_NOT_UPDATED_YET} -le 1 ]; do
-	if [ ${FILE_NOT_UPDATED_YET} -ne 1 ]; then
+while [ "${FILE_NOT_UPDATED_YET}" -le 1 ]; do
+	if [ "${FILE_NOT_UPDATED_YET}" -ne 1 ]; then
 		LOOP_SLEEP_CUR=$((LOOP_SLEEP_CUR + LOOP_SLEEP_ADD))
-		if [ ${LOOP_SLEEP_MAX} -lt ${LOOP_SLEEP_CUR} ]; then
+		if [ "${LOOP_SLEEP_MAX}" -lt "${LOOP_SLEEP_CUR}" ]; then
 			LOOP_SLEEP_CUR=${LOOP_SLEEP_MAX}
 		fi
 	fi
@@ -161,8 +161,7 @@ while [ ${FILE_NOT_UPDATED_YET} -le 1 ]; do
 	#
 	# Check got resource result
 	#
-	echo "${RESOURCE_STRING}" | tr '[:lower:]' '[:upper:]' | grep '["]*RESULT["]*:[[:space:]]*TRUE[[:space:]]*,' >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! echo "${RESOURCE_STRING}" | tr '[:lower:]' '[:upper:]' | grep '["]*RESULT["]*:[[:space:]]*TRUE[[:space:]]*,' >/dev/null 2>&1; then
 		prn_msg "[ERROR] Could not get resource from K2HR3(${K2HR3_RESOURCE_URL}/${K2HR3_YRN_RESOURCE})"
 		prn_msg "[ERROR] Result: ${RESOURCE_STRING}"
 		continue;
@@ -193,8 +192,7 @@ while [ ${FILE_NOT_UPDATED_YET} -le 1 ]; do
 		#
 		# Compare without blank lines
 		#
-		diff -B "${RESOURCE_COMPARE_CUR_FILE}" "${RESOURCE_COMPARE_NEW_FILE}" >/dev/null 2>&1
-		if [ $? -ne 0 ]; then
+		if ! diff -B "${RESOURCE_COMPARE_CUR_FILE}" "${RESOURCE_COMPARE_NEW_FILE}" >/dev/null 2>&1; then
 			FOUND_DIFFERENCE=1
 		fi
 
@@ -206,9 +204,8 @@ while [ ${FILE_NOT_UPDATED_YET} -le 1 ]; do
 	#
 	# Update configuarion file
 	#
-	if [ ${FOUND_DIFFERENCE} -eq 1 ]; then
-		cp "${RESOURCE_TEMP_FILE}" "${ANTPICKAX_ETC_DIR}/${K2HDDKC_INI_FILE}" 2>/dev/null
-		if [ $? -ne 0 ]; then
+	if [ "${FOUND_DIFFERENCE}" -eq 1 ]; then
+		if ! cp "${RESOURCE_TEMP_FILE}" "${ANTPICKAX_ETC_DIR}/${K2HDDKC_INI_FILE}" 2>/dev/null; then
 			rm -f "${RESOURCE_TEMP_FILE}"
 			prn_msg "[ERROR] Could not copy resource file to ${ANTPICKAX_ETC_DIR}/${K2HDDKC_INI_FILE}"
 			continue;

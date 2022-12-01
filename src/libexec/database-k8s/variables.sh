@@ -35,7 +35,7 @@
 #
 # Description
 #
-if [ "X${K2HR3CLI_PLUGIN_CONFIG_VAR_DESC}" != "X" ]; then
+if [ -n "${K2HR3CLI_PLUGIN_CONFIG_VAR_DESC}" ]; then
 	K2HR3CLI_PLUGIN_CONFIG_VAR_DESC="${K2HR3CLI_PLUGIN_CONFIG_VAR_DESC} config_var_desciption_dbaas_k8s"
 else
 	K2HR3CLI_PLUGIN_CONFIG_VAR_DESC="config_var_desciption_dbaas_k8s"
@@ -44,7 +44,7 @@ fi
 #
 # Names
 #
-if [ "X${K2HR3CLI_PLUGIN_CONFIG_VAR_NAME}" != "X" ]; then
+if [ -n "${K2HR3CLI_PLUGIN_CONFIG_VAR_NAME}" ]; then
 	K2HR3CLI_PLUGIN_CONFIG_VAR_NAME="${K2HR3CLI_PLUGIN_CONFIG_VAR_NAME} config_var_name_dbaas_k8s"
 else
 	K2HR3CLI_PLUGIN_CONFIG_VAR_NAME="config_var_name_dbaas_k8s"
@@ -53,7 +53,7 @@ fi
 #
 # Check DBaaS Variables
 #
-if [ "X${K2HR3CLI_PLUGIN_CONFIG_CHECK_VAR}" != "X" ]; then
+if [ -n "${K2HR3CLI_PLUGIN_CONFIG_CHECK_VAR}" ]; then
 	K2HR3CLI_PLUGIN_CONFIG_CHECK_VAR="${K2HR3CLI_PLUGIN_CONFIG_CHECK_VAR} config_check_var_name_dbaas_k8s"
 else
 	K2HR3CLI_PLUGIN_CONFIG_CHECK_VAR="config_check_var_name_dbaas_k8s"
@@ -117,54 +117,54 @@ config_var_desciption_dbaas_k8s()
 #
 config_var_name_dbaas_k8s()
 {
-	if [ "X$1" = "X" ]; then
-		if [ "X${K2HR3CLI_DBAAS_K8S_CONFIG}" != "X" ]; then
+	if [ -z "$1" ]; then
+		if [ -n "${K2HR3CLI_DBAAS_K8S_CONFIG}" ]; then
 			prn_msg "K2HR3CLI_DBAAS_K8S_CONFIG: \"${K2HR3CLI_DBAAS_K8S_CONFIG}\""
 		else
 			prn_msg "K2HR3CLI_DBAAS_K8S_CONFIG: (empty)"
 		fi
-		if [ "X${K2HR3CLI_DBAAS_K8S_DOMAIN}" != "X" ]; then
+		if [ -n "${K2HR3CLI_DBAAS_K8S_DOMAIN}" ]; then
 			prn_msg "K2HR3CLI_DBAAS_K8S_DOMAIN: \"${K2HR3CLI_DBAAS_K8S_DOMAIN}\""
 		else
 			prn_msg "K2HR3CLI_DBAAS_K8S_DOMAIN: (empty)"
 		fi
-		if [ "X${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}" != "X" ]; then
+		if [ -n "${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}" ]; then
 			prn_msg "K2HR3CLI_DBAAS_K8S_K8SNAMESPACE: \"${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}\""
 		else
 			prn_msg "K2HR3CLI_DBAAS_K8S_K8SNAMESPACE: (empty)"
 		fi
-		if [ "X${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}" != "X" ]; then
+		if [ -n "${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}" ]; then
 			prn_msg "K2HR3CLI_DBAAS_K8S_K8SDOMAIN: \"${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}\""
 		else
 			prn_msg "K2HR3CLI_DBAAS_K8S_K8SDOMAIN: (empty)"
 		fi
 
-	elif [ "X$1" = "XK2HR3CLI_DBAAS_K8S_CONFIG" ]; then
-		if [ "X${K2HR3CLI_DBAAS_K8S_CONFIG}" != "X" ]; then
+	elif [ "$1" = "K2HR3CLI_DBAAS_K8S_CONFIG" ]; then
+		if [ -n "${K2HR3CLI_DBAAS_K8S_CONFIG}" ]; then
 			prn_msg "K2HR3CLI_DBAAS_K8S_CONFIG: \"${K2HR3CLI_DBAAS_K8S_CONFIG}\""
 		else
 			prn_msg "K2HR3CLI_DBAAS_K8S_CONFIG: (empty)"
 		fi
 		return 0
 
-	elif [ "X$1" = "XK2HR3CLI_DBAAS_K8S_DOMAIN" ]; then
-		if [ "X${K2HR3CLI_DBAAS_K8S_DOMAIN}" != "X" ]; then
+	elif [ "$1" = "K2HR3CLI_DBAAS_K8S_DOMAIN" ]; then
+		if [ -n "${K2HR3CLI_DBAAS_K8S_DOMAIN}" ]; then
 			prn_msg "K2HR3CLI_DBAAS_K8S_DOMAIN: \"${K2HR3CLI_DBAAS_K8S_DOMAIN}\""
 		else
 			prn_msg "K2HR3CLI_DBAAS_K8S_DOMAIN: (empty)"
 		fi
 		return 0
 
-	elif [ "X$1" = "XK2HR3CLI_DBAAS_K8S_K8SNAMESPACE" ]; then
-		if [ "X${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}" != "X" ]; then
+	elif [ "$1" = "K2HR3CLI_DBAAS_K8S_K8SNAMESPACE" ]; then
+		if [ -n "${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}" ]; then
 			prn_msg "K2HR3CLI_DBAAS_K8S_K8SNAMESPACE: \"${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}\""
 		else
 			prn_msg "K2HR3CLI_DBAAS_K8S_K8SNAMESPACE: (empty)"
 		fi
 		return 0
 
-	elif [ "X$1" = "XK2HR3CLI_DBAAS_K8S_K8SDOMAIN" ]; then
-		if [ "X${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}" != "X" ]; then
+	elif [ "$1" = "K2HR3CLI_DBAAS_K8S_K8SDOMAIN" ]; then
+		if [ -n "${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}" ]; then
 			prn_msg "K2HR3CLI_DBAAS_K8S_K8SDOMAIN: \"${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}\""
 		else
 			prn_msg "K2HR3CLI_DBAAS_K8S_K8SDOMAIN: (empty)"
@@ -183,13 +183,15 @@ config_var_name_dbaas_k8s()
 #
 config_check_var_name_dbaas_k8s()
 {
-	if [ "X$1" = "XK2HR3CLI_DBAAS_K8S_CONFIG" ]; then
+	if [ -z "$1" ]; then
+		return 1
+	elif [ "$1" = "K2HR3CLI_DBAAS_K8S_CONFIG" ]; then
 		return 0
-	elif [ "X$1" = "XK2HR3CLI_DBAAS_K8S_DOMAIN" ]; then
+	elif [ "$1" = "K2HR3CLI_DBAAS_K8S_DOMAIN" ]; then
 		return 0
-	elif [ "X$1" = "XK2HR3CLI_DBAAS_K8S_K8SNAMESPACE" ]; then
+	elif [ "$1" = "K2HR3CLI_DBAAS_K8S_K8SNAMESPACE" ]; then
 		return 0
-	elif [ "X$1" = "XK2HR3CLI_DBAAS_K8S_K8SDOMAIN" ]; then
+	elif [ "$1" = "K2HR3CLI_DBAAS_K8S_K8SDOMAIN" ]; then
 		return 0
 	fi
 	return 1

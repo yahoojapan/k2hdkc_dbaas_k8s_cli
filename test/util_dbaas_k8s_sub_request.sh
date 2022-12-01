@@ -42,9 +42,18 @@ test_kubectl()
 	_DUMMY_KUBECTL_PARAM_3=$3
 	_DUMMY_KUBECTL_PARAM_4=$4
 
-	if [ "X${_DUMMY_KUBECTL_PARAM_1}" = "Xget" ]; then
-		if [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xpods" ] || [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xpod" ]; then
-			if [ "X${_DUMMY_KUBECTL_PARAM_3}" = "X" ]; then
+	if [ -z "${_DUMMY_KUBECTL_PARAM_1}" ]; then
+		echo "[Unimplement: kubectl] ${_TEST_DUMMY_KUBECTL_BACKUP_ALL_PARAMS}" >> "${TEST_K2HDKC_DBAAS_K8S_UNIMPLEMENT_LOG}"
+		return 1
+
+	elif [ "${_DUMMY_KUBECTL_PARAM_1}" = "get" ]; then
+		if [ -z "${_DUMMY_KUBECTL_PARAM_2}" ]; then
+			#
+			# Nothind to do
+			#
+			:
+		elif [ "${_DUMMY_KUBECTL_PARAM_2}" = "pods" ] || [ "${_DUMMY_KUBECTL_PARAM_2}" = "pod" ]; then
+			if [ -z "${_DUMMY_KUBECTL_PARAM_3}" ]; then
 				#
 				# kubectl get pods
 				#
@@ -62,8 +71,8 @@ test_kubectl()
 				return 0
 			fi
 
-		elif [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xservices" ] || [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xservice" ]; then
-			if [ "X${_DUMMY_KUBECTL_PARAM_3}" = "X" ]; then
+		elif [ "${_DUMMY_KUBECTL_PARAM_2}" = "services" ] || [ "${_DUMMY_KUBECTL_PARAM_2}" = "service" ]; then
+			if [ -z "${_DUMMY_KUBECTL_PARAM_3}" ]; then
 				#
 				# kubectl get services
 				#
@@ -77,7 +86,7 @@ test_kubectl()
 				pecho "svrsvc-mycluster   ClusterIP   None             <none>        8020/TCP,8021/TCP   1h"
 				return 0
 
-			elif [ "X${_DUMMY_KUBECTL_PARAM_3}" = "Xnp-r3api" ]; then
+			elif [ "${_DUMMY_KUBECTL_PARAM_3}" = "np-r3api" ]; then
 				#
 				# kubectl get services np-r3api
 				#
@@ -85,7 +94,7 @@ test_kubectl()
 				pecho "np-r3api   NodePort   10.106.251.103   <none>        8443:32043/TCP   11m"
 				return 0
 
-			elif [ "X${_DUMMY_KUBECTL_PARAM_3}" = "Xnp-r3app" ]; then
+			elif [ "${_DUMMY_KUBECTL_PARAM_3}" = "np-r3app" ]; then
 				#
 				# kubectl get services np-r3api
 				#
@@ -94,8 +103,8 @@ test_kubectl()
 				return 0
 			fi
 
-		elif [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xdeployments" ] || [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xdeployment" ]; then
-			if [ "X${_DUMMY_KUBECTL_PARAM_3}" = "X" ]; then
+		elif [ "${_DUMMY_KUBECTL_PARAM_2}" = "deployments" ] || [ "${_DUMMY_KUBECTL_PARAM_2}" = "deployment" ]; then
+			if [ -z "${_DUMMY_KUBECTL_PARAM_3}" ]; then
 				#
 				# kubectl get deployments
 				#
@@ -104,8 +113,8 @@ test_kubectl()
 				return 0
 			fi
 
-		elif [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xstatefulsets" ] || [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xstatefulset" ]; then
-			if [ "X${_DUMMY_KUBECTL_PARAM_3}" = "X" ]; then
+		elif [ "${_DUMMY_KUBECTL_PARAM_2}" = "statefulsets" ] || [ "${_DUMMY_KUBECTL_PARAM_2}" = "statefulset" ]; then
+			if [ -z "${_DUMMY_KUBECTL_PARAM_3}" ]; then
 				#
 				# kubectl get statefulsets
 				#
@@ -117,8 +126,8 @@ test_kubectl()
 				return 0
 			fi
 
-		elif [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xsecrets" ] || [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xsecret" ]; then
-			if [ "X${_DUMMY_KUBECTL_PARAM_3}" = "X" ]; then
+		elif [ "${_DUMMY_KUBECTL_PARAM_2}" = "secrets" ] || [ "${_DUMMY_KUBECTL_PARAM_2}" = "secret" ]; then
+			if [ -z "${_DUMMY_KUBECTL_PARAM_3}" ]; then
 				#
 				# kubectl get secrets
 				#
@@ -132,8 +141,8 @@ test_kubectl()
 				return 0
 			fi
 
-		elif [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xconfigmaps" ] || [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xconfigmap" ]; then
-			if [ "X${_DUMMY_KUBECTL_PARAM_3}" = "X" ]; then
+		elif [ "${_DUMMY_KUBECTL_PARAM_2}" = "configmaps" ] || [ "${_DUMMY_KUBECTL_PARAM_2}" = "configmap" ]; then
+			if [ -z "${_DUMMY_KUBECTL_PARAM_3}" ]; then
 				#
 				# kubectl get configmaps
 				#
@@ -144,8 +153,8 @@ test_kubectl()
 				return 0
 			fi
 
-		elif [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xserviceaccounts" ] || [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xserviceaccount" ]; then
-			if [ "X${_DUMMY_KUBECTL_PARAM_3}" = "X" ]; then
+		elif [ "${_DUMMY_KUBECTL_PARAM_2}" = "serviceaccounts" ] || [ "${_DUMMY_KUBECTL_PARAM_2}" = "serviceaccount" ]; then
+			if [ -z "${_DUMMY_KUBECTL_PARAM_3}" ]; then
 				#
 				# kubectl get serviceaccounts
 				#
@@ -156,9 +165,9 @@ test_kubectl()
 			fi
 		fi
 
-	elif [ "X${_DUMMY_KUBECTL_PARAM_1}" = "Xdescribe" ]; then
-		if [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xservices" ] || [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xservice" ]; then
-			if [ "X${_DUMMY_KUBECTL_PARAM_3}" = "Xnp-r3api" ]; then
+	elif [ "${_DUMMY_KUBECTL_PARAM_1}" = "describe" ]; then
+		if [ -n "${_DUMMY_KUBECTL_PARAM_2}" ] && { [ "${_DUMMY_KUBECTL_PARAM_2}" = "services" ] || [ "${_DUMMY_KUBECTL_PARAM_2}" = "service" ]; }; then
+			if [ -n "${_DUMMY_KUBECTL_PARAM_3}" ] && [ "${_DUMMY_KUBECTL_PARAM_3}" = "np-r3api" ]; then
 				#
 				# kubectl describe services np-r3api
 				#
@@ -181,7 +190,7 @@ test_kubectl()
 				pecho "Events:                   <none>"
 				return 0
 
-			elif [ "X${_DUMMY_KUBECTL_PARAM_3}" = "Xnp-r3app" ]; then
+			elif [ -n "${_DUMMY_KUBECTL_PARAM_3}" ] && [ "${_DUMMY_KUBECTL_PARAM_3}" = "np-r3app" ]; then
 				#
 				# kubectl describe services np-r3app
 				#
@@ -206,16 +215,21 @@ test_kubectl()
 			fi
 		fi
 
-	elif [ "X${_DUMMY_KUBECTL_PARAM_1}" = "Xapply" ]; then
-		if [ "X${_DUMMY_KUBECTL_PARAM_2}" = "X-k" ]; then
-			if [ "X${_DUMMY_KUBECTL_PARAM_3}" = "X${TESTDIR}/dbaas-k8s/DBAAS-default.svc.cluster.local" ]; then
+	elif [ "${_DUMMY_KUBECTL_PARAM_1}" = "apply" ]; then
+		if [ -n "${_DUMMY_KUBECTL_PARAM_2}" ] && [ "${_DUMMY_KUBECTL_PARAM_2}" = "-k" ]; then
+			if [ -z "${_DUMMY_KUBECTL_PARAM_3}" ]; then
+				#
+				# Nothing to do
+				#
+				:
+			elif [ "${_DUMMY_KUBECTL_PARAM_3}" = "${TESTDIR}/dbaas-k8s/DBAAS-default.svc.cluster.local" ]; then
 				#
 				# kubectl apply -k <test directory>/dbaas-k8s/DBAAS-default.svc.cluster.local
 				#
 				pecho "succeed : kubectl apply -k <test directory>/dbaas-k8s/DBAAS-default.svc.cluster.local"
 				return 0
 
-			elif [ "X${_DUMMY_KUBECTL_PARAM_3}" = "X${TESTDIR}/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster" ]; then
+			elif [ "${_DUMMY_KUBECTL_PARAM_3}" = "${TESTDIR}/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster" ]; then
 				#
 				# kubectl apply -k <test directory>/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster
 				#
@@ -223,43 +237,48 @@ test_kubectl()
 				return 0
 			fi
 
-		elif [ "X${_DUMMY_KUBECTL_PARAM_2}" = "X-f" ]; then
-			if [ "X${_DUMMY_KUBECTL_PARAM_3}" = "X${TESTDIR}/dbaas-k8s/DBAAS-default.svc.cluster.local/k2hr3-sa.yaml" ]; then
+		elif [ -n "${_DUMMY_KUBECTL_PARAM_2}" ] && [ "${_DUMMY_KUBECTL_PARAM_2}" = "-f" ]; then
+			if [ -z "${_DUMMY_KUBECTL_PARAM_3}" ]; then
+				#
+				# Nothing to do
+				#
+				:
+			elif [ "${_DUMMY_KUBECTL_PARAM_3}" = "${TESTDIR}/dbaas-k8s/DBAAS-default.svc.cluster.local/k2hr3-sa.yaml" ]; then
 				#
 				# kubectl apply -f <test directory>/dbaas-k8s/DBAAS-default.svc.cluster.local/k2hr3-sa.yaml
 				#
 				pecho "succeed : kubectl apply -f <test directory>/dbaas-k8s/DBAAS-default.svc.cluster.local/k2hr3-sa.yaml"
 				return 0
 
-			elif [ "X${_DUMMY_KUBECTL_PARAM_3}" = "X${TESTDIR}/dbaas-k8s/DBAAS-default.svc.cluster.local/k2hr3-k2hdkc.yaml" ]; then
+			elif [ "${_DUMMY_KUBECTL_PARAM_3}" = "${TESTDIR}/dbaas-k8s/DBAAS-default.svc.cluster.local/k2hr3-k2hdkc.yaml" ]; then
 				#
 				# kubectl apply -f <test directory>/dbaas-k8s/DBAAS-default.svc.cluster.local/k2hr3-k2hdkc.yaml
 				#
 				pecho "succeed : kubectl apply -f <test directory>/dbaas-k8s/DBAAS-default.svc.cluster.local/k2hr3-k2hdkc.yaml"
 				return 0
 
-			elif [ "X${_DUMMY_KUBECTL_PARAM_3}" = "X${TESTDIR}/dbaas-k8s/DBAAS-default.svc.cluster.local/k2hr3-k2hr3api.yaml" ]; then
+			elif [ "${_DUMMY_KUBECTL_PARAM_3}" = "${TESTDIR}/dbaas-k8s/DBAAS-default.svc.cluster.local/k2hr3-k2hr3api.yaml" ]; then
 				#
 				# kubectl apply -f <test directory>/dbaas-k8s/DBAAS-default.svc.cluster.local/k2hr3-k2hr3api.yaml
 				#
 				pecho "succeed : kubectl apply -f <test directory>/dbaas-k8s/DBAAS-default.svc.cluster.local/k2hr3-k2hr3api.yaml"
 				return 0
 
-			elif [ "X${_DUMMY_KUBECTL_PARAM_3}" = "X${TESTDIR}/dbaas-k8s/DBAAS-default.svc.cluster.local/k2hr3-k2hr3app.yaml" ]; then
+			elif [ "${_DUMMY_KUBECTL_PARAM_3}" = "${TESTDIR}/dbaas-k8s/DBAAS-default.svc.cluster.local/k2hr3-k2hr3app.yaml" ]; then
 				#
 				# kubectl apply -f <test directory>/dbaas-k8s/DBAAS-default.svc.cluster.local/k2hr3-k2hr3app.yaml
 				#
 				pecho "succeed : kubectl apply -f <test directory>/dbaas-k8s/DBAAS-default.svc.cluster.local/k2hr3-k2hr3app.yaml"
 				return 0
 
-			elif [ "X${_DUMMY_KUBECTL_PARAM_3}" = "X${TESTDIR}/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/dbaas-k2hdkc-server.yaml" ]; then
+			elif [ "${_DUMMY_KUBECTL_PARAM_3}" = "${TESTDIR}/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/dbaas-k2hdkc-server.yaml" ]; then
 				#
 				# kubectl apply -f <test directory>/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/dbaas-k2hdkc-server.yaml
 				#
 				pecho "succeed : kubectl apply -f <test directory>/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/dbaas-k2hdkc-server.yaml"
 				return 0
 
-			elif [ "X${_DUMMY_KUBECTL_PARAM_3}" = "X${TESTDIR}/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/dbaas-k2hdkc-slave.yaml" ]; then
+			elif [ "${_DUMMY_KUBECTL_PARAM_3}" = "${TESTDIR}/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/dbaas-k2hdkc-slave.yaml" ]; then
 				#
 				# kubectl apply -f <test directory>/dbaas-k8s/DBAAS-default.svc.cluster.local/K2HDKC-mycluster/dbaas-k2hdkc-slave.yaml
 				#
@@ -268,9 +287,14 @@ test_kubectl()
 			fi
 		fi
 
-	elif [ "X${_DUMMY_KUBECTL_PARAM_1}" = "Xdelete" ]; then
-		if [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xpods" ] || [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xpod" ]; then
-			if [ "X${_DUMMY_KUBECTL_PARAM_3}" != "X" ]; then
+	elif [ "${_DUMMY_KUBECTL_PARAM_1}" = "delete" ]; then
+		if [ -z "${_DUMMY_KUBECTL_PARAM_2}" ]; then
+			#
+			# Nothing to do
+			#
+			:
+		elif [ "${_DUMMY_KUBECTL_PARAM_2}" = "pods" ] || [ "${_DUMMY_KUBECTL_PARAM_2}" = "pod" ]; then
+			if [ -n "${_DUMMY_KUBECTL_PARAM_3}" ]; then
 				#
 				# kubectl delete pods <resource>
 				#
@@ -278,8 +302,8 @@ test_kubectl()
 				return 0
 			fi
 
-		elif [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xservices" ] || [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xservice" ]; then
-			if [ "X${_DUMMY_KUBECTL_PARAM_3}" != "X" ]; then
+		elif [ "${_DUMMY_KUBECTL_PARAM_2}" = "services" ] || [ "${_DUMMY_KUBECTL_PARAM_2}" = "service" ]; then
+			if [ -n "${_DUMMY_KUBECTL_PARAM_3}" ]; then
 				#
 				# kubectl delete services <resource>
 				#
@@ -287,8 +311,8 @@ test_kubectl()
 				return 0
 			fi
 
-		elif [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xdeployments" ] || [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xdeployment" ]; then
-			if [ "X${_DUMMY_KUBECTL_PARAM_3}" != "X" ]; then
+		elif [ "${_DUMMY_KUBECTL_PARAM_2}" = "deployments" ] || [ "${_DUMMY_KUBECTL_PARAM_2}" = "deployment" ]; then
+			if [ -n "${_DUMMY_KUBECTL_PARAM_3}" ]; then
 				#
 				# kubectl delete deployments <resource>
 				#
@@ -296,8 +320,8 @@ test_kubectl()
 				return 0
 			fi
 
-		elif [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xstatefulsets" ] || [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xstatefulset" ]; then
-			if [ "X${_DUMMY_KUBECTL_PARAM_3}" != "X" ]; then
+		elif [ "${_DUMMY_KUBECTL_PARAM_2}" = "statefulsets" ] || [ "${_DUMMY_KUBECTL_PARAM_2}" = "statefulset" ]; then
+			if [ -n "${_DUMMY_KUBECTL_PARAM_3}" ]; then
 				#
 				# kubectl delete statefulsets <resource>
 				#
@@ -305,8 +329,8 @@ test_kubectl()
 				return 0
 			fi
 
-		elif [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xsecrets" ] || [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xsecret" ]; then
-			if [ "X${_DUMMY_KUBECTL_PARAM_3}" != "X" ]; then
+		elif [ "${_DUMMY_KUBECTL_PARAM_2}" = "secrets" ] || [ "${_DUMMY_KUBECTL_PARAM_2}" = "secret" ]; then
+			if [ -n "${_DUMMY_KUBECTL_PARAM_3}" ]; then
 				#
 				# kubectl delete secrets <resource>
 				#
@@ -314,8 +338,8 @@ test_kubectl()
 				return 0
 			fi
 
-		elif [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xconfigmaps" ] || [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xconfigmap" ]; then
-			if [ "X${_DUMMY_KUBECTL_PARAM_3}" != "X" ]; then
+		elif [ "${_DUMMY_KUBECTL_PARAM_2}" = "configmaps" ] || [ "${_DUMMY_KUBECTL_PARAM_2}" = "configmap" ]; then
+			if [ -n "${_DUMMY_KUBECTL_PARAM_3}" ]; then
 				#
 				# kubectl delete configmaps <resource>
 				#
@@ -323,8 +347,8 @@ test_kubectl()
 				return 0
 			fi
 
-		elif [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xserviceaccounts" ] || [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xserviceaccount" ]; then
-			if [ "X${_DUMMY_KUBECTL_PARAM_3}" != "X" ]; then
+		elif [ "${_DUMMY_KUBECTL_PARAM_2}" = "serviceaccounts" ] || [ "${_DUMMY_KUBECTL_PARAM_2}" = "serviceaccount" ]; then
+			if [ -n "${_DUMMY_KUBECTL_PARAM_3}" ]; then
 				#
 				# kubectl delete serviceaccounts <resource>
 				#
@@ -332,8 +356,8 @@ test_kubectl()
 				return 0
 			fi
 
-		elif [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xclusterrolebindings" ] || [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xclusterrolebinding" ]; then
-			if [ "X${_DUMMY_KUBECTL_PARAM_3}" != "X" ]; then
+		elif [ "${_DUMMY_KUBECTL_PARAM_2}" = "clusterrolebindings" ] || [ "${_DUMMY_KUBECTL_PARAM_2}" = "clusterrolebinding" ]; then
+			if [ -n "${_DUMMY_KUBECTL_PARAM_3}" ]; then
 				#
 				# kubectl delete clusterrolebindings <resource>
 				#
@@ -341,8 +365,8 @@ test_kubectl()
 				return 0
 			fi
 
-		elif [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xclusterroles" ] || [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xclusterrole" ]; then
-			if [ "X${_DUMMY_KUBECTL_PARAM_3}" != "X" ]; then
+		elif [ "${_DUMMY_KUBECTL_PARAM_2}" = "clusterroles" ] || [ "${_DUMMY_KUBECTL_PARAM_2}" = "clusterrole" ]; then
+			if [ -n "${_DUMMY_KUBECTL_PARAM_3}" ]; then
 				#
 				# kubectl delete clusterroles <resource>
 				#
@@ -351,16 +375,15 @@ test_kubectl()
 			fi
 		fi
 
-	elif [ "X${_DUMMY_KUBECTL_PARAM_1}" = "Xscale" ]; then
-		if [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xstatefulsets" ] || [ "X${_DUMMY_KUBECTL_PARAM_2}" = "Xstatefulset" ]; then
-			if [ "X${_DUMMY_KUBECTL_PARAM_3}" = "Xsvrpod-mycluster" ] || [ "X${_DUMMY_KUBECTL_PARAM_3}" = "Xslvpod-mycluster" ]; then
+	elif [ "${_DUMMY_KUBECTL_PARAM_1}" = "scale" ]; then
+		if [ -n "${_DUMMY_KUBECTL_PARAM_2}" ] && { [ "${_DUMMY_KUBECTL_PARAM_2}" = "statefulsets" ] || [ "${_DUMMY_KUBECTL_PARAM_2}" = "statefulset" ]; }; then
+			if [ -n "${_DUMMY_KUBECTL_PARAM_3}" ] && { [ "${_DUMMY_KUBECTL_PARAM_3}" = "svrpod-mycluster" ] || [ "${_DUMMY_KUBECTL_PARAM_3}" = "slvpod-mycluster" ]; }; then
 				#
 				# Check --replicas option value
 				#
 				_DUMMY_KUBECTL_REPLICAS=$(echo "${_DUMMY_KUBECTL_PARAM_4}" | sed -e 's/--replicas=//g')
 				# shellcheck disable=SC2003
-				expr "${_DUMMY_KUBECTL_REPLICAS}" + 1 >/dev/null 2>&1
-				if [ $? -eq 0 ]; then
+				if expr "${_DUMMY_KUBECTL_REPLICAS}" + 1 >/dev/null 2>&1; then
 					#
 					# kubectl scale statefulsets <cluster name> --replicas=<count>
 					#
@@ -385,7 +408,7 @@ test_minikube()
 	_TEST_DUMMY_KUBECTL_BACKUP_ALL_PARAMS="$*"
 	_DUMMY_MINIKUBE_PARAM_1=$1
 
-	if [ "X${_DUMMY_MINIKUBE_PARAM_1}" = "Xip" ]; then
+	if [ -n "${_DUMMY_MINIKUBE_PARAM_1}" ] && [ "${_DUMMY_MINIKUBE_PARAM_1}" = "ip" ]; then
 		pecho "192.168.1.254"
 		return 0
 	fi

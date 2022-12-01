@@ -116,8 +116,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -144,8 +143,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -173,8 +171,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -202,8 +199,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -240,8 +236,7 @@ rm -rf "${_DBAAS_K8S_TEST_CONFIG_DIR}/DBAAS-default.svc.cluster.local"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -274,8 +269,7 @@ mv "${_DBAAS_K8S_TEST_CONFIG_DIR}/DBAAS-default.svc.cluster.local/private/ca.key
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -328,8 +322,7 @@ mv "${_DBAAS_K8S_TEST_CONFIG_DIR}/DBAAS-default.svc.cluster.local/certs/pod-r3dk
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -386,8 +379,7 @@ mv "${_DBAAS_K8S_TEST_CONFIG_DIR}/DBAAS-default.svc.cluster.local/certs/pod-r3ap
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -438,8 +430,7 @@ mv "${_DBAAS_K8S_TEST_CONFIG_DIR}/DBAAS-default.svc.cluster.local/certs/pod-r3ap
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -473,8 +464,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -502,8 +492,7 @@ sed -i -e "s#${SRCTOP}/#k2hdkc_dbaas_k8s_cli/#g" "${SUB_TEST_PART_FILE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -524,8 +513,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -568,8 +556,7 @@ sed -i -e "s#${SRCTOP}/#k2hdkc_dbaas_k8s_cli/#g" "${SUB_TEST_PART_FILE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -612,8 +599,7 @@ sed -i -e "s#${SRCTOP}/#k2hdkc_dbaas_k8s_cli/#g" "${SUB_TEST_PART_FILE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -643,8 +629,7 @@ sed -i -e "s#${SRCTOP}/#k2hdkc_dbaas_k8s_cli/#g" "${SUB_TEST_PART_FILE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -674,8 +659,7 @@ sed -i -e "s#${SRCTOP}/#k2hdkc_dbaas_k8s_cli/#g" "${SUB_TEST_PART_FILE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -698,8 +682,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -730,8 +713,7 @@ sed -i -e "s#${SRCTOP}/#k2hdkc_dbaas_k8s_cli/#g" "${SUB_TEST_PART_FILE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -768,8 +750,7 @@ sed -i -e "s#${SRCTOP}/#k2hdkc_dbaas_k8s_cli/#g" "${SUB_TEST_PART_FILE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -806,8 +787,7 @@ sed -i -e "s#${SRCTOP}/#k2hdkc_dbaas_k8s_cli/#g" "${SUB_TEST_PART_FILE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -840,8 +820,7 @@ sed -i -e "s#${SRCTOP}/#k2hdkc_dbaas_k8s_cli/#g" "${SUB_TEST_PART_FILE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -865,8 +844,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -890,8 +868,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -922,8 +899,7 @@ sed -i -e "s#${SRCTOP}/#k2hdkc_dbaas_k8s_cli/#g" "${SUB_TEST_PART_FILE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -946,8 +922,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -980,20 +955,18 @@ fi
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
 #---------------------------------------------------------------------
 # Check update log
 #---------------------------------------------------------------------
-test_update_snapshot
-if [ $? -ne 0 ]; then
+if ! test_update_snapshot; then
 	TEST_EXIT_CODE=1
 fi
 
-exit ${TEST_EXIT_CODE}
+exit "${TEST_EXIT_CODE}"
 
 #
 # Local variables:

@@ -42,8 +42,7 @@ if [ ! -f "${CONFIGMAP_PRODUCTION_FILE}" ]; then
 	exit 1
 fi
 
-ln -s "${CONFIGMAP_PRODUCTION_FILE}" "${PRODUCTION_FILE}"
-if [ $? -ne 0 ]; then
+if ! ln -s "${CONFIGMAP_PRODUCTION_FILE}" "${PRODUCTION_FILE}"; then
 	exit 1
 fi
 
@@ -58,13 +57,10 @@ SYSTEM_CA_CERT_K2HR3_FILE="k2hr3-system-ca.crt"
 SYSTEM_CA_CERT_K2HR3_FILE_PATH="${SYSTEM_CA_CERT_DIR}/${SYSTEM_CA_CERT_K2HR3_FILE}"
 
 if [ -f "${K2HR3_CA_CERT_ORG_FILE_PATH}" ]; then
-	cp "${K2HR3_CA_CERT_ORG_FILE_PATH}" "${SYSTEM_CA_CERT_K2HR3_FILE_PATH}"
-	if [ $? -ne 0 ]; then
+	if ! cp "${K2HR3_CA_CERT_ORG_FILE_PATH}" "${SYSTEM_CA_CERT_K2HR3_FILE_PATH}"; then
 		exit 1
 	fi
-
-	update-ca-certificates
-	if [ $? -ne 0 ]; then
+	if ! update-ca-certificates; then
 		exit 1
 	fi
 fi
@@ -77,7 +73,7 @@ fi
 #
 set -e
 
-if [ "X${K2HR3_MANUAL_START}" = "X1" ]; then
+if [ -n "${K2HR3_MANUAL_START}" ] && [ "${K2HR3_MANUAL_START}" = "1" ]; then
 	while true; do
 		sleep ${SLEEP_LONG_MANUAL}
 	done
