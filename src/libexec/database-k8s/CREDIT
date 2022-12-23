@@ -1,7 +1,7 @@
 -----------------------------------------------------------
 K2HDKC DBaaS on kubernetes Command Line Interface - VERSION_NUMBER
 
-Copyright 2021 Yahoo! Japan Corporation.
+Copyright 2021 Yahoo Japan Corporation.
 
 The K2HDKC DBaaS K8S CLI (Command Line Interface of Database as a
 Service for K2HDKC) is a tool for building a K2HDKC cluster in
