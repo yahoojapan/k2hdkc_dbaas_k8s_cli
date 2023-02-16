@@ -23,6 +23,7 @@ EXTRA_DIST =make_variables.sh \
 			make_rpm_changelog.sh \
 			debian_build.sh \
 			rpm_build.sh \
+			alpine_build.sh \
 			k2hdkc-dbaas-k8s-cli.install \
 			setup_k2hr3_cli_component.sh
 

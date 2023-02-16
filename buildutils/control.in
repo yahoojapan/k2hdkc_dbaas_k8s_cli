@@ -12,7 +12,7 @@ Package: @PACKAGE_NAME@
 Section: utils
 Architecture: all
 Depends: ${misc:Depends}, k2hr3-cli
-Description: @SHORTDESC@
+Description: K2HDKC DBaaS on Kubernetes CLI command
  The K2HDKC DBaaS K8S CLI (Command Line Interface of Database
   as a Service for K2HDKC) is a tool for building a K2HDKC
   cluster in conjunction with K2HR3.

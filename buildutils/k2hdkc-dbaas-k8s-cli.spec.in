@@ -48,7 +48,7 @@
 #
 # main package
 #
-Summary: @SHORTDESC@
+Summary: K2HDKC DBaaS on Kubernetes CLI command
 Name: @PACKAGE_NAME@
 Version: @VERSION@
 Release: %{package_revision}%{?dist}

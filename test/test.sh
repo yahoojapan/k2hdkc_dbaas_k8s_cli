@@ -55,6 +55,15 @@ TEST_SUMMARY_FILE="${TESTDIR}/${TESTMAINBASENAME}.summary.log"
 #
 export TEST_CREATE_DUMMY_RESPONSE_FUNC="create_dummy_dbaas_k8s_response"
 
+# [NOTE]
+# If the k2hr3-cli package is installed, the "/etc/antpickax/k2hr3.config"
+# file will be present and loaded.
+# The test fails if "/etc/antpickax/k2hr3.config" is loaded, so this
+# "K2HR3CLI_GLOBAL_CONFIG_NOTUSE" environment prevents it from loading.
+# This makes the test work fine.
+#
+export K2HR3CLI_GLOBAL_CONFIG_NOTUSE=1
+
 #
 # Load K2HDKC DBaaS K8S dummy request file
 #
@@ -104,18 +113,6 @@ done
 # the real file affects the variable.
 #
 set -- "--config" "${TESTDIR}/k2hr3.config" "--dbaas_k8s_config" "${_DBAAS_K8S_TEST_CONFIG_DIR}"
-
-#---------------------------------------------------------------------
-# Functions
-#---------------------------------------------------------------------
-func_usage()
-{
-	echo ""
-	echo "Usage: ${TESTMAINBIN} [option...]"
-	echo "	     --update(-u)   update the test result comparison file with the current test result."
-	echo "	     --help(-h)     print help."
-	echo ""
-}
 
 #---------------------------------------------------------------------
 # Test all
