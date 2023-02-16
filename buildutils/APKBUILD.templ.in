@@ -1,0 +1,153 @@
+#
+# K2HDKC DBaaS on Kubernetes Command Line Interface - K2HR3 CLI Plugin
+#
+# Copyright 2020 Yahoo Japan Corporation.
+#
+# K2HDKC DBaaS is a DataBase as a Service provided by Yahoo! JAPAN
+# which is built K2HR3 as a backend and provides services in
+# cooperation with Kubernetes.
+# The Override configuration for K2HDKC DBaaS serves to connect the
+# components that make up the K2HDKC DBaaS. K2HDKC, K2HR3, CHMPX,
+# and K2HASH are components provided as AntPickax.
+#
+# For the full copyright and license information, please view
+# the license file that was distributed with this source code.
+#
+# AUTHOR:   Takeshi Nakatani
+# CREATE:   Wed, 8 Feb 2023
+# REVISION:
+#
+
+#---------------------------------------------------------------
+# Local varibales as antpickax template
+#---------------------------------------------------------------
+#
+# Set variables by configure
+#
+_git_domain="@GIT_DOMAIN@"
+_organization_name="@GIT_ORG@"
+_repository_name="@GIT_REPO@"
+
+#
+# Set variables by apk_build.sh
+#
+_package_revision=%%BUILD_NUMBER%%
+_configure_option=%%CONFIGUREOPT%%
+_source_archive_url=%%SOURCE_ARCHIVE_URL%%
+
+#---------------------------------------------------------------
+# Main variables for APKBUILD
+#---------------------------------------------------------------
+# Contributor: @DEV_NAME@ <@DEV_EMAIL@>
+# Maintainer: @DEV_NAME@ <@DEV_EMAIL@>
+
+# [NOTE]
+# The $_organization_name is "k2hdkc_dbaas_k8s_cli", but the $pkgname
+# should be "k2hdkc-dbaas-k8s-cli", so adjust with this variable.
+#
+pkgname="k2hdkc-dbaas-k8s-cli"
+pkgver=@PKG_VERSION@
+pkgrel=$_package_revision
+pkgdesc="K2HDKC DBaaS on Kubernetes CLI command"
+
+url="https://k2hr3.antpick.ax/"
+arch="x86_64"
+license="MIT"
+
+depends="
+	k2hr3-cli
+"
+depends_dev=""
+makedepends="
+	$depends_dev
+	autoconf
+	automake
+	musl-locales
+	procps
+"
+
+install=""
+subpackages=""
+
+source="$pkgname-$pkgver.tar.gz%%SOURCE_ARCHIVE_URL%%"
+
+builddir="$srcdir/$pkgname-$pkgver"
+
+#---------------------------------------------------------------
+# Build functions for APKBUILD
+#---------------------------------------------------------------
+prepare() {
+	default_prepare
+	# this function can be omitted if no extra steps are needed
+}
+
+unpack() {
+	default_unpack
+
+	# [NOTE]
+	# A github release archive is unzipped as a directory with the
+	# repository name(k2hdkc_dbaas_k8s_cli) and version number.
+	# In this case, change the directory name to the package name
+	# (k2hdkc-dbaas-k8s-cli) instead of the repository name.
+	#
+	if [ -d "$_repository_name-$pkgver" ]; then
+		mv "$_repository_name-$pkgver" "$pkgname-$pkgver"
+	fi
+}
+
+build() {
+	if [ ! -f configure ]; then
+		./autogen.sh
+	fi
+	./configure --prefix=/usr $_configure_option
+	make build
+}
+
+check() {
+	make check
+}
+
+package() {
+	install -Dm 0444 src/libexec/database-k8s/CREDIT                                "$pkgdir"/usr/libexec/k2hr3/database-k8s/CREDIT
+	install -Dm 0444 src/libexec/database-k8s/VERSION                               "$pkgdir"/usr/libexec/k2hr3/database-k8s/VERSION
+	install -Dm 0444 src/libexec/database-k8s/certification.sh                      "$pkgdir"/usr/libexec/k2hr3/database-k8s/certification.sh
+	install -Dm 0444 src/libexec/database-k8s/command.sh                            "$pkgdir"/usr/libexec/k2hr3/database-k8s/command.sh
+	install -Dm 0444 src/libexec/database-k8s/functions.sh                          "$pkgdir"/usr/libexec/k2hr3/database-k8s/functions.sh
+	install -Dm 0444 src/libexec/database-k8s/help.sh                               "$pkgdir"/usr/libexec/k2hr3/database-k8s/help.sh
+	install -Dm 0444 src/libexec/database-k8s/options.sh                            "$pkgdir"/usr/libexec/k2hr3/database-k8s/options.sh
+	install -Dm 0444 src/libexec/database-k8s/summary.sh                            "$pkgdir"/usr/libexec/k2hr3/database-k8s/summary.sh
+	install -Dm 0444 src/libexec/database-k8s/variables.sh                          "$pkgdir"/usr/libexec/k2hr3/database-k8s/variables.sh
+	install -Dm 0444 src/libexec/database-k8s/k8sapi.sh                             "$pkgdir"/usr/libexec/k2hr3/database-k8s/k8sapi.sh
+	install -Dm 0444 src/libexec/database-k8s/configuration.sh                      "$pkgdir"/usr/libexec/k2hr3/database-k8s/configuration.sh
+	install -Dm 0444 src/libexec/database-k8s/constvariables.sh                     "$pkgdir"/usr/libexec/k2hr3/database-k8s/constvariables.sh
+	install -Dm 0444 src/libexec/database-k8s/dbaas-k8s.config                      "$pkgdir"/usr/libexec/k2hr3/database-k8s/dbaas-k8s.config
+	install -Dm 0444 src/libexec/database-k8s/k2hdkc.config                         "$pkgdir"/usr/libexec/k2hr3/database-k8s/k2hdkc.config
+	install -Dm 0444 src/libexec/database-k8s/k2hr3.config                          "$pkgdir"/usr/libexec/k2hr3/database-k8s/k2hr3.config
+	install -Dm 0444 src/libexec/database-k8s/dbaas-k2hdkc-chmpxproc-wrap.sh        "$pkgdir"/usr/libexec/k2hr3/database-k8s/dbaas-k2hdkc-chmpxproc-wrap.sh
+	install -Dm 0444 src/libexec/database-k8s/dbaas-k2hdkc.ini.templ                "$pkgdir"/usr/libexec/k2hr3/database-k8s/dbaas-k2hdkc.ini.templ
+	install -Dm 0444 src/libexec/database-k8s/dbaas-k2hdkc-ini-update.sh            "$pkgdir"/usr/libexec/k2hr3/database-k8s/dbaas-k2hdkc-ini-update.sh
+	install -Dm 0444 src/libexec/database-k8s/dbaas-k2hdkc-k2hr3-registration.sh    "$pkgdir"/usr/libexec/k2hr3/database-k8s/dbaas-k2hdkc-k2hr3-registration.sh
+	install -Dm 0444 src/libexec/database-k8s/dbaas-k2hdkc-kustomization.yaml.templ "$pkgdir"/usr/libexec/k2hr3/database-k8s/dbaas-k2hdkc-kustomization.yaml.templ
+	install -Dm 0444 src/libexec/database-k8s/dbaas-k2hdkc-serverproc-wrap.sh       "$pkgdir"/usr/libexec/k2hr3/database-k8s/dbaas-k2hdkc-serverproc-wrap.sh
+	install -Dm 0444 src/libexec/database-k8s/dbaas-k2hdkc-server.yaml.templ        "$pkgdir"/usr/libexec/k2hr3/database-k8s/dbaas-k2hdkc-server.yaml.templ
+	install -Dm 0444 src/libexec/database-k8s/dbaas-k2hdkc-slave.yaml.templ         "$pkgdir"/usr/libexec/k2hr3/database-k8s/dbaas-k2hdkc-slave.yaml.templ
+	install -Dm 0444 src/libexec/database-k8s/dbaas-k2hdkc-variables-setup.sh       "$pkgdir"/usr/libexec/k2hr3/database-k8s/dbaas-k2hdkc-variables-setup.sh
+	install -Dm 0444 src/libexec/database-k8s/k2hr3-sa.yaml.templ                   "$pkgdir"/usr/libexec/k2hr3/database-k8s/k2hr3-sa.yaml.templ
+	install -Dm 0444 src/libexec/database-k8s/k2hr3-kustomization.yaml.templ        "$pkgdir"/usr/libexec/k2hr3/database-k8s/k2hr3-kustomization.yaml.templ
+	install -Dm 0444 src/libexec/database-k8s/k2hr3-k2hr3api.yaml.templ             "$pkgdir"/usr/libexec/k2hr3/database-k8s/k2hr3-k2hr3api.yaml.templ
+	install -Dm 0444 src/libexec/database-k8s/k2hr3-k2hr3app.yaml.templ             "$pkgdir"/usr/libexec/k2hr3/database-k8s/k2hr3-k2hr3app.yaml.templ
+	install -Dm 0444 src/libexec/database-k8s/k2hr3-k2hdkc.yaml.templ               "$pkgdir"/usr/libexec/k2hr3/database-k8s/k2hr3-k2hdkc.yaml.templ
+	install -Dm 0444 src/libexec/database-k8s/k2hr3-k2hdkc.ini.templ                "$pkgdir"/usr/libexec/k2hr3/database-k8s/k2hr3-k2hdkc.ini.templ
+	install -Dm 0444 src/libexec/database-k8s/k2hr3-k2hdkc-ini-update.sh            "$pkgdir"/usr/libexec/k2hr3/database-k8s/k2hr3-k2hdkc-ini-update.sh
+	install -Dm 0444 src/libexec/database-k8s/k2hr3-api-nodeport.yaml.templ         "$pkgdir"/usr/libexec/k2hr3/database-k8s/k2hr3-api-nodeport.yaml.templ
+	install -Dm 0444 src/libexec/database-k8s/k2hr3-api-production.json.templ       "$pkgdir"/usr/libexec/k2hr3/database-k8s/k2hr3-api-production.json.templ
+	install -Dm 0444 src/libexec/database-k8s/k2hr3-api-wrap.sh                     "$pkgdir"/usr/libexec/k2hr3/database-k8s/k2hr3-api-wrap.sh
+	install -Dm 0444 src/libexec/database-k8s/k2hr3-app-nodeport.yaml.templ         "$pkgdir"/usr/libexec/k2hr3/database-k8s/k2hr3-app-nodeport.yaml.templ
+	install -Dm 0444 src/libexec/database-k8s/k2hr3-app-production.json.templ       "$pkgdir"/usr/libexec/k2hr3/database-k8s/k2hr3-app-production.json.templ
+	install -Dm 0444 src/libexec/database-k8s/k2hr3-app-wrap.sh                     "$pkgdir"/usr/libexec/k2hr3/database-k8s/k2hr3-app-wrap.sh
+	install -Dm 0444 src/libexec/database-k8s/k2hr3-app-init.sh                     "$pkgdir"/usr/libexec/k2hr3/database-k8s/k2hr3-app-init.sh
+}
+
+# [NOTE]
+# Subsequent lines print the checksum of the source archive.
+#

@@ -49,6 +49,15 @@ SRCTOP=$(cd "${TESTDIR}/.." || exit 1; pwd)
 #
 export TEST_CREATE_DUMMY_RESPONSE_FUNC="create_dummy_dbaas_k8s_response"
 
+# [NOTE]
+# If the k2hr3-cli package is installed, the "/etc/antpickax/k2hr3.config"
+# file will be present and loaded.
+# The test fails if "/etc/antpickax/k2hr3.config" is loaded, so this
+# "K2HR3CLI_GLOBAL_CONFIG_NOTUSE" environment prevents it from loading.
+# This makes the test work fine.
+#
+export K2HR3CLI_GLOBAL_CONFIG_NOTUSE=1
+
 #
 # Load K2HDKC DBaaS K8S dummy request file
 #

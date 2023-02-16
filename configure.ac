@@ -103,7 +103,8 @@ AC_CONFIG_FILES([Makefile
 				buildutils/control
 				buildutils/copyright
 				buildutils/rules
-				buildutils/k2hdkc-dbaas-k8s-cli.spec])
+				buildutils/k2hdkc-dbaas-k8s-cli.spec
+				buildutils/APKBUILD.templ])
 
 AC_OUTPUT
 
