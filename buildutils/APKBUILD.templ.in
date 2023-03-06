@@ -50,7 +50,7 @@ pkgver=@PKG_VERSION@
 pkgrel=$_package_revision
 pkgdesc="K2HDKC DBaaS on Kubernetes CLI command"
 
-url="https://k2hr3.antpick.ax/"
+url="https://dbaas.k2hdkc.antpick.ax/"
 arch="x86_64"
 license="MIT"
 
