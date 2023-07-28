@@ -1,3 +1,9 @@
+k2hdkc-dbaas-k8s-cli (1.0.6) unstable; urgency=low
+
+  * Changed due to k2hr3cli insecure communication support - #24
+
+ -- Takeshi Nakatani <ggtakec@gmail.com>  Fri, 28 Jul 2023 12:04:39 +0900
+
 k2hdkc-dbaas-k8s-cli (1.0.5) unstable; urgency=low
 
   * Updated building/packaging scripts - #22
