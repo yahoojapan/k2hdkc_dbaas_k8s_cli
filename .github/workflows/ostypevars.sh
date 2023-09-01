@@ -131,6 +131,20 @@ elif [ "${CI_OSTYPE}" = "ubuntu:18.04" ] || [ "${CI_OSTYPE}" = "ubuntu:bionic" ]
 	PKG_EXT="deb"
 	IS_OS_UBUNTU=1
 
+elif [ "${CI_OSTYPE}" = "debian:12" ] || [ "${CI_OSTYPE}" = "debian:bookworm" ]; then
+	DIST_TAG="debian/bookworm"
+	INSTALL_PKG_LIST="git autoconf autotools-dev make dh-make fakeroot dpkg-dev devscripts pkg-config ruby-dev rubygems rubygems-integration procps"
+	INSTALLER_BIN="apt-get"
+	UPDATE_CMD="update"
+	UPDATE_CMD_ARG=""
+	INSTALL_CMD="install"
+	INSTALL_CMD_ARG=""
+	INSTALL_AUTO_ARG="-y"
+	INSTALL_QUIET_ARG="-qq"
+	PKG_OUTPUT_DIR="debian_build"
+	PKG_EXT="deb"
+	IS_OS_DEBIAN=1
+
 elif [ "${CI_OSTYPE}" = "debian:11" ] || [ "${CI_OSTYPE}" = "debian:bullseye" ]; then
 	DIST_TAG="debian/bullseye"
 	INSTALL_PKG_LIST="git autoconf autotools-dev make dh-make fakeroot dpkg-dev devscripts pkg-config ruby-dev rubygems rubygems-integration procps"
@@ -229,8 +243,8 @@ elif [ "${CI_OSTYPE}" = "fedora:36" ]; then
 	PKG_EXT="rpm"
 	IS_OS_FEDORA=1
 
-elif [ "${CI_OSTYPE}" = "alpine:3.17" ]; then
-	DIST_TAG="alpine/v3.17"
+elif [ "${CI_OSTYPE}" = "alpine:3.18" ]; then
+	DIST_TAG="alpine/v3.18"
 	INSTALL_PKG_LIST="bash sudo alpine-sdk automake autoconf util-linux-misc musl-locales ruby-dev procps coreutils k2hr3-cli"
 	INSTALLER_BIN="apk"
 	UPDATE_CMD="update"
