@@ -1,3 +1,9 @@
+k2hdkc-dbaas-k8s-cli (1.0.11) unstable; urgency=low
+
+  * Changed supported OS and modified some codes - #35
+
+ -- Takeshi Nakatani <ggtakec@gmail.com>  Mon, 18 Nov 2024 16:21:55 +0900
+
 k2hdkc-dbaas-k8s-cli (1.0.10) unstable; urgency=low
 
   * Changed support OS, etc - #33
