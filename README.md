@@ -5,8 +5,9 @@ K2HDKC DBaaS on Kubernetes Command Line Interface(K2HR3 CLI Plugin)
 [![GitHub forks](https://img.shields.io/github/forks/yahoojapan/k2hdkc_dbaas_k8s_cli.svg)](https://github.com/yahoojapan/k2hdkc_dbaas_k8s_cli/network)
 [![GitHub stars](https://img.shields.io/github/stars/yahoojapan/k2hdkc_dbaas_k8s_cli.svg)](https://github.com/yahoojapan/k2hdkc_dbaas_k8s_cli/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/yahoojapan/k2hdkc_dbaas_k8s_cli.svg)](https://github.com/yahoojapan/k2hdkc_dbaas_k8s_cli/issues)
-[![debian packages](https://img.shields.io/badge/deb-packagecloud.io-844fec.svg)](https://packagecloud.io/antpickax/stable)
 [![RPM packages](https://img.shields.io/badge/rpm-packagecloud.io-844fec.svg)](https://packagecloud.io/antpickax/stable)
+[![debian packages](https://img.shields.io/badge/deb-packagecloud.io-844fec.svg)](https://packagecloud.io/antpickax/stable)
+[![ALPINE packages](https://img.shields.io/badge/apk-packagecloud.io-844fec.svg)](https://packagecloud.io/antpickax/stable)
 
 ### **K2HDKC** **DBaaS**
 
@@ -46,37 +47,33 @@ The overall **K2HDKC DBaaS on kubernetes CLI** overview diagram is shown below.
 ![K2HDKC DBaaS system for kubernetes](https://dbaas.k2hdkc.antpick.ax/images/overview_k8s_cli.png)  
 
 ### Documents
-[K2HDKC DBaaS Document](https://dbaas.k2hdkc.antpick.ax/index.html)  
-[Github wiki page](https://github.com/yahoojapan/k2hdkc_dbaas_k8s_cli/wiki)
+  - [K2HDKC DBaaS Document](https://dbaas.k2hdkc.antpick.ax/index.html)
+  - [Github wiki page](https://github.com/yahoojapan/k2hdkc_dbaas_k8s_cli/wiki)
 
-[About k2hdkc Document](https://k2hdkc.antpick.ax/index.html)  
-[About chmpx Document](https://chmpx.antpick.ax/index.html)  
-[About k2hr3 Document](https://k2hr3.antpick.ax/index.html)  
-
-[About AntPickax](https://antpick.ax/)  
+  - [About k2hdkc Document](https://k2hdkc.antpick.ax/index.html)
+  - [About chmpx Document](https://chmpx.antpick.ax/index.html)
+  - [About k2hr3 Document](https://k2hr3.antpick.ax/index.html)
+  - [About AntPickax](https://antpick.ax/)
 
 ### Repositories
-[k2hdkc dbaas](https://github.com/yahoojapan/k2hdkc_dbaas)  
-[k2hdkc_dbaas_cli](https://github.com/yahoojapan/k2hdkc_dbaas_cli)  
-[k2hr3](https://github.com/yahoojapan/k2hr3)  
-[k2hr3_app](https://github.com/yahoojapan/k2hr3_app)  
-[k2hr3_api](https://github.com/yahoojapan/k2hr3_api)  
-[k2hr3_cli](https://github.com/yahoojapan/k2hr3_cli)  
-[k2hr3_get_resource](https://github.com/yahoojapan/k2hr3_get_resource)  
-[k2hdkc](https://github.com/yahoojapan/k2hdkc)  
-[k2hdkc_dbaas_override_conf](https://github.com/yahoojapan/k2hdkc_dbaas_override_conf)  
-[chmpx](https://github.com/yahoojapan/chmpx)  
+  - [k2hdkc](https://github.com/yahoojapan/k2hdkc)
+  - [chmpx](https://github.com/yahoojapan/chmpx)
+  - [k2hdkc_dbaas](https://github.com/yahoojapan/k2hdkc_dbaas)
+  - [k2hdkc_dbaas_k8s_cli](https://github.com/yahoojapan/k2hdkc_dbaas_k8s_cli)
+  - [k2hdkc_dbaas_cli](https://github.com/yahoojapan/k2hdkc_dbaas_cli)
+  - [k2hdkc_dbaas_override_conf](https://github.com/yahoojapan/k2hdkc_dbaas_override_conf)
+  - [k2hdkc_dbaas_trove](https://github.com/yahoojapan/k2hdkc_dbaas_trove)
+  - [k2hr3](https://github.com/yahoojapan/k2hr3)
+  - [k2hr3_app](https://github.com/yahoojapan/k2hr3_app)
+  - [k2hr3_api](https://github.com/yahoojapan/k2hr3_api)
+  - [k2hr3_cli](https://github.com/yahoojapan/k2hr3_cli)
+  - [k2hr3_get_resource](https://github.com/yahoojapan/k2hr3_get_resource)
+  - [k2hr3client_python](https://github.com/yahoojapan/k2hr3client_python)
 
 ### Packages
-[k2hdkc(packagecloud.io)](https://packagecloud.io/app/antpickax/stable/search?q=k2hdkc)  
-[chmpx(packagecloud.io)](https://packagecloud.io/app/antpickax/stable/search?q=chmpx)  
-[k2hdkc-dbaas-cli(packagecloud.io)](https://packagecloud.io/app/antpickax/stable/search?q=k2hdkc-dbaas-cli)  
-[k2hdkc-dbaas-k8s-cli(packagecloud.io)](https://packagecloud.io/app/antpickax/stable/search?q=k2hdkc-dbaas-k8s-cli)  
-[k2hdkc-dbaas-override-conf(packagecloud.io)](https://packagecloud.io/app/antpickax/stable/search?q=k2hdkc-dbaas-override-conf)  
-[k2hr3-cli(packagecloud.io)](https://packagecloud.io/app/antpickax/stable/search?q=k2hr3-cli)  
-[k2hr3-app(npm packages)](https://www.npmjs.com/package/k2hr3-app)  
-[k2hr3-api(npm packages)](https://www.npmjs.com/package/k2hr3-api)  
-[k2hr3-get-resource(packagecloud.io)](https://packagecloud.io/app/antpickax/stable/search?q=k2hr3-get-resource)  
+  - [RPM packages(packagecloud.io)](https://packagecloud.io/app/antpickax/stable/search?q=k2hdkc-dbaas-k8s-cli&filter=rpm&dist=&arch=)
+  - [Debian packages(packagecloud.io)](https://packagecloud.io/app/antpickax/stable/search?q=k2hdkc-dbaas-k8s-cli&filter=deb&dist=&arch=)
+  - [ALPINE packages(packagecloud.io)](https://packagecloud.io/app/antpickax/stable/search?q=k2hdkc-dbaas-k8s-cli&filter=all&dist=alpine&arch=)
 
 ### License
 This software is released under the MIT License, see the license file.
