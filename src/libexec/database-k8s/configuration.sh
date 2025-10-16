@@ -95,20 +95,14 @@ check_dbaas_k8s_cluster_domain()
 			K2HR3CLI_DBAAS_K8S_K8SDOMAIN=${_DBAAS_K8S_CONFIG_TMP_K8S_DOMAIN}
 
 		elif [ -z "${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}" ]; then
-			# [NOTE]
-			# Since the condition becomes complicated, use "X"(temporary word).
-			#
-			if [ "X${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}" != "X${_DBAAS_K8S_CONFIG_TMP_K8S_DOMAIN}" ]; then
+			if [ -z "${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}" ] || [ -z "${_DBAAS_K8S_CONFIG_TMP_K8S_DOMAIN}" ] || [ "${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}" != "${_DBAAS_K8S_CONFIG_TMP_K8S_DOMAIN}" ]; then
 				prn_err "The values of the \"${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_DOMAIN_LONG}\" and \"${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_K8SDOMAIN_LONG}\" options are inconsistent."
 				return 1
 			fi
 			K2HR3CLI_DBAAS_K8S_K8SNAMESPACE=${_DBAAS_K8S_CONFIG_TMP_K8S_NAMESPACE}
 
 		elif [ -z "${K2HR3CLI_DBAAS_K8S_K8SDOMAIN}" ]; then
-			# [NOTE]
-			# Since the condition becomes complicated, use "X"(temporary word).
-			#
-			if [ "X${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}" != "X${_DBAAS_K8S_CONFIG_TMP_K8S_NAMESPACE}" ]; then
+			if [ -z "${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}" ] || [ -z "${_DBAAS_K8S_CONFIG_TMP_K8S_NAMESPACE}" ] || [ "${K2HR3CLI_DBAAS_K8S_K8SNAMESPACE}" != "${_DBAAS_K8S_CONFIG_TMP_K8S_NAMESPACE}" ]; then
 				prn_err "The values of the \"${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_DOMAIN_LONG}\" and \"${K2HR3CLI_DBAAS_K8S_COMMAND_OPT_K8SNAMESPACE_LONG}\" options are inconsistent."
 				return 1
 

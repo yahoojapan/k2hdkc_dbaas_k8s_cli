@@ -305,7 +305,7 @@ if stat "${SECRET_K2HR3_CERTS}/${K2HR3_FILE_CA_CERT}" >/dev/null 2>&1; then
 	chmod 0444 ${ANTPICKAX_ETC_DIR}/${K2HR3_FILE_CA_CERT}					|| exit 1
 fi
 
-SELF_HOSTNAME=$(hostname)
+SELF_HOSTNAME=$(hostname -f)
 # shellcheck disable=SC2012
 SELF_SERVER_CRT=$(ls -1 "${SECRET_K2HR3_CERTS}"/"${SELF_HOSTNAME}".*server.crt | sed -e "s#${SECRET_K2HR3_CERTS}/##g" -e '/^$/d' | head -1)
 # shellcheck disable=SC2012

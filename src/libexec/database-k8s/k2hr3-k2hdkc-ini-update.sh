@@ -153,7 +153,7 @@ GLOBAL_PART_SERVER_PRIKEY=""
 GLOBAL_PART_SLAVE_CERT=""
 GLOBAL_PART_SLAVE_PRIKEY=""
 
-SELF_HOSTNAME=$(hostname)
+SELF_HOSTNAME=$(hostname -f)
 
 if [ -n "${SEC_CA_MOUNTPOINT}" ]; then
 	SECRET_CA_CERT_FILE=$(find "${SEC_CA_MOUNTPOINT}/" -name '*_CA.crt' | head -1)
