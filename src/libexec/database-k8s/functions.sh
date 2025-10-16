@@ -134,7 +134,7 @@ set_localhost_name_ip_variables()
 			fi
 		fi
 
-		_DBAAS_K8S_TMP_LOCAL_LONG_HOSTNAME=$(hostname)
+		_DBAAS_K8S_TMP_LOCAL_LONG_HOSTNAME=$(hostname -f)
 		_DBAAS_K8S_TMP_LOCAL_SHORT_HOSTNAME=$(hostname -a)
 
 		if [ -n "${_DBAAS_K8S_TMP_LOCAL_LONG_HOSTNAME}" ] && [ -n "${_DBAAS_K8S_TMP_LOCAL_SHORT_HOSTNAME}" ]; then
@@ -221,14 +221,18 @@ check_socat_program()
 			return 1
 		fi
 
-		_DBAAS_K8S_TMP_OS_NAME=$(grep '^ID=' /etc/os-release | sed 's/"/ /g' | awk '{print $2}')
+		_DBAAS_K8S_TMP_OS_NAME=$(grep '^ID[[:space:]]*=[[:space:]]*' /etc/os-release | sed -e 's|^ID[[:space:]]*=[[:space:]]*||g' -e 's|^[[:space:]]*||g' -e 's|[[:space:]]*$||g' -e 's|"||g')
 		if [ -z "${_DBAAS_K8S_TMP_OS_NAME}" ]; then
 			prn_err "Unknown OS type, so could not install \"${SOCAT_BIN}\", please install manually."
 			return 1
-		elif [ "${_DBAAS_K8S_TMP_OS_NAME}" = "centos" ]; then
-			sudo yum install "${SOCAT_BIN}"
-		elif [ "${_DBAAS_K8S_TMP_OS_NAME}" = "ubuntu" ]; then
-			sudo apt-get install "${SOCAT_BIN}"
+		elif echo "${_DBAAS_K8S_TMP_OS_NAME}" | grep -q -i 'centos'; then
+			sudo yum install -y "${SOCAT_BIN}" >/dev/null 2>&1
+		elif echo "${_DBAAS_K8S_TMP_OS_NAME}" | grep -q -i -e 'rocky' -e 'fedora'; then
+			sudo dnf install -y "${SOCAT_BIN}" >/dev/null 2>&1
+		elif echo "${_DBAAS_K8S_TMP_OS_NAME}" | grep -q -i -e 'ubuntu' -e 'debian'; then
+			sudo apt-get install -y "${SOCAT_BIN}" >/dev/null 2>&1
+		elif echo "${_DBAAS_K8S_TMP_OS_NAME}" | grep -q -i 'alpine'; then
+			sudo apk add -q --no-progress --no-cache "${SOCAT_BIN}" >/dev/null 2>&1
 		else
 			prn_err "Unknown OS type, so could not install \"${SOCAT_BIN}\", please install manually."
 			return 1

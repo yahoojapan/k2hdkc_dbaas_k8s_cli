@@ -49,7 +49,7 @@ fi
 #----------------------------------------------------------
 # Copy Certificates
 #----------------------------------------------------------
-SELF_HOSTNAME=$(hostname | sed 's/\(pod-[^-]*\)\(-.*\)$/\1/g')
+SELF_HOSTNAME=$(hostname -f | sed 's/\(pod-[^-]*\)\(-.*\)$/\1/g')
 
 if [ -n "${SEC_CA_MOUNTPOINT}" ]; then
 	SECRET_CA_CERT_FILE=$(find "${SEC_CA_MOUNTPOINT}/" -name '*_CA.crt' | head -1)

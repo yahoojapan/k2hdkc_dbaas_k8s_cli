@@ -446,10 +446,7 @@ create_openssl_cnf_file()
 		_DBAAS_K8S_CERT_TMP_OLD_CONTENTS=$(sed -e 's/#.*$//g' -e 's/^[[:space:]]*//g' -e 's/[[:space:]]*$//g' -e 's/[[:space:]]*=[[:space:]]*/=/g' -e '/^$/d' "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF}")
 		_DBAAS_K8S_CERT_TMP_NEW_CONTENTS=$(sed -e 's/#.*$//g' -e 's/^[[:space:]]*//g' -e 's/[[:space:]]*$//g' -e 's/[[:space:]]*=[[:space:]]*/=/g' -e '/^$/d' "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF_TMP}")
 
-		# [NOTE]
-		# Since the condition becomes complicated, use "X"(temporary word).
-		#
-		if [ "X${_DBAAS_K8S_CERT_TMP_OLD_CONTENTS}" = "X${_DBAAS_K8S_CERT_TMP_NEW_CONTENTS}" ]; then
+		if [ -n "${_DBAAS_K8S_CERT_TMP_OLD_CONTENTS}" ] && [ -n "${_DBAAS_K8S_CERT_TMP_NEW_CONTENTS}" ] && [ "${_DBAAS_K8S_CERT_TMP_OLD_CONTENTS}" = "${_DBAAS_K8S_CERT_TMP_NEW_CONTENTS}" ]; then
 			rm -f "${_DBAAS_K8S_CLUSTER_DIRPATH}/${K2HR3CLI_DBAAS_K8S_OPENSSL_CNF_TMP}"
 			prn_dbg "(create_openssl_cnf_file) Nothing to update."
 		else
